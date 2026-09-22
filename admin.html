@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin panel — Mathcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   style.css — shared look for every page.
+   Exercise book: graph paper, ballpoint blue, red teacher's pen.
+   ============================================================ */
+
+:root {
+  --paper:      #F2F6FB;
+  --grid:       #CFE0F2;
+  --ink:        #16324F;
+  --ink-soft:   #5C7490;
+  --red-pen:    #E03B3B;
+  --gold:       #FFC53D;
+  --mint:       #3FC99A;
+  --grape:      #8B6BDB;
+
+  --shadow-sticker: 2px 3px 0 rgba(22, 50, 79, 0.18);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* the graph paper */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+h1, h2, h3, .chunky {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 20px 18px 64px;
+}
+
+/* --- the header strip, like the front of an exercise book --- */
+.book-label {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.book-label h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+}
+
+.book-label h1 .dot { color: var(--red-pen); }
+
+.stats {
+  display: flex;
+  gap: 16px;
+  font-weight: 700;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.stat .figure {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stat .caption {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.coins .figure  { color: #C98B00; }
+.streak .figure { color: var(--mint); }
+.level .figure  { color: var(--grape); }
+
+/* ============================================================
+   Overall level — one level across every game, shown on the hub.
+   The maths level (1-8) is a different thing and lives in the games.
+   ============================================================ */
+
+.overall { min-width: min(300px, 100%); }
+
+.ov-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+
+.ov-level {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--grape);
+}
+
+.ov-level .word {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  margin-right: 6px;
+}
+
+.ov-coins {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.25rem;
+  color: #C98B00;
+  white-space: nowrap;
+}
+
+.ov-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.ov-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.4s ease-out;
+}
+
+.ov-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- the warm-up question card --- */
+.warmup {
+  margin-top: 26px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.warmup .prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 11vw, 3.6rem);
+  margin: 6px 0 18px;
+  line-height: 1.1;
+}
+
+.warmup .meta {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.answer-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+input[type="number"] {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  width: 140px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+input[type="number"]:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--grape);
+  outline-offset: 2px;
+}
+
+/* stop the little spinner arrows */
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+button {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  padding: 11px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+}
+
+button:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* --- feedback line, written in red pen when you're wrong --- */
+.feedback {
+  min-height: 1.6em;
+  margin-top: 14px;
+  font-weight: 800;
+}
+
+.feedback.good  { color: var(--mint); }
+.feedback.bad   { color: var(--red-pen); }
+
+/* --- the game grid: each tile is a picture of the game being played --- */
+.shelf {
+  display: grid;
+  /* the max matters as much as the min — with 1fr, two tiles on a wide page
+     stretched to half the page each. Cap it and they stay tile-sized. */
+  grid-template-columns: repeat(auto-fit, minmax(175px, 215px));
+  justify-content: start;
+  gap: 16px;
+}
+
+/* on a phone, one tile per row, full width — a 215px column left a strip of nothing */
+@media (max-width: 520px) {
+  .shelf { grid-template-columns: 1fr; }
+  .tile:nth-child(n) { transform: none; }
+}
+
+.tile {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+/* each tile sits a touch crooked, like a sticker on the page */
+.tile:nth-child(4n+1) { transform: rotate(-0.7deg); }
+.tile:nth-child(4n+2) { transform: rotate(0.55deg); }
+.tile:nth-child(4n+3) { transform: rotate(0.4deg); }
+.tile:nth-child(4n+4) { transform: rotate(-0.45deg); }
+
+.tile:hover,
+.tile:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow: 4px 8px 0 rgba(22, 50, 79, 0.22);
+}
+
+/* the picture */
+.tile .cover {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-bottom: 2px solid var(--ink);
+  background: #090F22;
+  overflow: hidden;
+}
+
+.tile .cover svg { display: block; width: 100%; height: 100%; }
+
+/* a tile with no artwork yet can still use a big emoji */
+.tile .cover.emoji {
+  display: grid;
+  place-items: center;
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+}
+
+.cover.blue  { background: #BFE3FF; }
+.cover.mint  { background: #C4F0DF; }
+.cover.gold  { background: #FFE6A8; }
+.cover.grape { background: #DCD2F7; }
+
+.tile-body { display: block; padding: 10px 12px 12px; }
+
+.tile .name {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+  text-align: left;
+  padding: 0;
+  line-height: 1.15;
+}
+
+.tile .blurb {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.tile .prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  min-height: 13px;
+}
+
+.tile .prog-track {
+  flex: 1;
+  height: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.tile .prog-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.5s ease-out;
+}
+
+.tile .state {
+  display: block;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0;
+  color: var(--ink-soft);
+}
+
+.tile .state b { color: var(--ink); }
+.tile .state.go { color: var(--mint); }
+
+.tile.locked { opacity: 0.62; }
+.tile.locked .state { color: var(--ink-soft); }
+.tile.locked:hover { transform: rotate(0deg); box-shadow: var(--shadow-sticker); }
+
+footer {
+  margin-top: 46px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+footer button.armed { background: var(--red-pen); color: #fff; border-color: var(--red-pen); }
+
+footer button {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 520px) {
+  .book-label { flex-direction: column; align-items: flex-start; }
+  .stats { gap: 18px; }
+}
+
+/* ============================================================
+   Question pop-up (js/quiz.js)
+   ============================================================ */
+
+.quiz-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: 50;
+}
+
+.quiz-backdrop.open { display: flex; }
+
+.quiz-card {
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  text-align: center;
+}
+
+.quiz-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.quiz-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.quiz-pips {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin: 14px 0 6px;
+}
+
+.pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.pip.lit { background: var(--mint); }
+
+.quiz-prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2rem, 9vw, 2.9rem);
+  margin: 8px 0 18px;
+  line-height: 1.1;
+}
+
+.shake { animation: shake 0.32s ease; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-9px); }
+  75%      { transform: translateX(9px); }
+}
+
+/* ============================================================
+   In-game HUD — the keycap row
+   ============================================================ */
+
+.game-body {
+  margin: 0;
+  overflow: hidden;
+  background: #0A1624;
+}
+
+canvas { display: block; }
+
+.hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  pointer-events: none;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.keycaps { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.keycap {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.keycap.lit {
+  border-color: #fff;
+  background: var(--gold);
+  color: var(--ink);
+  text-shadow: none;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 16px rgba(255, 197, 61, 0.7);
+}
+
+.keycap.pressed { transform: translateY(3px); box-shadow: none; }
+
+.hud-right { text-align: right; line-height: 1.35; }
+.hud-right .big { font-size: 1.5rem; }
+.hud-right .small { font-size: 0.85rem; opacity: 0.85; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.banner.show { opacity: 1; }
+
+.back-link {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  z-index: 20;
+}
+
+.back-link:hover { color: #fff; }
+
+/* ============================================================
+   Featured game panel on the hub — a dark window into the game
+   world, sitting on the paper page
+   ============================================================ */
+
+.featured {
+  margin-top: 26px;
+  background: #16324F;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 4px 6px 0 rgba(22, 50, 79, 0.28);
+  padding: 26px 24px;
+  color: #fff;
+}
+
+.featured h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 2.5rem);
+}
+
+.featured p {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  color: #BBD3EC;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.featured .keycaps {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 20px 0 22px;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.featured .play {
+  display: inline-block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  padding: 12px 30px;
+  border: 2px solid #0A1624;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.featured .play:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* ============================================================
+   End-of-game results screen (js/results.js)
+   ============================================================ */
+
+.results-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+}
+
+.results-backdrop.open { display: flex; }
+
+.results-card {
+  position: relative;
+  overflow: hidden;
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.4);
+  padding: 26px 22px 22px;
+  text-align: center;
+}
+
+.results-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.7rem, 7vw, 2.3rem);
+  margin: 0;
+}
+
+.results-sub {
+  margin: 4px 0 20px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.results-stats {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.results-stat {
+  flex: 1;
+  max-width: 116px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 13px 8px;
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+
+.results-stat.pop {
+  animation: statPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes statPop {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.results-figure {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.results-stat.score .results-figure { color: var(--mint); }
+.results-stat.coins .results-figure { color: #C98B00; }
+.results-stat.time  .results-figure { color: var(--grape); }
+
+.results-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- level bar --- */
+.results-levelbox {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.results-levelrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.results-levelbadge {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.9rem;
+  background: var(--grape);
+  color: #fff;
+  padding: 4px 13px;
+  border-radius: 999px;
+}
+
+.results-levelbadge.bump { animation: badgeBump 0.5s ease; }
+
+@keyframes badgeBump {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+
+.results-levelnote {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.results-track {
+  height: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.results-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+}
+
+.results-fill.glow { box-shadow: 0 0 14px 2px rgba(255, 197, 61, 0.9); }
+
+/* --- buttons --- */
+.results-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.results-again { width: 100%; }
+
+.results-home {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  padding: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* --- confetti --- */
+.confetti-bit {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(420px) rotate(680deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-bit { display: none; }
+  .results-stat { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Speed Stages — chunky arcade HUD
+   ============================================================ */
+
+.hud { gap: 10px; justify-content: center; }
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(#2E4C78, #1B3151);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  padding: 7px 20px 7px 12px;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pill b { font-size: 1.15rem; }
+.pill.speed  span { color: var(--gold); }
+.pill.hearts span { color: #FF8A98; }
+.pill.wins   span { color: var(--mint); }
+.pill.mult   span { color: #C4AEFF; }
+
+/* left column of square buttons */
+.sidebar {
+  position: fixed;
+  left: 14px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+
+.sidebar button {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 16px;
+  background: linear-gradient(#5AA9E6, #3A7CC4);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+}
+
+.sidebar button span { font-size: 1.9rem; line-height: 1; }
+.sidebar button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+#rebirthBtn { background: linear-gradient(#B88BEA, #8B5FD0); }
+
+/* progress bar along the bottom */
+.bottombar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  background: rgba(20, 32, 52, 0.88);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.bb-level { font-size: 1.05rem; white-space: nowrap; }
+
+.bb-track {
+  flex: 1;
+  height: 17px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bb-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), #FF9F43);
+  transition: width 0.25s ease-out;
+}
+
+.bb-num { font-size: 0.9rem; white-space: nowrap; opacity: 0.9; }
+
+@media (max-width: 620px) {
+  .sidebar button { width: 62px; height: 62px; font-size: 0.7rem; }
+  .sidebar button span { font-size: 1.4rem; }
+  .pill { font-size: 1.05rem; padding: 5px 14px 5px 9px; }
+}
+
+/* --- shop --- */
+.shop-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 55;
+}
+
+.shop-backdrop.open { display: flex; }
+
+.shop-card {
+  width: min(440px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  color: var(--ink);
+}
+
+.shop-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  margin: 0;
+  text-align: center;
+}
+
+.shop-sub {
+  margin: 4px 0 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.shop-item strong {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+}
+
+.shop-item span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.shop-item button { font-size: 0.9rem; padding: 8px 15px; white-space: nowrap; }
+.shop-item button:disabled { background: #E4E9EF; color: var(--ink-soft); cursor: not-allowed; }
+
+.shop-close { width: 100%; margin-top: 6px; background: #fff; }
+
+/* ============================================================
+   Prism Rush — the runner
+   ============================================================ */
+
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+.gd-hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.gd-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.gd-tag {
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.gd-track {
+  flex: 1;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gd-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3FC99A, #FFC53D);
+}
+
+/* start card */
+.gd-start {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  background: rgba(10, 16, 36, 0.86);
+  z-index: 40;
+}
+
+.gd-start h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.4rem, 11vw, 4rem);
+  color: #FFC53D;
+  margin: 0 0 6px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.gd-start p {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.gd-start .gd-small { font-size: 0.85rem; opacity: 0.72; margin-top: 8px; }
+.gd-start button { margin-top: 20px; font-size: 1.25rem; padding: 13px 38px; }
+
+/* --- Prism Rush menu: Geometry Dash style carousel --- */
+.gd-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 35%, #223A6B, #0A1024 70%);
+  z-index: 40;
+}
+
+.gd-menu h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  color: #FFC53D;
+  margin: 0 0 14px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+.carousel { display: flex; align-items: center; gap: 10px; }
+
+.car-arrow {
+  width: 54px;
+  height: 54px;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.car-stage { width: min(330px, 74vw); }
+
+.car-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 18px 22px;
+  border: 4px solid #fff;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--c1), var(--c2));
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+.car-card.locked { filter: grayscale(0.9) brightness(0.5); }
+
+.car-index { font-size: 0.75rem; opacity: 0.7; letter-spacing: 0.08em; }
+.car-title { font-size: 1.7rem; text-shadow: 0 0 18px var(--ac); }
+
+.car-diff {
+  font-size: 0.78rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: #10203A;
+  font-weight: 700;
+}
+
+.car-bestwrap { width: 100%; margin-top: 8px; }
+
+.car-best {
+  height: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.car-best div { height: 100%; background: var(--ac); }
+
+.car-pct {
+  display: block;
+  text-align: center;
+  font-size: 0.76rem;
+  margin-top: 5px;
+  opacity: 0.85;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+
+.car-star { font-size: 0.8rem; color: #FFE066; }
+
+.menu-row { display: flex; gap: 10px; margin-top: 20px; align-items: stretch; }
+
+.big-play { font-size: 1.35rem; padding: 14px 52px; }
+.big-play:disabled { background: #46506A; color: #9AA6B8; cursor: not-allowed; }
+.menu-side { font-size: 0.95rem; padding: 14px 20px; background: #fff; }
+
+.gd-menu .gd-small {
+  color: #fff;
+  opacity: 0.6;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  margin-top: 14px;
+}
+
+.mute-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  width: 46px;
+  height: 46px;
+  font-size: 1.2rem;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  box-shadow: none;
+  z-index: 45;
+}
+
+.skin-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
+</style>
+<style>
+/* ============================================================
+   Admin panel (this page only)
+   ============================================================ */
+.ad-back { margin-left: auto; font-weight: 800; color: var(--ink); text-decoration: none; border: 2px solid var(--ink);
+           border-radius: 10px; padding: 8px 14px; background: #fff; box-shadow: var(--shadow-sticker); }
+.ad-card { margin-top: 18px; padding: 16px 18px; background: #fff; border: 2px solid var(--ink);
+           border-radius: var(--radius); box-shadow: var(--shadow-sticker); }
+.ad-card h2 { margin: 0 0 10px; font-size: 1.35rem; }
+.ad-card.danger { border-color: var(--red-pen); }
+.ad-card.danger h2 { color: var(--red-pen); }
+.ad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 14px; }
+.ad-grid label { display: flex; flex-direction: column; gap: 4px; font-weight: 800; font-size: .85rem; color: var(--ink-soft); }
+.ad-grid small { font-weight: 700; opacity: .8; }
+.ad-grid input, .ad-grid select, #raw { font: 600 1rem 'Nunito', sans-serif; color: var(--ink); padding: 8px 10px;
+           border: 2px solid var(--ink); border-radius: 10px; background: var(--paper); }
+.ad-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.ad-note { margin: 8px 0 0; font-size: .85rem; font-weight: 700; color: var(--ink-soft); }
+.ad-note.good { color: var(--mint); }
+.ad-note.bad { color: var(--red-pen); }
+.ad-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.ad-game { padding: 12px; background: var(--paper); border: 2px solid var(--ink); border-radius: 12px; }
+.ad-game h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.ad-game .bar { display: block; font-size: .85rem; font-weight: 800; color: var(--ink-soft); margin-bottom: 8px; }
+.ad-game button { font-size: .9rem; padding: 7px 12px; }
+.ad-card button { font-size: .95rem; padding: 9px 16px; }
+.danger button { background: #fff; border-color: var(--red-pen); color: var(--red-pen); }
+.danger button.armed { background: var(--red-pen); color: #fff; }
+#raw { width: 100%; height: 200px; margin-top: 10px; font-family: ui-monospace, Menlo, monospace; font-size: .8rem; }
+details summary { cursor: pointer; font-weight: 800; color: var(--ink-soft); font-size: .9rem; margin-top: 12px; }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="book-label">
+    <h1>Admin panel<span class="dot">.</span></h1>
+    <a class="ad-back" href="index.html">&larr; Back to Mathcade</a>
+  </header>
+
+  <p class="shelf-note">
+    Everything Mathcade saves lives in this browser. This page shows it, lets you change it for
+    testing, and can save it to a file so you can move it to another computer.
+  </p>
+
+  <section class="ad-card">
+    <h2>You</h2>
+    <div class="ad-grid">
+      <label>Name<input id="fName" maxlength="14"></label>
+      <label>Picture<select id="fAvatar"></select></label>
+      <label>XP <small>(sets your overall Level)</small><input id="fXp" type="number" min="0"></label>
+      <label>Maths step <small>(1 easy &rarr; 8 hard)</small><input id="fLevel" type="number" min="1" max="8"></label>
+      <label>Answers in a row<input id="fStreak" type="number" min="0"></label>
+      <label>Best ever streak<input id="fBest" type="number" min="0"></label>
+      <label>Prism Rush coins<input id="fCoins" type="number" min="0"></label>
+      <label>Nitro Cup cash<input id="fCash" type="number" min="0"></label>
+    </div>
+    <p class="ad-note" id="levelNote"></p>
+    <button id="saveYou">Save changes</button>
+  </section>
+
+  <section class="ad-card">
+    <h2>Games</h2>
+    <div class="ad-games" id="games"></div>
+  </section>
+
+  <section class="ad-card">
+    <h2>Trophies and the daily challenge</h2>
+    <p class="ad-note" id="tpNote"></p>
+    <div class="ad-row">
+      <button id="tpAll">Grant every trophy</button>
+      <button id="tpNone">Clear trophies</button>
+      <button id="dcNew">New challenge for today</button>
+      <button id="dcDone">Finish today's challenge</button>
+    </div>
+  </section>
+
+  <section class="ad-card">
+    <h2>Backup</h2>
+    <p class="ad-note">A backup file holds everything: levels, stars, cars, trophies and cash.
+      Load it on another computer to carry on there.</p>
+    <div class="ad-row">
+      <button id="dlSave">Save to a file</button>
+      <button id="upSave">Load from a file</button>
+      <input type="file" id="fileIn" accept="application/json,.json" hidden>
+      <button id="copySave">Copy to clipboard</button>
+    </div>
+    <p class="ad-note" id="backupNote"></p>
+    <details>
+      <summary>Show the raw save (for tinkering)</summary>
+      <textarea id="raw" spellcheck="false"></textarea>
+      <div class="ad-row"><button id="applyRaw">Apply this text</button><span class="ad-note" id="rawNote"></span></div>
+    </details>
+  </section>
+
+  <section class="ad-card danger">
+    <h2>Danger zone</h2>
+    <p class="ad-note">These wipe progress. Each one asks twice.</p>
+    <div class="ad-row" id="wipes"></div>
+  </section>
+
+  <footer><span>Nothing here leaves this browser.</span></footer>
+</main>
+
+<script>
+const Save = (() => {
+  const KEY = 'mathcade';
+
+  const BLANK = {
+    name: 'Player',
+    coins: 0,     // coins you can spend
+    xp: 0,        // every coin ever earned. Spending can't take this away,
+                  // which is why the overall level uses it and not coins.
+    level: 1,     // which MATHS level you're on (1-8) — not the overall level
+    streak: 0,    // correct answers in a row right now
+    best: 0       // best streak ever
+  };
+
+  let data = load();
+  const listeners = [];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { ...BLANK };
+      const saved = JSON.parse(raw);
+      // Anyone who played before the overall level existed: their coins are
+      // the only record of what they earned, so start their XP from those.
+      if (saved.xp === undefined) saved.xp = saved.coins || 0;
+      return { ...BLANK, ...saved };
+    } catch (e) {
+      // Private browsing, or storage full — play on without saving.
+      return { ...BLANK };
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      /* nothing we can do; the game still works for this session */
+    }
+    listeners.forEach(fn => fn(data));
+
+    // --- FIREBASE GOES HERE (later) -------------------------
+    // if (firebase.auth().currentUser) {
+    //   firebase.database()
+    //     .ref('players/' + firebase.auth().currentUser.uid)
+    //     .set(data);
+    // }
+    // --------------------------------------------------------
+  }
+
+  return {
+    get: () => ({ ...data }),
+
+    update(changes) {
+      data = { ...data, ...changes };
+      persist();
+      return { ...data };
+    },
+
+    addCoins(n) {
+      data.coins += n;
+      data.xp    += n;      // the overall level rides along on every coin,
+      persist();            // so no game has to know the level exists
+      return data.coins;
+    },
+
+    // Every game except Prism Rush pays in XP only. Coins are Prism Rush's
+    // own money (for skins), so answering questions elsewhere shouldn't
+    // quietly fill a wallet you can only spend in one game.
+    addXp(n) {
+      data.xp += n;
+      persist();
+      return data.xp;
+    },
+
+    spendCoins(n) {
+      if (data.coins < n) return false;
+      data.coins -= n;      // xp deliberately untouched
+      persist();
+      return true;
+    },
+
+    // One level across every game, worked out from XP.
+    // Level 2 needs 100 XP, then 250, 450, 700, 1000 ... each step 50 more.
+    // There's no top level; it just keeps getting slower.
+    overall() {
+      const xp   = data.xp;
+      const need = n => 25 * n * n + 75 * n;     // XP to reach level n + 1
+      const n    = Math.floor((-75 + Math.sqrt(5625 + 100 * xp)) / 50);
+      const from = need(n);
+      const to   = need(n + 1);
+      return {
+        level: n + 1,
+        xp,
+        into: xp - from,      // XP earned since this level began
+        span: to - from,      // how much XP this level is worth
+        next: to - xp         // XP still to go
+      };
+    },
+
+    // Run a function now and again every time anything changes.
+    onChange(fn) {
+      listeners.push(fn);
+      fn(data);
+    },
+
+    reset() {
+      data = { ...BLANK };
+      persist();
+    }
+  };
+})();
+</script>
+<script>
+/* ============================================================
+   ADMIN PANEL
+
+   Everything Mathcade saves is in this browser: one bundle under
+   'mathcade' (all the games but Striker League) and Striker
+   League's own 'sl26save'. This page reads both, lets you change
+   them, and can save them to a file and load them back.
+
+   No passwords: there's no server to check one against, so
+   anyone who opens this page can change the save. That's fine
+   for a game whose save lives on your own computer.
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const AVATARS = ['mage', 'racer', 'cube', 'ball', 'cat', 'robot', 'alien', 'dragon'];
+const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0);
+
+// Striker League keeps its own save, so it's read and written separately
+const striker = {
+  get() { try { return JSON.parse(localStorage.getItem('sl26save') || 'null'); } catch (e) { return null; } },
+  set(v) { try { v === null ? localStorage.removeItem('sl26save') : localStorage.setItem('sl26save', JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- the games, and what "unlock everything" means for each ---------- */
+const GAMES = [
+  { name: 'Mage Run', file: 'mage-run.html',
+    line: d => `${Object.keys(d.mrStars || {}).length} of ${d.mrLevels || 40} levels · ${sum(d.mrStars)}★`,
+    all: () => { const s = {}; for (let w = 0; w < 4; w++) for (let l = 0; l < 10; l++) s[w + '-' + l] = 3; return { mrStars: s, mrLevels: 40 }; },
+    clear: { mrStars: {} } },
+  { name: 'Nitro Cup', file: 'nitro-cup.html',
+    line: d => `${Object.keys(d.ncStars || {}).length} of 16 tracks · ${sum(d.ncStars)}★ · ${d.ncCash || 0} cash`,
+    all: () => {
+      const s = {}, p = {};
+      for (let c = 0; c < 4; c++) for (let t = 0; t < 4; t++) { s[c + '-' + t] = 3; p[c + '-' + t] = 1; }
+      return { ncStars: s, ncPlace: p, ncTut: true, ncUp: { engine: 5, tyres: 5, nitro: 3, drift: 3 },
+               ncCar: { paint: 'gold', paints: ['sunny','red','blue','lime','grape','pink','white','night','orange','gold'],
+                        body: 'rocket', bodies: ['classic','sports','buggy','truck','formula','rocket'],
+                        flame: 'rainbow', flames: ['fire','blue','green','purple','rainbow'] } };
+    },
+    clear: { ncStars: {}, ncPlace: {}, ncGhost: {} } },
+  { name: 'Tower Guard', file: 'tower-guard.html',
+    line: d => `${Object.keys(d.tgStars || {}).length} of 12 levels · ${sum(d.tgStars)}★`,
+    all: () => { const s = {}; for (let w = 0; w < 3; w++) for (let l = 0; l < 4; l++) s[w + '-' + l] = 3; return { tgStars: s, tgLevels: 12 }; },
+    clear: { tgStars: {} } },
+  { name: 'Prism Rush', file: 'prism-rush.html',
+    line: d => `${(d.gdCleared ?? -1) + 1} of 8 levels · ${(d.gdSkins || ['gold']).length} skins`,
+    all: () => ({ gdCleared: 7, gdBest: Object.fromEntries([...Array(8)].map((_, i) => [i, 100])),
+                  gdSkins: ['gold', 'mint', 'grape', 'red', 'sky', 'ghost'] }),
+    clear: { gdCleared: -1, gdBest: {} } },
+  { name: "Striker League '26", file: 'striker-league.html', own: true,
+    line: () => { const s = striker.get(); return s ? `${s.clubName || 'A club'} · ${s.played || 0} matches` : 'not started'; } }
+];
+
+/* ---------- filling the page in ---------- */
+function draw() {
+  const d = Save.get();
+  $('fName').value = d.name || 'Player';
+  $('fAvatar').innerHTML = AVATARS.map(a => `<option ${d.pfAvatar === a ? 'selected' : ''}>${a}</option>`).join('');
+  $('fXp').value = d.xp || 0;
+  $('fLevel').value = d.level || 1;
+  $('fStreak').value = d.streak || 0;
+  $('fBest').value = d.best || 0;
+  $('fCoins').value = d.coins || 0;
+  $('fCash').value = d.ncCash || 0;
+  const o = Save.overall();
+  $('levelNote').textContent = `That XP makes you Level ${o.level} (${o.next} XP to the next one).`;
+
+  $('games').innerHTML = GAMES.map((g, i) => `<div class="ad-game">
+      <h3>${g.name}</h3><span class="bar">${g.line(d)}</span>
+      ${g.own ? '<span class="bar">Saved separately by that game.</span>'
+              : `<button data-all="${i}">Unlock everything</button> <button data-clear="${i}">Clear progress</button>`}
+      <p class="ad-note"><a href="${g.file}">Open the game &rarr;</a></p>
+    </div>`).join('');
+  document.querySelectorAll('[data-all]').forEach(b => b.onclick = () => { Save.update(GAMES[+b.dataset.all].all()); note('Unlocked ' + GAMES[+b.dataset.all].name); });
+  document.querySelectorAll('[data-clear]').forEach(b => b.onclick = () => { Save.update(GAMES[+b.dataset.clear].clear); note('Cleared ' + GAMES[+b.dataset.clear].name); });
+
+  const got = Object.keys(d.tpGot || {}).length;
+  $('tpNote').textContent = `${got} trophies earned · today's challenge: ${d.dcId || 'none yet'}${d.dcDone ? ' (done)' : ''}`
+    + ` · ${d.dcStreak || 0} day streak`;
+  $('raw').value = JSON.stringify({ mathcade: Save.get(), sl26save: striker.get() }, null, 1);
+}
+let noteTimer = null;
+function note(msg, kind) {
+  const el = $('backupNote');
+  el.textContent = msg; el.className = 'ad-note ' + (kind || 'good');
+  clearTimeout(noteTimer); noteTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+  draw();
+}
+
+/* ---------- you ---------- */
+$('saveYou').onclick = () => {
+  Save.update({
+    name: ($('fName').value || 'Player').slice(0, 14),
+    pfAvatar: $('fAvatar').value,
+    xp: Math.max(0, +$('fXp').value || 0),
+    level: Math.min(8, Math.max(1, +$('fLevel').value || 1)),
+    streak: Math.max(0, +$('fStreak').value || 0),
+    best: Math.max(0, +$('fBest').value || 0),
+    coins: Math.max(0, +$('fCoins').value || 0),
+    ncCash: Math.max(0, +$('fCash').value || 0)
+  });
+  note('Saved');
+};
+
+/* ---------- trophies and the daily challenge ---------- */
+// The front page works trophies out from your progress, so the ids are copied here.
+const ALL_TROPHY_IDS = ['firstxp','lvl5','lvl10','lvl20','row10','row25','maths8','daily1','daily7',
+  'mr1','mrboss','mr3x10','mrbosses','mrall','nctut','ncwin','ncmeadow','nccar','ncghost','nc3x10','ncrocket',
+  'tg1','tgboss','tg3x6','tgall','pr1','pr4','prall','prskin','sl1','sl10'];
+$('tpAll').onclick = () => {
+  const today = new Date().toLocaleDateString('en-CA');
+  Save.update({ tpGot: Object.fromEntries(ALL_TROPHY_IDS.map(id => [id, today])) });
+  note('Every trophy granted');
+};
+$('tpNone').onclick = () => { Save.update({ tpGot: {}, tpNew: [] }); note('Trophies cleared'); };
+$('dcNew').onclick = () => { Save.update({ dcDay: '', dcDone: false }); note('Open the front page for a new challenge'); };
+$('dcDone').onclick = () => {
+  const d = Save.get(), today = new Date().toLocaleDateString('en-CA');
+  Save.update({ dcDay: today, dcDone: true, dcLast: today, dcStreak: (d.dcStreak || 0) + 1,
+                dcCount: (d.dcCount || 0) + 1, dcBestStreak: Math.max(d.dcBestStreak || 0, (d.dcStreak || 0) + 1), dcPaid: 150 });
+  note("Today's challenge marked done");
+};
+
+/* ---------- backup ---------- */
+const bundle = () => JSON.stringify({ what: 'mathcade-save', when: new Date().toISOString(),
+                                      mathcade: Save.get(), sl26save: striker.get() }, null, 1);
+$('dlSave').onclick = () => {
+  const blob = new Blob([bundle()], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mathcade-save-' + new Date().toLocaleDateString('en-CA') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  note('Saved to your Downloads folder');
+};
+$('copySave').onclick = async () => {
+  try { await navigator.clipboard.writeText(bundle()); note('Copied'); }
+  catch (e) { note('The browser wouldn’t let me copy. Use "Save to a file" instead.', 'bad'); }
+};
+$('upSave').onclick = () => $('fileIn').click();
+$('fileIn').onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { load(JSON.parse(await f.text())); note('Loaded ' + f.name); }
+  catch (err) { note('That file didn’t look like a Mathcade backup.', 'bad'); }
+  e.target.value = '';
+};
+function load(data) {
+  if (!data || typeof data !== 'object' || !data.mathcade) throw new Error('not a save');
+  Save.update(data.mathcade);
+  if (data.sl26save !== undefined) striker.set(data.sl26save);
+}
+$('applyRaw').onclick = () => {
+  try { load(JSON.parse($('raw').value)); $('rawNote').textContent = 'Applied'; note('Applied the text'); }
+  catch (e) { $('rawNote').textContent = 'That text isn’t valid: ' + e.message; }
+};
+
+/* ---------- danger zone: every button asks twice ---------- */
+const WIPES = [
+  { label: 'Wipe Mage Run', run: () => Save.update({ mrStars: {} }) },
+  { label: 'Wipe Nitro Cup', run: () => Save.update({ ncStars: {}, ncPlace: {}, ncGhost: {}, ncCash: 0, ncUp: {}, ncCar: {}, ncTut: false }) },
+  { label: 'Wipe Tower Guard', run: () => Save.update({ tgStars: {} }) },
+  { label: 'Wipe Prism Rush', run: () => Save.update({ gdCleared: -1, gdBest: {}, gdSkins: ['gold'], gdSkin: 'gold' }) },
+  { label: 'Wipe Striker League', run: () => striker.set(null) },
+  { label: 'Wipe EVERYTHING', run: () => { Save.reset(); striker.set(null); } }
+];
+$('wipes').innerHTML = WIPES.map((w, i) => `<button data-wipe="${i}">${w.label}</button>`).join('');
+document.querySelectorAll('[data-wipe]').forEach(b => {
+  let armed = null;
+  b.onclick = () => {
+    if (!armed) {
+      const was = b.textContent;
+      b.textContent = 'Tap again to be sure';
+      b.classList.add('armed');
+      armed = setTimeout(() => { armed = null; b.textContent = was; b.classList.remove('armed'); }, 3000);
+      return;
+    }
+    clearTimeout(armed); armed = null;
+    b.classList.remove('armed');
+    WIPES[+b.dataset.wipe].run();
+    b.textContent = WIPES[+b.dataset.wipe].label;
+    note('Done');
+  };
+});
+
+draw();
+</script>
+
+</body>
+</html>
