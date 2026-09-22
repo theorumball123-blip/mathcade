@@ -1,0 +1,3184 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tower Guard &mdash; Mathcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   style.css — shared look for every page.
+   Exercise book: graph paper, ballpoint blue, red teacher's pen.
+   ============================================================ */
+
+:root {
+  --paper:      #F2F6FB;
+  --grid:       #CFE0F2;
+  --ink:        #16324F;
+  --ink-soft:   #5C7490;
+  --red-pen:    #E03B3B;
+  --gold:       #FFC53D;
+  --mint:       #3FC99A;
+  --grape:      #8B6BDB;
+
+  --shadow-sticker: 2px 3px 0 rgba(22, 50, 79, 0.18);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* the graph paper */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+h1, h2, h3, .chunky {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 20px 18px 64px;
+}
+
+/* --- the header strip, like the front of an exercise book --- */
+.book-label {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.book-label h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+}
+
+.book-label h1 .dot { color: var(--red-pen); }
+
+.stats {
+  display: flex;
+  gap: 16px;
+  font-weight: 700;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.stat .figure {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stat .caption {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.coins .figure  { color: #C98B00; }
+.streak .figure { color: var(--mint); }
+.level .figure  { color: var(--grape); }
+
+/* ============================================================
+   Overall level — one level across every game, shown on the hub.
+   The maths level (1-8) is a different thing and lives in the games.
+   ============================================================ */
+
+.overall { min-width: min(300px, 100%); }
+
+.ov-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+
+.ov-level {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--grape);
+}
+
+.ov-level .word {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  margin-right: 6px;
+}
+
+.ov-coins {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.25rem;
+  color: #C98B00;
+  white-space: nowrap;
+}
+
+.ov-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.ov-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.4s ease-out;
+}
+
+.ov-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- the warm-up question card --- */
+.warmup {
+  margin-top: 26px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.warmup .prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 11vw, 3.6rem);
+  margin: 6px 0 18px;
+  line-height: 1.1;
+}
+
+.warmup .meta {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.answer-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+input[type="number"] {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  width: 140px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+input[type="number"]:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--grape);
+  outline-offset: 2px;
+}
+
+/* stop the little spinner arrows */
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+button {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  padding: 11px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+}
+
+button:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* --- feedback line, written in red pen when you're wrong --- */
+.feedback {
+  min-height: 1.6em;
+  margin-top: 14px;
+  font-weight: 800;
+}
+
+.feedback.good  { color: var(--mint); }
+.feedback.bad   { color: var(--red-pen); }
+
+/* --- the game grid: each tile is a picture of the game being played --- */
+.shelf {
+  display: grid;
+  /* the max matters as much as the min — with 1fr, two tiles on a wide page
+     stretched to half the page each. Cap it and they stay tile-sized. */
+  grid-template-columns: repeat(auto-fit, minmax(175px, 215px));
+  justify-content: start;
+  gap: 16px;
+}
+
+/* on a phone, one tile per row, full width — a 215px column left a strip of nothing */
+@media (max-width: 520px) {
+  .shelf { grid-template-columns: 1fr; }
+  .tile:nth-child(n) { transform: none; }
+}
+
+.tile {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+/* each tile sits a touch crooked, like a sticker on the page */
+.tile:nth-child(4n+1) { transform: rotate(-0.7deg); }
+.tile:nth-child(4n+2) { transform: rotate(0.55deg); }
+.tile:nth-child(4n+3) { transform: rotate(0.4deg); }
+.tile:nth-child(4n+4) { transform: rotate(-0.45deg); }
+
+.tile:hover,
+.tile:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow: 4px 8px 0 rgba(22, 50, 79, 0.22);
+}
+
+/* the picture */
+.tile .cover {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-bottom: 2px solid var(--ink);
+  background: #090F22;
+  overflow: hidden;
+}
+
+.tile .cover svg { display: block; width: 100%; height: 100%; }
+
+/* a tile with no artwork yet can still use a big emoji */
+.tile .cover.emoji {
+  display: grid;
+  place-items: center;
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+}
+
+.cover.blue  { background: #BFE3FF; }
+.cover.mint  { background: #C4F0DF; }
+.cover.gold  { background: #FFE6A8; }
+.cover.grape { background: #DCD2F7; }
+
+.tile-body { display: block; padding: 10px 12px 12px; }
+
+.tile .name {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+  text-align: left;
+  padding: 0;
+  line-height: 1.15;
+}
+
+.tile .blurb {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.tile .prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  min-height: 13px;
+}
+
+.tile .prog-track {
+  flex: 1;
+  height: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.tile .prog-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.5s ease-out;
+}
+
+.tile .state {
+  display: block;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0;
+  color: var(--ink-soft);
+}
+
+.tile .state b { color: var(--ink); }
+.tile .state.go { color: var(--mint); }
+
+.tile.locked { opacity: 0.62; }
+.tile.locked .state { color: var(--ink-soft); }
+.tile.locked:hover { transform: rotate(0deg); box-shadow: var(--shadow-sticker); }
+
+footer {
+  margin-top: 46px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+footer button.armed { background: var(--red-pen); color: #fff; border-color: var(--red-pen); }
+
+footer button {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 520px) {
+  .book-label { flex-direction: column; align-items: flex-start; }
+  .stats { gap: 18px; }
+}
+
+/* ============================================================
+   Question pop-up (js/quiz.js)
+   ============================================================ */
+
+.quiz-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: 50;
+}
+
+.quiz-backdrop.open { display: flex; }
+
+.quiz-card {
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  text-align: center;
+}
+
+.quiz-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.quiz-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.quiz-pips {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin: 14px 0 6px;
+}
+
+.pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.pip.lit { background: var(--mint); }
+
+.quiz-prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2rem, 9vw, 2.9rem);
+  margin: 8px 0 18px;
+  line-height: 1.1;
+}
+
+.shake { animation: shake 0.32s ease; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-9px); }
+  75%      { transform: translateX(9px); }
+}
+
+/* ============================================================
+   In-game HUD — the keycap row
+   ============================================================ */
+
+.game-body {
+  margin: 0;
+  overflow: hidden;
+  background: #0A1624;
+}
+
+canvas { display: block; }
+
+.hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  pointer-events: none;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.keycaps { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.keycap {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.keycap.lit {
+  border-color: #fff;
+  background: var(--gold);
+  color: var(--ink);
+  text-shadow: none;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 16px rgba(255, 197, 61, 0.7);
+}
+
+.keycap.pressed { transform: translateY(3px); box-shadow: none; }
+
+.hud-right { text-align: right; line-height: 1.35; }
+.hud-right .big { font-size: 1.5rem; }
+.hud-right .small { font-size: 0.85rem; opacity: 0.85; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.banner.show { opacity: 1; }
+
+.back-link {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  z-index: 20;
+}
+
+.back-link:hover { color: #fff; }
+
+/* ============================================================
+   Featured game panel on the hub — a dark window into the game
+   world, sitting on the paper page
+   ============================================================ */
+
+.featured {
+  margin-top: 26px;
+  background: #16324F;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 4px 6px 0 rgba(22, 50, 79, 0.28);
+  padding: 26px 24px;
+  color: #fff;
+}
+
+.featured h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 2.5rem);
+}
+
+.featured p {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  color: #BBD3EC;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.featured .keycaps {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 20px 0 22px;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.featured .play {
+  display: inline-block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  padding: 12px 30px;
+  border: 2px solid #0A1624;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.featured .play:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* ============================================================
+   End-of-game results screen (js/results.js)
+   ============================================================ */
+
+.results-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+}
+
+.results-backdrop.open { display: flex; }
+
+.results-card {
+  position: relative;
+  overflow: hidden;
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.4);
+  padding: 26px 22px 22px;
+  text-align: center;
+}
+
+.results-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.7rem, 7vw, 2.3rem);
+  margin: 0;
+}
+
+.results-sub {
+  margin: 4px 0 20px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.results-stats {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.results-stat {
+  flex: 1;
+  max-width: 116px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 13px 8px;
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+
+.results-stat.pop {
+  animation: statPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes statPop {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.results-figure {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.results-stat.score .results-figure { color: var(--mint); }
+.results-stat.coins .results-figure { color: #C98B00; }
+.results-stat.time  .results-figure { color: var(--grape); }
+
+.results-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- level bar --- */
+.results-levelbox {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.results-levelrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.results-levelbadge {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.9rem;
+  background: var(--grape);
+  color: #fff;
+  padding: 4px 13px;
+  border-radius: 999px;
+}
+
+.results-levelbadge.bump { animation: badgeBump 0.5s ease; }
+
+@keyframes badgeBump {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+
+.results-levelnote {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.results-track {
+  height: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.results-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+}
+
+.results-fill.glow { box-shadow: 0 0 14px 2px rgba(255, 197, 61, 0.9); }
+
+/* --- buttons --- */
+.results-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.results-again { width: 100%; }
+
+.results-home {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  padding: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* --- confetti --- */
+.confetti-bit {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(420px) rotate(680deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-bit { display: none; }
+  .results-stat { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Speed Stages — chunky arcade HUD
+   ============================================================ */
+
+.hud { gap: 10px; justify-content: center; }
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(#2E4C78, #1B3151);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  padding: 7px 20px 7px 12px;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pill b { font-size: 1.15rem; }
+.pill.speed  span { color: var(--gold); }
+.pill.hearts span { color: #FF8A98; }
+.pill.wins   span { color: var(--mint); }
+.pill.mult   span { color: #C4AEFF; }
+
+/* left column of square buttons */
+.sidebar {
+  position: fixed;
+  left: 14px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+
+.sidebar button {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 16px;
+  background: linear-gradient(#5AA9E6, #3A7CC4);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+}
+
+.sidebar button span { font-size: 1.9rem; line-height: 1; }
+.sidebar button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+#rebirthBtn { background: linear-gradient(#B88BEA, #8B5FD0); }
+
+/* progress bar along the bottom */
+.bottombar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  background: rgba(20, 32, 52, 0.88);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.bb-level { font-size: 1.05rem; white-space: nowrap; }
+
+.bb-track {
+  flex: 1;
+  height: 17px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bb-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), #FF9F43);
+  transition: width 0.25s ease-out;
+}
+
+.bb-num { font-size: 0.9rem; white-space: nowrap; opacity: 0.9; }
+
+@media (max-width: 620px) {
+  .sidebar button { width: 62px; height: 62px; font-size: 0.7rem; }
+  .sidebar button span { font-size: 1.4rem; }
+  .pill { font-size: 1.05rem; padding: 5px 14px 5px 9px; }
+}
+
+/* --- shop --- */
+.shop-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 55;
+}
+
+.shop-backdrop.open { display: flex; }
+
+.shop-card {
+  width: min(440px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  color: var(--ink);
+}
+
+.shop-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  margin: 0;
+  text-align: center;
+}
+
+.shop-sub {
+  margin: 4px 0 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.shop-item strong {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+}
+
+.shop-item span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.shop-item button { font-size: 0.9rem; padding: 8px 15px; white-space: nowrap; }
+.shop-item button:disabled { background: #E4E9EF; color: var(--ink-soft); cursor: not-allowed; }
+
+.shop-close { width: 100%; margin-top: 6px; background: #fff; }
+
+/* ============================================================
+   Prism Rush — the runner
+   ============================================================ */
+
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+.gd-hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.gd-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.gd-tag {
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.gd-track {
+  flex: 1;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gd-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3FC99A, #FFC53D);
+}
+
+/* start card */
+.gd-start {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  background: rgba(10, 16, 36, 0.86);
+  z-index: 40;
+}
+
+.gd-start h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.4rem, 11vw, 4rem);
+  color: #FFC53D;
+  margin: 0 0 6px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.gd-start p {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.gd-start .gd-small { font-size: 0.85rem; opacity: 0.72; margin-top: 8px; }
+.gd-start button { margin-top: 20px; font-size: 1.25rem; padding: 13px 38px; }
+
+/* --- Prism Rush menu: Geometry Dash style carousel --- */
+.gd-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 35%, #223A6B, #0A1024 70%);
+  z-index: 40;
+}
+
+.gd-menu h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  color: #FFC53D;
+  margin: 0 0 14px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+.carousel { display: flex; align-items: center; gap: 10px; }
+
+.car-arrow {
+  width: 54px;
+  height: 54px;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.car-stage { width: min(330px, 74vw); }
+
+.car-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 18px 22px;
+  border: 4px solid #fff;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--c1), var(--c2));
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+.car-card.locked { filter: grayscale(0.9) brightness(0.5); }
+
+.car-index { font-size: 0.75rem; opacity: 0.7; letter-spacing: 0.08em; }
+.car-title { font-size: 1.7rem; text-shadow: 0 0 18px var(--ac); }
+
+.car-diff {
+  font-size: 0.78rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: #10203A;
+  font-weight: 700;
+}
+
+.car-bestwrap { width: 100%; margin-top: 8px; }
+
+.car-best {
+  height: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.car-best div { height: 100%; background: var(--ac); }
+
+.car-pct {
+  display: block;
+  text-align: center;
+  font-size: 0.76rem;
+  margin-top: 5px;
+  opacity: 0.85;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+
+.car-star { font-size: 0.8rem; color: #FFE066; }
+
+.menu-row { display: flex; gap: 10px; margin-top: 20px; align-items: stretch; }
+
+.big-play { font-size: 1.35rem; padding: 14px 52px; }
+.big-play:disabled { background: #46506A; color: #9AA6B8; cursor: not-allowed; }
+.menu-side { font-size: 0.95rem; padding: 14px 20px; background: #fff; }
+
+.gd-menu .gd-small {
+  color: #fff;
+  opacity: 0.6;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  margin-top: 14px;
+}
+
+.mute-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  width: 46px;
+  height: 46px;
+  font-size: 1.2rem;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  box-shadow: none;
+  z-index: 45;
+}
+
+.skin-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
+</style>
+<style>
+/* ============================================================
+   Tower Guard
+   ============================================================ */
+.td-hud, .td-bar, .td-screen, .td-card, .td-pop, .rotate { font-family: 'Pixelify Sans', 'Fredoka', monospace; }
+canvas#cv { position: fixed; inset: 0; image-rendering: pixelated; touch-action: none; }
+.banner { font-family: 'Pixelify Sans', monospace; font-weight: 700; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024; }
+.ol { text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+
+/* top bar */
+.td-hud { position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: none; align-items: center; gap: 4px 18px; flex-wrap: wrap;
+          padding: 8px 14px; background: rgba(20,16,40,.88); border-bottom: 3px solid #1A1024; color: #fff; font-weight: 700; font-size: clamp(15px, 2.6vh, 22px); }
+.td-level { color: #FFC53D; margin-right: auto; }
+.td-stat b { color: #FFFFFF; }
+.td-stat.lives { color: #FF6A6A; }
+.td-stat.lives.low { animation: blink .6s steps(2) infinite; }
+.td-stat.gold { color: #FFE14A; }
+@keyframes blink { 50% { opacity: .35; } }
+.td-btns { display: flex; gap: 6px; }
+.td-btns button { width: 40px; height: 36px; padding: 0; font: 700 1rem 'Pixelify Sans', monospace; color: #fff; background: #3F7BC2;
+                  border: 3px solid #1A1024; border-radius: 9px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+
+/* bottom bar */
+.td-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; display: none; align-items: center; justify-content: flex-end; gap: 8px 12px;
+          flex-wrap: wrap; padding: 8px 14px; background: rgba(20,16,40,.88); border-top: 3px solid #1A1024; color: #fff; min-height: 56px; }
+.td-hint { margin-right: auto; font-size: clamp(13px, 2.2vh, 18px); opacity: .92; }
+.td-go, .td-bonus { font: 700 1.05rem 'Pixelify Sans', monospace; padding: 9px 16px; border: 3px solid #1A1024; border-radius: 11px;
+                    box-shadow: 0 4px 0 rgba(0,0,0,.4); color: #1A1024; }
+.td-go { background: #58B83A; color: #fff; }
+.td-bonus { background: #FFC53D; }
+
+/* a sideways phone: the bars become columns down each side */
+@media (max-height: 500px) and (orientation: landscape) {
+  .td-hud { right: auto; bottom: 0; width: 104px; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px;
+            padding: 10px 8px; border-bottom: 0; border-right: 3px solid #1A1024; font-size: 15px; }
+  .td-level { margin: 0; font-size: 12px; line-height: 1.2; }
+  .td-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: auto; }
+  .td-btns button { width: auto; height: 32px; font-size: .8rem; border-width: 2px; }
+  .td-bar { left: auto; top: 0; width: 124px; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: stretch;
+            gap: 10px; padding: 10px 8px; border-top: 0; border-left: 3px solid #1A1024; }
+  .td-hint { margin: 0; font-size: 11px; line-height: 1.3; }
+  .td-go, .td-bonus { font-size: .85rem; padding: 10px 6px; }
+}
+
+/* what's coming next wave */
+.td-next { display: flex; align-items: center; gap: 8px; font-size: .85rem; opacity: .95; }
+.td-next span { opacity: .75; }
+.td-next i { display: flex; align-items: center; gap: 3px; font-style: normal; }
+.td-next img { width: 20px; image-rendering: pixelated; }
+
+/* build / tower menu */
+.td-pop.wide { width: min(340px, 92vw); }
+.pop-list { display: flex; flex-direction: column; gap: 5px; max-height: min(60vh, 440px); overflow: auto; }
+.pop-tower small.note { opacity: .6; font-size: .72rem; }
+.pop-stats.next { opacity: .65; }
+.pop-stats b { color: #FFE14A; }
+.boosted { color: #FFC53D; }
+.pop-mode { font: 700 .95rem 'Pixelify Sans', monospace; padding: 7px 10px; color: #fff; background: #3F7BC2; text-align: left;
+            border: 3px solid #1A1024; border-radius: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.pop-mode small { display: block; font-weight: 400; opacity: .85; font-size: .72rem; }
+.td-go.early { background: #E08A2A; }
+.td-go em, .td-bonus em { font-style: normal; color: #FFE14A; }
+.td-pop { position: fixed; z-index: 30; display: none; flex-direction: column; gap: 6px; width: min(270px, 80vw); padding: 10px;
+          background: rgba(20,22,44,.96); border: 3px solid #1A1024; border-radius: 12px; box-shadow: 0 6px 0 rgba(0,0,0,.4); color: #fff; }
+.pop-head { font-weight: 700; font-size: 1.1rem; color: #FFC53D; }
+.pop-head .pips { color: #fff; font-size: .9rem; margin-left: 6px; }
+.pop-tower { display: flex; align-items: center; gap: 8px; padding: 6px 8px; text-align: left; color: #fff; background: rgba(255,255,255,.08);
+             border: 2px solid #1A1024; border-radius: 9px; font-family: 'Pixelify Sans', monospace; box-shadow: none; }
+.pop-tower:not(:disabled):hover { background: rgba(255,197,61,.2); }
+.pop-tower:disabled { opacity: .45; }
+.pop-tower img { width: 32px; image-rendering: pixelated; flex: none; }
+.pop-tower span { flex: 1; min-width: 0; }
+.pop-tower b { display: block; font-size: .98rem; }
+.pop-tower small { display: block; font-size: .75rem; opacity: .8; line-height: 1.2; }
+.pop-tower em, .pop-up em, .pop-sell em { font-style: normal; color: #FFE14A; font-weight: 700; }
+.pop-tower em::after, .pop-up em::after, .pop-sell em::after { content: ' \1FA99'; font-size: .8em; }
+.pop-tower em.poor { color: #FF7A6A; }
+.pop-stats { margin: 0; font-size: .8rem; opacity: .85; }
+.pop-up, .pop-sell { font: 700 1rem 'Pixelify Sans', monospace; padding: 8px 10px; border: 3px solid #1A1024; border-radius: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.pop-up { background: #58B83A; color: #fff; }
+.pop-up:disabled { background: #555; color: #bbb; }
+.pop-sell { background: #fff; color: #1A1024; }
+
+/* menu */
+.td-screen { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 2.4vh;
+             padding: 70px 16px 20px; overflow: auto; color: #fff; background: linear-gradient(rgba(10,10,30,.25), rgba(10,10,30,.7)); }
+.td-top { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; }
+.td-back { font: 700 1.05rem 'Pixelify Sans', monospace; padding: 8px 14px; background: #fff; color: #1A1024; border: 3px solid #1A1024;
+           border-radius: 10px; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.td-top button { width: 46px; height: 42px; padding: 0; font-size: 1.1rem; background: #3F7BC2; border: 3px solid #1A1024; border-radius: 10px; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.td-title { margin: 0; font-size: clamp(40px, 11vh, 92px); font-weight: 700; color: #FFC53D; line-height: 1; letter-spacing: .02em; }
+.td-world { display: flex; align-items: center; gap: 14px; font-size: clamp(20px, 4vh, 34px); font-weight: 700; }
+.td-world button { width: 46px; height: 46px; padding: 0; font: 700 1.6rem 'Pixelify Sans', monospace; border-radius: 50%; background: #FFC53D;
+                   border: 3px solid #1A1024; color: #1A1024; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.td-levels { display: grid; grid-template-columns: repeat(4, minmax(110px, 160px)); gap: 14px; }
+@media (max-width: 640px) { .td-levels { grid-template-columns: repeat(2, minmax(110px, 160px)); } }
+.lvl { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px 10px; color: #fff; background: #3A6A3A;
+       border: 4px solid #1A1024; border-radius: 14px; box-shadow: 0 6px 0 rgba(0,0,0,.4); font-family: 'Pixelify Sans', monospace; }
+.lvl.boss { background: #7A2A3A; }
+.lvl b { font-size: 2.2rem; line-height: 1; }
+.lvl small { font-size: .85rem; opacity: .9; }
+.lvl.locked { filter: grayscale(.9) brightness(.55); }
+.lstars { color: #FFC53D; font-size: 1.2rem; letter-spacing: 2px; }
+.lstars i, .td-stars i { color: rgba(255,255,255,.3); font-style: normal; }
+.td-hint2 { margin: 0; max-width: 640px; text-align: center; font-size: clamp(12px, 2vh, 16px); opacity: .9; }
+
+/* pause and results */
+.td-cardback { position: fixed; inset: 0; z-index: 55; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(8,10,24,.6); }
+.td-card { width: min(420px, 100%); text-align: center; padding: 22px; color: #fff; background: rgba(20,22,44,.96);
+           border: 4px solid #1A1024; border-radius: 16px; box-shadow: 0 8px 0 rgba(0,0,0,.45); }
+.td-card h2 { margin: 0 0 8px; font-size: 1.9rem; color: #FFC53D; }
+.td-stars { font-size: 3rem; color: #FFC53D; letter-spacing: 6px; }
+.td-card p { margin: 6px 0 12px; font-size: 1rem; opacity: .9; }
+.td-card button { display: block; width: 100%; margin-top: 9px; font: 700 1.15rem 'Pixelify Sans', monospace; padding: 11px; color: #fff;
+                  background: #3F7BC2; border: 4px solid #1A1024; border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,.4); }
+.td-card button.go { background: #58B83A; }
+
+/* upright phone */
+.rotate { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  body:not(.upright-ok).playing .rotate { display: flex; position: fixed; inset: 0; z-index: 80; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 30px; text-align: center; color: #fff; background: radial-gradient(circle at 50% 35%, #2C4F86, #0B1228 72%); }
+}
+.rotate-phone { font-size: 4.5rem; animation: turn 2.2s ease-in-out infinite; }
+@keyframes turn { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+.rotate-head { margin: 10px 0 0; font-size: 1.7rem; font-weight: 700; color: #FFC53D; }
+.rotate-sub { margin: 0; opacity: .85; max-width: 26ch; }
+.rotate-anyway { margin-top: 18px; background: #fff; font-size: .95rem; }
+</style>
+</head>
+<body class="game-body">
+
+<canvas id="cv"></canvas>
+
+<!-- ===== top bar ===== -->
+<div class="td-hud ol" id="hud">
+  <span class="td-level" id="hLevel">Green Fields 1</span>
+  <span class="td-stat lives">&#9829; <b id="hLives">20</b></span>
+  <span class="td-stat gold">&#129689; <b id="hGold">0</b></span>
+  <span class="td-stat">Wave <b id="hWave">1</b>/<span id="hWaves">8</span></span>
+  <span class="td-btns">
+    <button id="speedBtn" title="Speed (F)">&#9654;</button>
+    <button id="muteBtn" title="Sound on/off (M)">&#128266;</button>
+    <button id="pauseBtn" title="Pause (Esc)">II</button>
+  </span>
+</div>
+
+<!-- ===== bottom bar ===== -->
+<div class="td-bar ol" id="bar">
+  <span class="td-hint" id="hint"></span>
+  <span class="td-next" id="next"></span>
+  <button class="td-bonus" id="bonusBtn">+ gold</button>
+  <button class="td-go" id="goBtn">Start wave 1 &#9654;</button>
+</div>
+
+<div class="td-pop" id="pop"></div>
+<div class="banner" id="banner"></div>
+
+<!-- ===== pick a level ===== -->
+<div class="td-screen" id="menu">
+  <div class="td-top">
+    <a class="td-back" href="index.html">&larr; Mathcade</a>
+    <button id="menuMute" title="Sound on/off (M)">&#128266;</button>
+  </div>
+  <h1 class="td-title ol">TOWER GUARD</h1>
+  <div class="td-world ol">
+    <button id="wPrev">&lsaquo;</button>
+    <span id="wName">Green Fields</span>
+    <button id="wNext">&rsaquo;</button>
+  </div>
+  <div class="td-levels" id="levels"></div>
+  <p class="td-hint2 ol">Tap an empty square beside the path to build towers. Monsters that reach your castle cost hearts.<br>
+     Keep 18 of your 20 hearts for three stars. &nbsp;Space = next wave &middot; F = fast &middot; Esc = pause</p>
+</div>
+
+<!-- ===== paused ===== -->
+<div class="td-cardback" id="pauseCard">
+  <div class="td-card">
+    <h2>Paused</h2>
+    <button class="go" id="resumeBtn">Resume</button>
+    <button id="restartBtn">Restart level</button>
+    <button id="quitBtn">Choose a level</button>
+  </div>
+</div>
+
+<!-- ===== results ===== -->
+<div class="td-cardback" id="resultCard">
+  <div class="td-card">
+    <h2 id="rTitle">Castle saved!</h2>
+    <div class="td-stars" id="rStars"></div>
+    <p id="rMsg"></p>
+    <button class="go" id="rNext">Next level</button>
+    <button id="rAgain">Play again</button>
+    <button id="rMenu">Choose a level</button>
+  </div>
+</div>
+
+<!-- ===== an upright phone ===== -->
+<div class="rotate" id="rotate">
+  <div class="rotate-phone">&#128241;</div>
+  <p class="rotate-head">Turn your phone sideways</p>
+  <p class="rotate-sub">The whole map needs the width of the screen.</p>
+  <button class="rotate-anyway" id="rotateAnyway">Play upright anyway</button>
+</div>
+
+<script>
+addEventListener('error', e => {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:auto 10px 10px 10px;z-index:99;padding:12px 14px;'
+    + 'background:#3A0F1E;color:#FFD1D7;border:2px solid #FF5A6E;border-radius:10px;'
+    + 'font:600 13px/1.45 monospace;white-space:pre-wrap';
+  d.textContent = 'ERROR: ' + (e.message || 'unknown') + (e.filename ? '\n' + e.filename + ':' + e.lineno : '');
+  document.body.appendChild(d);
+});
+</script>
+<script>
+const Save = (() => {
+  const KEY = 'mathcade';
+
+  const BLANK = {
+    name: 'Player',
+    coins: 0,     // coins you can spend
+    xp: 0,        // every coin ever earned. Spending can't take this away,
+                  // which is why the overall level uses it and not coins.
+    level: 1,     // which MATHS level you're on (1-8) — not the overall level
+    streak: 0,    // correct answers in a row right now
+    best: 0       // best streak ever
+  };
+
+  let data = load();
+  const listeners = [];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { ...BLANK };
+      const saved = JSON.parse(raw);
+      // Anyone who played before the overall level existed: their coins are
+      // the only record of what they earned, so start their XP from those.
+      if (saved.xp === undefined) saved.xp = saved.coins || 0;
+      return { ...BLANK, ...saved };
+    } catch (e) {
+      // Private browsing, or storage full — play on without saving.
+      return { ...BLANK };
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      /* nothing we can do; the game still works for this session */
+    }
+    listeners.forEach(fn => fn(data));
+
+    // --- FIREBASE GOES HERE (later) -------------------------
+    // if (firebase.auth().currentUser) {
+    //   firebase.database()
+    //     .ref('players/' + firebase.auth().currentUser.uid)
+    //     .set(data);
+    // }
+    // --------------------------------------------------------
+  }
+
+  return {
+    get: () => ({ ...data }),
+
+    update(changes) {
+      data = { ...data, ...changes };
+      persist();
+      return { ...data };
+    },
+
+    addCoins(n) {
+      data.coins += n;
+      data.xp    += n;      // the overall level rides along on every coin,
+      persist();            // so no game has to know the level exists
+      return data.coins;
+    },
+
+    // Every game except Prism Rush pays in XP only. Coins are Prism Rush's
+    // own money (for skins), so answering questions elsewhere shouldn't
+    // quietly fill a wallet you can only spend in one game.
+    addXp(n) {
+      data.xp += n;
+      persist();
+      return data.xp;
+    },
+
+    spendCoins(n) {
+      if (data.coins < n) return false;
+      data.coins -= n;      // xp deliberately untouched
+      persist();
+      return true;
+    },
+
+    // One level across every game, worked out from XP.
+    // Level 2 needs 100 XP, then 250, 450, 700, 1000 ... each step 50 more.
+    // There's no top level; it just keeps getting slower.
+    overall() {
+      const xp   = data.xp;
+      const need = n => 25 * n * n + 75 * n;     // XP to reach level n + 1
+      const n    = Math.floor((-75 + Math.sqrt(5625 + 100 * xp)) / 50);
+      const from = need(n);
+      const to   = need(n + 1);
+      return {
+        level: n + 1,
+        xp,
+        into: xp - from,      // XP earned since this level began
+        span: to - from,      // how much XP this level is worth
+        next: to - xp         // XP still to go
+      };
+    },
+
+    // Run a function now and again every time anything changes.
+    onChange(fn) {
+      listeners.push(fn);
+      fn(data);
+    },
+
+    reset() {
+      data = { ...BLANK };
+      persist();
+    }
+  };
+})();
+
+const MathEngine = (() => {
+
+  // --- little helpers -------------------------------------------------
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const pick = arr => arr[rnd(0, arr.length - 1)];
+
+  // --- the question ladder --------------------------------------------
+  // Each level is a function that returns { text, answer }.
+  const LEVELS = [
+    // Made a bit easier on request (twice): same eight steps, gentler numbers.
+    // Each step leans on the friendly cases (2, 5 and 10 times tables,
+    // halves and quarters, 10% / 25% / 50%) and only sometimes mixes in
+    // the harder ones, so a level still stretches you without being a wall.
+
+    // 1 — adding and taking away, small numbers
+    () => {
+      const a = rnd(1, 10), b = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 2 — adding and taking away, two-digit numbers.
+    // Mostly ones with no carrying (23 + 14), and about 1 in 5 that needs it
+    // (38 + 27). Carrying is the skill this step teaches, so it stays in -
+    // just not every time. Subtraction is the same: (a + b) − b needs
+    // borrowing exactly when a + b would have needed carrying.
+    () => {
+      const carry = Math.random() < 0.2;
+      let a, b;
+      do { a = rnd(10, 50); b = rnd(5, 30); }
+      while (((a % 10) + (b % 10) >= 10) !== carry);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 3 — times tables, mostly the friendly ones
+    () => {
+      const a = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const b = rnd(1, 10);
+      return { text: `${a} × ${b}`, answer: a * b };
+    },
+
+    // 4 — division facts, mostly the friendly ones
+    () => {
+      const b = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const answer = rnd(1, 10);
+      return { text: `${b * answer} ÷ ${b}`, answer };
+    },
+
+    // 5 — two steps, order of operations
+    () => {
+      const a = rnd(2, 4), b = rnd(2, 5), c = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} × ${b} + ${c}`, answer: a * b + c }
+        : { text: `${a * b + c} − ${a} × ${b}`, answer: c };
+    },
+
+    // 6 — fractions of an amount, mostly one-halves, quarters and tenths
+    () => {
+      const denom = pick([2, 2, 4, 5, 10]);
+      const numer = Math.random() < 0.8 ? 1 : rnd(1, denom - 1);
+      const whole = denom * rnd(2, 10);
+      return {
+        text: `${numer}/${denom} of ${whole}`,
+        answer: (whole / denom) * numer
+      };
+    },
+
+    // 7 — percentages, mostly 10%, 25% and 50% of round numbers
+    () => {
+      const pct = Math.random() < 0.8 ? pick([10, 25, 50]) : pick([20, 75]);
+      const whole = pick([20, 40, 60, 80, 100]);
+      return { text: `${pct}% of ${whole}`, answer: (whole * pct) / 100 };
+    },
+
+    // 8 — solve for x
+    () => {
+      const a = rnd(2, 4), x = rnd(1, 10), b = rnd(1, 10);
+      return { text: `${a}x + ${b} = ${a * x + b},  x = ?`, answer: x };
+    }
+  ];
+
+  const MAX_LEVEL = LEVELS.length;
+  const STREAK_TO_LEVEL_UP = 3;
+
+  // Coins a single question is worth, before the run multiplier.
+  const baseReward = level => 5 + level * 3;
+
+  // --- a run of questions ---------------------------------------------
+  function startRun(length = 5, { coins = false } = {}) {
+    let index = 0;          // how far through the run
+    let question = null;
+
+    // The difficulty is fixed the moment the run starts. Before this, every
+    // question looked up your level again — so you could deliberately get a
+    // hard one wrong, drop a level, and have the whole restarted run be easy.
+    // Getting one wrong still costs you a level for NEXT time; it just can't
+    // make the run you are in any easier.
+    const runLevel = Save.get().level;
+
+    function make() {
+      const level = runLevel;
+      const q = LEVELS[level - 1]();
+      question = {
+        text: q.text,
+        answer: q.answer,
+        level,
+        number: index + 1,
+        of: length,
+        reward: baseReward(level)
+      };
+      return question;
+    }
+
+    return {
+      current() {
+        return question || make();
+      },
+
+      submit(given) {
+        const q = question || make();
+        const correct = Number(given) === q.answer;
+        const save = Save.get();
+
+        if (correct) {
+          index++;
+          const streak = save.streak + 1;
+          let level = save.level;
+          let levelUp = false;
+
+          if (streak % STREAK_TO_LEVEL_UP === 0 && level < MAX_LEVEL) {
+            level++;
+            levelUp = true;
+          }
+
+          Save.update({ streak, level, best: Math.max(save.best, streak) });
+          if (coins) Save.addCoins(q.reward);   // Prism Rush only
+          else       Save.addXp(q.reward);
+
+          const finished = index >= length;
+          if (!finished) make();
+
+          return {
+            correct: true,
+            reward: q.reward,
+            streak,
+            level,
+            levelUp,
+            finished,
+            answer: q.answer
+          };
+        }
+
+        // Wrong — the run restarts from question 1 and the level eases off.
+        index = 0;
+        const level = Math.max(1, save.level - 1);
+        Save.update({ streak: 0, level });
+        make();
+
+        return {
+          correct: false,
+          reward: 0,
+          streak: 0,
+          level,
+          levelDown: level < save.level,
+          restarted: true,
+          finished: false,
+          answer: q.answer
+        };
+      },
+
+      progress() {
+        return { done: index, total: length };
+      }
+    };
+  }
+
+  // A one-off question with no run attached.
+  function single() {
+    return startRun(1);
+  }
+
+  return { startRun, single, MAX_LEVEL };
+})();
+
+const Quiz = (() => {
+  let root = null;
+  let active = false;
+
+  function build() {
+    root = document.createElement('div');
+    root.className = 'quiz-backdrop';
+    root.innerHTML = `
+      <div class="quiz-card" role="dialog" aria-modal="true">
+        <p class="quiz-title"></p>
+        <p class="quiz-subtitle"></p>
+        <div class="quiz-pips"></div>
+        <p class="quiz-prompt"></p>
+        <div class="answer-row">
+          <input type="number" class="quiz-input" inputmode="numeric"
+                 aria-label="Your answer" autocomplete="off">
+          <button class="quiz-check">Unlock</button>
+        </div>
+        <p class="feedback quiz-feedback"></p>
+      </div>`;
+    document.body.appendChild(root);
+  }
+
+  function ask({ count = 2, title = 'Locked', subtitle = '', onDone, coins = false }) {
+    if (active) return;
+    if (!root) build();
+    active = true;
+
+    const card     = root.querySelector('.quiz-card');
+    const pipsEl   = root.querySelector('.quiz-pips');
+    const promptEl = root.querySelector('.quiz-prompt');
+    const inputEl  = root.querySelector('.quiz-input');
+    const btnEl    = root.querySelector('.quiz-check');
+    const fbEl     = root.querySelector('.quiz-feedback');
+
+    root.querySelector('.quiz-title').textContent = title;
+    root.querySelector('.quiz-subtitle').textContent = subtitle;
+
+    const run = MathEngine.startRun(count, { coins });
+    let earned = 0;
+    let asked = 0;
+    let right = 0;
+
+    function draw() {
+      const q = run.current();
+      const { done } = run.progress();
+      promptEl.textContent = q.text;
+      pipsEl.innerHTML = Array.from({ length: count }, (_, i) =>
+        `<span class="pip ${i < done ? 'lit' : ''}"></span>`).join('');
+      inputEl.value = '';
+      inputEl.focus();
+    }
+
+    function submit() {
+      if (inputEl.value === '') return;
+      const res = run.submit(inputEl.value);
+      asked++;
+      if (res.correct) right++;
+
+      if (res.correct) {
+        earned += res.reward;
+        if (res.finished) {
+          fbEl.className = 'feedback quiz-feedback good';
+          fbEl.textContent = `Unlocked. +${earned} ${coins ? 'coins' : 'XP'}.`;
+          setTimeout(close, 700);
+          return;
+        }
+        fbEl.className = 'feedback quiz-feedback good';
+        fbEl.textContent = res.levelUp
+          ? `Correct — maths level ${res.level} now.`
+          : 'Correct. Next one.';
+      } else {
+        earned = 0;
+        fbEl.className = 'feedback quiz-feedback bad';
+        fbEl.textContent = `It was ${res.answer}. Back to the first question.`;
+        card.classList.remove('shake');
+        void card.offsetWidth;          // restart the animation
+        card.classList.add('shake');
+      }
+      draw();
+    }
+
+    function close() {
+      active = false;
+      root.classList.remove('open');
+      btnEl.removeEventListener('click', submit);
+      inputEl.removeEventListener('keydown', onKey);
+      if (onDone) onDone(earned, { asked, correct: right });
+    }
+
+    function onKey(e) {
+      e.stopPropagation();              // don't let the game read this keypress
+      if (e.key === 'Enter') submit();
+    }
+
+    btnEl.addEventListener('click', submit);
+    inputEl.addEventListener('keydown', onKey);
+
+    fbEl.textContent = '';
+    fbEl.className = 'feedback quiz-feedback';
+    root.classList.add('open');
+    draw();
+  }
+
+  return { ask, isOpen: () => active };
+})();
+</script>
+<script>
+/* ==========================================================
+   TOWER GUARD
+
+   Monsters march along a path to your castle. Build towers
+   beside the path to stop them. Every monster that gets
+   through costs the castle hearts. Answer the supply wagon's
+   questions at the start of a level for building gold, and
+   grab bonus gold between waves with a couple more.
+
+   Everything is measured in tiles: the map is 20 x 12 tiles,
+   and a monster's speed is tiles per second.
+   This part is just the rules - no drawing - so the test bots
+   can play it without a screen.
+   ========================================================== */
+
+const MW = 20, MH = 12;          // map size in tiles
+const START_LIVES = 20;
+
+/* ---------- the towers ----------
+   Each has three levels: the numbers in the lists are for level 1, 2, 3.
+   up = what it costs to upgrade to level 2 and level 3.
+   unlock = the level number where it turns up in the build menu.
+   The last two don't shoot at all: one speeds up its neighbours, the other
+   digs up gold. Working out the mix a map needs is most of the game.     */
+const TOWERS = {
+  archer:    { name: 'Archer',    cost: 50,  up: [60, 110],  unlock: 0, range: [2.6, 2.9, 3.2], rate: [0.6, 0.5, 0.4], dmg: [8, 14, 22],
+               air: true, note: 'Fast arrows. Hits flying monsters.' },
+  cannon:    { name: 'Cannon',    cost: 80,  up: [90, 160],  unlock: 0, range: [2.4, 2.6, 2.8], rate: [1.5, 1.4, 1.3], dmg: [20, 34, 55],
+               splash: [0.9, 1.0, 1.1], air: false, note: 'Blasts a whole group. No good against flyers.' },
+  frost:     { name: 'Frost',     cost: 70,  up: [70, 120],  unlock: 0, range: [2.4, 2.6, 2.9], rate: [0.9, 0.8, 0.7], dmg: [4, 6, 9],
+               slow: [0.55, 0.45, 0.35], air: true, note: 'Slows monsters right down.' },
+  mine:      { name: 'Gold mine', cost: 120, up: [130, 220], unlock: 1, range: [0, 0, 0], rate: [9, 9, 9], dmg: [0, 0, 0],
+               gold: [25, 45, 70], air: true, note: 'No attack. Digs up gold after every wave.' },
+  ballista:  { name: 'Ballista',  cost: 110, up: [120, 200], unlock: 2, range: [4.2, 4.6, 5.0], rate: [2.0, 1.8, 1.6], dmg: [45, 75, 120],
+               pierce: true, air: true, note: 'Sees a long way and punches through armour.' },
+  flame:     { name: 'Flame',     cost: 90,  up: [100, 170], unlock: 3, range: [1.8, 2.0, 2.2], rate: [0.25, 0.22, 0.2], dmg: [5, 8, 12],
+               burn: [3, 5, 8], all: true, air: true, note: 'Burns everything close by. Great against crowds.' },
+  tesla:     { name: 'Tesla',     cost: 120, up: [120, 200], unlock: 4, range: [2.8, 3.0, 3.3], rate: [1.3, 1.2, 1.05], dmg: [18, 28, 42],
+               chain: [3, 4, 5], magic: true, air: true, note: 'Zaps a chain of monsters. Ignores armour.' },
+  banner:    { name: 'War banner', cost: 90, up: [110, 180], unlock: 5, range: [2.0, 2.3, 2.6], rate: [9, 9, 9], dmg: [0, 0, 0],
+               boost: [1.25, 1.4, 1.55], air: true, note: 'No attack. Towers beside it shoot faster and further.' },
+  poison:    { name: 'Alchemist', cost: 100, up: [110, 180], unlock: 6, range: [2.6, 2.8, 3.0], rate: [1.6, 1.5, 1.4], dmg: [6, 9, 12],
+               poison: [5, 8, 12], magic: true, air: true, note: 'Poison keeps hurting. Ignores armour. Good on bosses.' }
+};
+const TOWER_ORDER = ['archer', 'cannon', 'frost', 'ballista', 'flame', 'tesla', 'poison', 'banner', 'mine'];
+// who a tower picks out of the monsters it can reach
+const MODES = [
+  { id: 'first',  name: 'First',     note: 'nearest your castle' },
+  { id: 'strong', name: 'Strongest', note: 'the most health' },
+  { id: 'close',  name: 'Closest',   note: 'nearest the tower' }
+];
+
+/* ---------- the monsters ----------
+   armour: arrows and cannonballs do less (magic and ballistas get through)
+   splits: turns into these when it dies
+   heals:  mends nearby monsters, so it's worth picking off first          */
+const ENEMIES = {
+  goblin:  { name: 'Goblin',  hp: 30,  spd: 1.1,  gold: 4,  cost: 4 },
+  wolf:    { name: 'Wolf',    hp: 22,  spd: 2.0,  gold: 5,  cost: 5 },
+  bat:     { name: 'Bat',     hp: 26,  spd: 1.5,  gold: 6,  cost: 6, fly: true },
+  orc:     { name: 'Orc',     hp: 95,  spd: 0.75, gold: 9,  cost: 10 },
+  knight:  { name: 'Knight',  hp: 75,  spd: 0.9,  gold: 10, cost: 12, armour: 0.5 },
+  slime:   { name: 'Slime',   hp: 50,  spd: 0.9,  gold: 5,  cost: 9, splits: ['slimelet', 'slimelet'] },
+  slimelet:{ name: 'Slimelet', hp: 18, spd: 1.35, gold: 2,  cost: 0 },
+  shaman:  { name: 'Shaman',  hp: 45,  spd: 0.9,  gold: 8,  cost: 20, heals: 7 },
+  gargoyle:{ name: 'Gargoyle', hp: 80, spd: 1.2,  gold: 11, cost: 13, fly: true, armour: 0.45 },
+  troll:   { name: 'Troll King',     hp: 1100, spd: 0.5,  gold: 60,  cost: 0, boss: true, hurt: 5, summons: ['goblin', 'goblin'], every: 7 },
+  scorpion:{ name: 'Scorpion Queen', hp: 2100, spd: 0.55, gold: 90,  cost: 0, boss: true, hurt: 5, armour: 0.3, summons: ['wolf', 'wolf'], every: 6 },
+  yeti:    { name: 'Yeti Lord',      hp: 3800, spd: 0.5,  gold: 120, cost: 0, boss: true, hurt: 5, coldproof: true, freezes: 2.5, every: 8 }
+};
+
+/* ---------- the worlds and their maps ----------
+   A path is a list of corners in tiles. It starts just off the map and
+   ends where the castle stands.                                       */
+const WORLDS = [
+  { name: 'Green Fields', theme: 'fields', boss: 'troll', levels: [
+    [[-1, 6], [5, 6], [5, 2], [12, 2], [12, 9], [17, 9], [17, 5]],
+    [[-1, 2], [4, 2], [4, 9], [9, 9], [9, 3], [14, 3], [14, 9], [18, 9]],
+    [[-1, 9], [3, 9], [3, 4], [7, 4], [7, 8], [11, 8], [11, 2], [16, 2], [16, 7], [18, 7]],
+    [[-1, 5], [3, 5], [3, 1], [8, 1], [8, 10], [12, 10], [12, 4], [16, 4], [16, 8], [18, 8]]
+  ]},
+  { name: 'Sandy Dunes', theme: 'desert', boss: 'scorpion', levels: [
+    [[10, -1], [10, 3], [4, 3], [4, 8], [15, 8], [15, 4], [18, 4]],
+    [[-1, 1], [16, 1], [16, 5], [2, 5], [2, 9], [18, 9]],
+    [[-1, 10], [5, 10], [5, 6], [2, 6], [2, 2], [9, 2], [9, 9], [14, 9], [14, 3], [18, 3]],
+    [[-1, 6], [3, 6], [3, 2], [9, 2], [9, 10], [13, 10], [13, 5], [17, 5], [17, 1]]
+  ]},
+  { name: 'Frost Peaks', theme: 'snow', boss: 'yeti', levels: [
+    [[-1, 8], [4, 8], [4, 3], [8, 3], [8, 10], [12, 10], [12, 6], [16, 6], [16, 2]],
+    [[5, -1], [5, 3], [10, 3], [10, 7], [4, 7], [4, 10], [14, 10], [14, 5], [17, 5]],
+    [[-1, 1], [18, 1], [18, 4], [1, 4], [1, 7], [18, 7], [18, 10], [8, 10]],
+    [[-1, 6], [4, 6], [4, 2], [10, 2], [10, 9], [15, 9], [15, 5], [17, 5]]
+  ]}
+];
+const LEVELS = WORLDS.flatMap((w, wi) => w.levels.map((path, li) => ({
+  world: wi, index: li, id: wi + '-' + li, n: wi * 4 + li, path, theme: w.theme,
+  name: w.name + ' ' + (li + 1), boss: li === 3 ? w.boss : null
+})));
+
+/* ---------- waves ----------
+   Made from each level's number, so they're the same every time. Each
+   wave has a budget that grows; it's spent on the monsters that level
+   allows, one or two kinds per wave, in groups.                      */
+function allowedEnemies(n, w) {
+  const a = ['goblin'];
+  if (w >= 2 || n >= 1) a.push('wolf');
+  if (n >= 1 && w >= 3) a.push('orc');
+  if (n >= 2 && w >= 2) a.push('bat');
+  if (n >= 4 && w >= 2) a.push('knight');
+  if (n >= 5 && w >= 3) a.push('slime');
+  if (n >= 3 && w >= 3) a.push('shaman');       // heals its friends: kill it first
+  if (n >= 7 && w >= 2) a.push('gargoyle');     // armoured AND flying
+  // later worlds lean on the monsters that need the right tower:
+  // knights shrug off arrows, bats fly over cannonballs
+  if (n >= 6 && w >= 2) a.push('knight', 'bat');
+  if (n >= 8 && w >= 1) a.push('knight', 'bat', 'orc');
+  return a;
+}
+// how long between one monster and the next of its kind
+const SPACING = { goblin: 0.8, wolf: 0.55, bat: 0.7, orc: 1.4, knight: 1.2, slime: 1.1, shaman: 1.3, gargoyle: 0.9 };
+const spacingOf = type => SPACING[type] || 1;   // a missing one used to make the wave never arrive
+function makeWaves(level) {
+  const n = level.n, count = 8 + Math.floor(n / 3);
+  let seed = n * 7919 + 13;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const waves = [];
+  for (let w = 0; w < count; w++) {
+    // the number of monsters grows gently; it's their health that grows fast (see hpScale)
+    let budget = Math.round((28 + 11 * w) * (1 + 0.05 * n));
+    const kinds = allowedEnemies(n, w);
+    const pick = [kinds[Math.floor(rnd() * kinds.length)]];
+    if (kinds.length > 1 && rnd() < 0.6) pick.push(kinds[Math.floor(rnd() * kinds.length)]);
+    const spawns = []; let t = 0;
+    while (budget > 0) {
+      const type = pick[Math.floor(rnd() * pick.length)], group = 3 + Math.floor(rnd() * 4);
+      for (let g = 0; g < group && budget > 0; g++) { spawns.push({ type, at: t }); t += spacingOf(type); budget -= ENEMIES[type].cost; }
+      t += 1.5;
+    }
+    if (level.boss && w === count - 1) spawns.push({ type: level.boss, at: t + 1 });
+    waves.push(spawns);
+  }
+  return waves;
+}
+// monsters get tougher level by level, and a little through each level
+const hpScale = (n, w) => 1 + 0.1 * n + 0.16 * w + 0.008 * n * w;
+// tougher monsters are worth more gold, so you can keep up
+const goldScale = w => 1 + 0.08 * w;
+
+/* ---------- the game state ---------- */
+let G = null;                    // the level being played
+const sfx = name => { if (typeof Sound !== 'undefined' && !G?.silent) Sound.sfx(name); };
+const onEvent = { fn: () => {} };   // the screens listen for kills, leaks, wins...
+
+function buildPath(corners) {
+  // the corners, as tile centres, plus every tile the path covers
+  const pts = corners.map(([x, y]) => ({ x: x + 0.5, y: y + 0.5 }));
+  const tiles = new Set(), segs = [];
+  let len = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1], l = Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+    segs.push({ a, b, l, from: len }); len += l;
+    const steps = Math.round(l);
+    for (let s = 0; s <= steps; s++) {
+      const tx = Math.floor(a.x + (b.x - a.x) * s / steps), ty = Math.floor(a.y + (b.y - a.y) * s / steps);
+      if (tx >= 0 && ty >= 0 && tx < MW && ty < MH) tiles.add(tx + ',' + ty);
+    }
+  }
+  return { pts, segs, len, tiles };
+}
+function pointAt(path, d) {
+  for (const s of path.segs) {
+    if (d <= s.from + s.l) { const f = s.l ? (d - s.from) / s.l : 0; return { x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f, dx: Math.sign(s.b.x - s.a.x) }; }
+  }
+  const e = path.pts[path.pts.length - 1];
+  return { x: e.x, y: e.y, dx: 0 };
+}
+
+function newGame(level) {
+  const path = buildPath(level.path);
+  const end = level.path[level.path.length - 1];
+  // scenery: trees and rocks you can't build on, never on the path or by the castle
+  let seed = level.n * 104729 + 7;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const blocked = new Set(), deco = [];
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const k = x + ',' + y;
+    if (path.tiles.has(k) || (Math.abs(x - end[0]) <= 1 && Math.abs(y - end[1]) <= 1)) continue;
+    if (rnd() < 0.09) { blocked.add(k); deco.push({ x, y, kind: rnd() < 0.6 ? 'tree' : 'rock' }); }
+  }
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) blocked.add((end[0] + dx) + ',' + (end[1] + dy));
+  G = {
+    level, path, end, deco, blocked,
+    waves: makeWaves(level),
+    sent: 0, cleared: 0,            // waves sent out, and waves finished off
+    inWave: false, waveT: 0, queue: [],
+    lives: START_LIVES, maxLives: START_LIVES, repairs: 0, walls: 0,
+    gold: 100, towers: [], enemies: [], shots: [], zaps: [], pops: [],
+    time: 0, over: false, won: false, bonusTaken: false, kills: 0, leaked: 0, silent: false
+  };
+  return G;
+}
+
+const tileFree = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && !G.path.tiles.has(x + ',' + y)
+                        && !G.blocked.has(x + ',' + y) && !G.towers.some(t => t.x === x && t.y === y);
+const towerAt = (x, y) => G.towers.find(t => t.x === x && t.y === y);
+const isUnlocked = type => (TOWERS[type].unlock || 0) <= G.level.n;
+
+// what a tower is really worth right now: war banners beside it help
+function stats(t) {
+  const T = TOWERS[t.type], L = t.lvl;
+  let rate = T.rate[L], range = T.range[L], boost = 1;
+  for (const o of G.towers) {
+    if (!TOWERS[o.type].boost || o === t) continue;
+    const d = Math.hypot(o.x - t.x, o.y - t.y);
+    if (d <= TOWERS[o.type].range[o.lvl]) boost = Math.max(boost, TOWERS[o.type].boost[o.lvl]);
+  }
+  if (boost > 1) { rate /= boost; range += (boost - 1) * 0.8; }
+  return { rate, range, dmg: T.dmg[L], boosted: boost > 1 };
+}
+
+function build(type, x, y) {
+  const T = TOWERS[type];
+  if (!tileFree(x, y) || G.gold < T.cost || !isUnlocked(type)) return false;
+  G.gold -= T.cost;
+  G.towers.push({ type, x, y, lvl: 0, cool: 0, spent: T.cost, aim: 0, flash: 0, mode: 'first', frozen: 0 });
+  sfx('build');
+  return true;
+}
+function upgrade(t) {
+  const T = TOWERS[t.type];
+  if (t.lvl >= 2 || G.gold < T.up[t.lvl]) return false;
+  G.gold -= T.up[t.lvl]; t.spent += T.up[t.lvl]; t.lvl++;
+  sfx('upgrade');
+  return true;
+}
+const sellValue = t => Math.floor(t.spent * 0.7);
+function sell(t) {
+  G.gold += sellValue(t);
+  G.towers = G.towers.filter(o => o !== t);
+  sfx('sell');
+}
+// First / Strongest / Closest
+function cycleMode(t) {
+  t.mode = MODES[(MODES.findIndex(m => m.id === t.mode) + 1) % MODES.length].id;
+  sfx('click');
+  return t.mode;
+}
+
+/* ---------- the castle ----------
+   Gold can go into the castle instead of towers: patch up the hearts you've
+   lost, or build the walls up so it can take more.                        */
+const repairCost = () => 90 + 50 * G.repairs;
+const wallCost = () => 180 + 120 * G.walls;
+const MAX_WALLS = 3;
+function repair() {
+  if (G.gold < repairCost() || G.lives >= G.maxLives) return false;
+  G.gold -= repairCost(); G.repairs++;
+  G.lives = Math.min(G.maxLives, G.lives + 4);
+  sfx('upgrade');
+  return true;
+}
+function reinforce() {
+  if (G.gold < wallCost() || G.walls >= MAX_WALLS) return false;
+  G.gold -= wallCost(); G.walls++;
+  G.maxLives += 5; G.lives += 5;
+  sfx('upgrade');
+  return true;
+}
+
+/* ---------- waves ----------
+   You can send the next wave while one is still running. It's worth gold,
+   and it's the main way a confident player gets ahead.                  */
+const earlyBonus = () => 15 + G.sent * 4;
+function startWave() {
+  if (G.over || G.sent >= G.waves.length) return false;
+  const early = G.inWave;
+  const at0 = early ? G.waveT + 2 : 0;
+  const w = G.sent;
+  for (const s of G.waves[w]) G.queue.push({ type: s.type, at: at0 + s.at, wave: w });
+  G.queue.sort((a, b) => a.at - b.at);
+  G.sent++;
+  if (!early) { G.inWave = true; G.waveT = 0; G.bonusTaken = false; }
+  else { G.gold += earlyBonus(); onEvent.fn('early', earlyBonus()); }
+  sfx('horn');
+  return true;
+}
+
+function spawn(type, d, wave) {
+  const E = ENEMIES[type], hp = Math.round(E.hp * hpScale(G.level.n, wave === undefined ? G.sent - 1 : wave));
+  const e = { type, d: d || 0, hp, max: hp, slowT: 0, slowMul: 1, hitT: 0, burn: 0, burnT: 0, poison: 0, poisonT: 0,
+              every: E.every || 0, wave: wave === undefined ? G.sent - 1 : wave, id: Math.random() };
+  G.enemies.push(e);
+  return e;
+}
+const enemyPos = e => pointAt(G.path, e.d);
+
+function hurt(e, dmg, kind, quiet) {
+  const E = ENEMIES[e.type];
+  if (E.armour) {
+    if (kind === 'pierce') dmg *= 1 - E.armour / 2;            // ballistas punch through half of it
+    else if (kind !== 'magic') dmg *= 1 - E.armour;            // magic ignores armour completely
+  }
+  e.hp -= dmg;
+  if (!quiet) e.hitT = 0.12;
+  if (e.hp <= 0 && !e.dead) {
+    e.dead = true;
+    const gold = Math.round(E.gold * goldScale(e.wave));
+    G.gold += gold; G.kills++;
+    const p = enemyPos(e);
+    G.pops.push({ x: p.x, y: p.y, t: 0.6, text: '+' + gold });
+    if (E.splits) E.splits.forEach((s, i) => spawn(s, Math.max(0, e.d - 0.25 * i), e.wave));
+    sfx(E.boss ? 'bossDie' : 'pop');
+    onEvent.fn('kill', e);
+  }
+}
+
+// who a tower shoots at
+function target(t, range, air, mode) {
+  let best = null, bestScore = -Infinity;
+  for (const e of G.enemies) {
+    if (e.dead || (!air && ENEMIES[e.type].fly)) continue;
+    const p = enemyPos(e), dx = p.x - (t.x + 0.5), dy = p.y - (t.y + 0.5), d2 = dx * dx + dy * dy;
+    if (d2 > range * range) continue;
+    const score = mode === 'strong' ? e.hp : mode === 'close' ? -d2 : e.d;
+    if (score > bestScore) { bestScore = score; best = e; }
+  }
+  return best;
+}
+
+/* ---------- one tick ---------- */
+function step(dt) {
+  if (!G || G.over) return;
+  G.time += dt;
+  if (G.inWave) {
+    G.waveT += dt;
+    while (G.queue.length && G.queue[0].at <= G.waveT) { const s = G.queue.shift(); spawn(s.type, 0, s.wave); }
+  }
+  // monsters walk, burn, heal and boss-things
+  for (const e of G.enemies) {
+    if (e.dead) continue;
+    const E = ENEMIES[e.type];
+    if (e.slowT > 0) e.slowT -= dt; else e.slowMul = 1;
+    if (e.hitT > 0) e.hitT -= dt;
+    if (e.burnT > 0) { e.burnT -= dt; hurt(e, e.burn * dt, 'magic', true); }
+    if (e.poisonT > 0) { e.poisonT -= dt; hurt(e, e.poison * dt, 'magic', true); }
+    if (e.dead) continue;
+    if (E.heals) {                                            // a shaman mends its friends
+      e.healT = (e.healT || 0) - dt;
+      if (e.healT <= 0) {
+        e.healT = 1;
+        const p = enemyPos(e);
+        for (const o of G.enemies) {
+          // shamans won't mend each other, and a monster can only be mended
+          // once a second however many shamans are walking with it - a pack of
+          // them used to out-heal every tower you had
+          if (o === e || o.dead || o.hp >= o.max || ENEMIES[o.type].heals) continue;
+          if (o.lastHeal !== undefined && G.time - o.lastHeal < 0.9) continue;
+          const q = enemyPos(o);
+          if ((q.x - p.x) ** 2 + (q.y - p.y) ** 2 <= 4) {
+            o.hp = Math.min(o.max, o.hp + E.heals * (1 + 0.15 * e.wave)); o.healed = 0.4; o.lastHeal = G.time;
+          }
+        }
+      }
+    }
+    if (E.summons || E.freezes) {                             // bosses fight back
+      e.every -= dt;
+      if (e.every <= 0) {
+        e.every = E.every;
+        if (E.summons) { E.summons.forEach((s, i) => spawn(s, Math.max(0, e.d - 0.6 - i * 0.4), e.wave)); onEvent.fn('summon', e); }
+        if (E.freezes) {
+          const p = enemyPos(e);
+          const near = G.towers.filter(t => t.frozen <= 0).sort((a, c) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(c.x - p.x, c.y - p.y))[0];
+          if (near) { near.frozen = E.freezes; onEvent.fn('freeze', near); }
+        }
+      }
+    }
+    if (e.healed > 0) e.healed -= dt;
+    e.d += E.spd * e.slowMul * dt;
+    if (e.d >= G.path.len) {
+      e.dead = true; e.leaked = true;
+      G.lives = Math.max(0, G.lives - (E.hurt || 1)); G.leaked++;
+      sfx('leak'); onEvent.fn('leak', e);
+    }
+  }
+  // towers
+  for (const t of G.towers) {
+    const T = TOWERS[t.type];
+    if (t.frozen > 0) { t.frozen -= dt; continue; }
+    if (T.gold || T.boost) continue;                          // these two don't shoot
+    const S = stats(t), L = t.lvl;
+    t.cool -= dt; if (t.flash > 0) t.flash -= dt;
+    if (t.cool > 0) continue;
+    const e = target(t, S.range, T.air, t.mode);
+    if (!e) continue;
+    t.cool = S.rate; t.flash = 0.12;
+    const p = enemyPos(e);
+    t.aim = Math.atan2(p.y - (t.y + 0.5), p.x - (t.x + 0.5));
+    if (T.all) {
+      // flame: everything close by gets scorched
+      let hitAny = false;
+      for (const o of G.enemies) {
+        if (o.dead) continue;
+        const q = enemyPos(o);
+        if ((q.x - t.x - 0.5) ** 2 + (q.y - t.y - 0.5) ** 2 > S.range * S.range) continue;
+        hurt(o, S.dmg, 'magic'); o.burn = Math.max(o.burn, T.burn[L]); o.burnT = 2; hitAny = true;
+      }
+      if (hitAny) { G.zaps.push({ fire: true, x: t.x + 0.5, y: t.y + 0.4, r: S.range, t: 0.18 }); sfx('flame'); }
+    } else if (T.chain) {
+      const hit = [e]; let last = e;
+      while (hit.length < T.chain[L]) {
+        const lp = enemyPos(last); let next = null, nd = 1.7 * 1.7;
+        for (const o of G.enemies) {
+          if (o.dead || hit.includes(o)) continue;
+          const op = enemyPos(o), dd = (op.x - lp.x) ** 2 + (op.y - lp.y) ** 2;
+          if (dd < nd) { nd = dd; next = o; }
+        }
+        if (!next) break;
+        hit.push(next); last = next;
+      }
+      G.zaps.push({ pts: [{ x: t.x + 0.5, y: t.y - 0.1 }].concat(hit.map(enemyPos)), t: 0.15 });
+      hit.forEach((o, i) => hurt(o, S.dmg * (i ? 0.8 : 1), 'magic'));
+      sfx('zap');
+    } else if (T.splash) {
+      const flight = 0.55, ahead = enemyPos({ d: e.d + ENEMIES[e.type].spd * e.slowMul * flight });
+      G.shots.push({ kind: 'ball', x: t.x + 0.5, y: t.y + 0.3, sx: t.x + 0.5, sy: t.y + 0.3, tx: ahead.x, ty: ahead.y,
+                     t: 0, dur: flight, dmg: S.dmg, splash: T.splash[L] });
+      sfx('boom');
+    } else {
+      const kind = t.type === 'frost' ? 'ice' : t.type === 'poison' ? 'vial' : t.type === 'ballista' ? 'bolt' : 'arrow';
+      G.shots.push({ kind, x: t.x + 0.5, y: t.y + 0.3, target: e, spd: kind === 'bolt' ? 16 : kind === 'ice' ? 8 : 13,
+                     dmg: S.dmg, hitKind: T.magic ? 'magic' : T.pierce ? 'pierce' : 'archer',
+                     slow: T.slow ? T.slow[L] : 0, poison: T.poison ? T.poison[L] : 0 });
+      sfx(kind === 'ice' ? 'ice' : kind === 'vial' ? 'vial' : kind === 'bolt' ? 'bolt' : 'arrow');
+    }
+  }
+  // shots fly
+  for (const s of G.shots) {
+    if (s.kind === 'ball') {
+      s.t += dt;
+      const f = Math.min(1, s.t / s.dur);
+      s.x = s.sx + (s.tx - s.sx) * f; s.y = s.sy + (s.ty - s.sy) * f; s.h = Math.sin(Math.PI * f) * 1.2;
+      if (f >= 1) {
+        s.done = true;
+        for (const e of G.enemies) {
+          if (e.dead || ENEMIES[e.type].fly) continue;
+          const p = enemyPos(e);
+          if ((p.x - s.tx) ** 2 + (p.y - s.ty) ** 2 <= s.splash * s.splash) hurt(e, s.dmg, 'cannon');
+        }
+        G.pops.push({ x: s.tx, y: s.ty, t: 0.3, boom: s.splash });
+      }
+      continue;
+    }
+    const e = s.target;
+    if (e.dead) { s.done = true; continue; }
+    const p = enemyPos(e), dx = p.x - s.x, dy = p.y - s.y, dist = Math.hypot(dx, dy), mv = s.spd * dt;
+    if (dist <= mv) {
+      s.done = true;
+      hurt(e, s.dmg, s.hitKind);
+      if (s.slow && !e.dead) {
+        const mul = ENEMIES[e.type].coldproof ? 1 - (1 - s.slow) / 2 : s.slow;
+        e.slowMul = Math.min(e.slowMul, mul); e.slowT = 1.6;
+      }
+      if (s.poison && !e.dead) { e.poison = Math.max(e.poison, s.poison); e.poisonT = 3; }
+    } else { s.x += dx / dist * mv; s.y += dy / dist * mv; s.a = Math.atan2(dy, dx); }
+  }
+  G.shots = G.shots.filter(s => !s.done);
+  G.enemies = G.enemies.filter(e => !e.dead);
+  G.zaps.forEach(z => z.t -= dt); G.zaps = G.zaps.filter(z => z.t > 0);
+  G.pops.forEach(p => p.t -= dt); G.pops = G.pops.filter(p => p.t > 0);
+
+  if (G.lives <= 0) { G.over = true; G.won = false; sfx('lose'); onEvent.fn('lose'); return; }
+  // a wave is done when everything sent has been dealt with
+  if (G.inWave && !G.queue.length && !G.enemies.length) {
+    G.inWave = false;
+    G.cleared = G.sent;
+    let bonus = 10 + G.cleared * 2;
+    const mines = G.towers.filter(t => TOWERS[t.type].gold);
+    const dug = mines.reduce((a, t) => a + TOWERS[t.type].gold[t.lvl], 0);
+    G.gold += bonus + dug;
+    mines.forEach(t => G.pops.push({ x: t.x + 0.5, y: t.y, t: 0.9, text: '+' + TOWERS[t.type].gold[t.lvl] }));
+    if (G.cleared >= G.waves.length) { G.over = true; G.won = true; sfx('win'); onEvent.fn('win'); }
+    else { sfx('waveDone'); onEvent.fn('waveDone', bonus + dug); }
+  }
+}
+
+// stars: keep nearly every heart for three
+const starsFor = lives => lives >= 18 ? 3 : lives >= 10 ? 2 : lives > 0 ? 1 : 0;
+// what's in a wave, for the "coming next" line
+function waveSummary(w) {
+  const wave = G.waves[w];
+  if (!wave) return [];
+  const count = {};
+  for (const s of wave) count[s.type] = (count[s.type] || 0) + 1;
+  return Object.entries(count).sort((a, b) => b[1] - a[1]);
+}
+
+/* ==========================================================
+   SOUND — everything is made by the browser from code, no
+   sound files, so it still works offline.
+
+   Sound.sfx('jump')       a sound effect
+   Sound.play('fields')    start a song (does nothing if it's already on)
+   Sound.stop()            stop the music
+   Sound.toggle()          mute / unmute, remembered next time
+   ========================================================== */
+const Sound = (() => {
+  let ac = null, master, music, fx, echo;
+  let muted = !!Save.get().tgMuted;
+  let song = null, step = 0, next = 0, timer = null, duck = 1;
+
+  // Browsers only allow sound after the player has pressed something,
+  // so the audio is switched on by the first key, click or tap.
+  function wake() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = muted ? 0 : 1;
+      master.connect(ac.destination);
+      music = ac.createGain(); music.gain.value = 0.55; music.connect(master);
+      fx = ac.createGain(); fx.gain.value = 0.8; fx.connect(master);
+      // a soft echo, used by the cave song
+      echo = ac.createDelay(); echo.delayTime.value = 0.32;
+      const back = ac.createGain(); back.gain.value = 0.35;
+      echo.connect(back); back.connect(echo); back.connect(music);
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return true;
+  }
+  ['keydown', 'pointerdown', 'touchstart'].forEach(ev =>
+    addEventListener(ev, () => { wake(); if (song && !timer) start(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!ac) return;
+    if (document.hidden) ac.suspend(); else ac.resume();
+  });
+
+  const hz = midi => 440 * Math.pow(2, (midi - 69) / 12);
+
+  function tone(freq, dur, type, vol, slide, when, dest) {
+    const t = (ac.currentTime) + (when || 0);
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || fx);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+
+  let noiseBuf = null;
+  function noise(dur, vol, cutoff, when, dest) {
+    if (!noiseBuf) {
+      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t = ac.currentTime + (when || 0);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = noiseBuf;
+    f.type = 'lowpass'; f.frequency.value = cutoff || 2000;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(dest || fx);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+
+  const arp = (base, steps, gap, type, vol) =>
+    steps.forEach((s, i) => tone(base * Math.pow(2, s / 12), 0.13, type, vol, 0, i * gap));
+
+  const EFFECTS = {
+    build:   () => { noise(0.12, 0.2, 1500); tone(330, 0.1, 'square', 0.07, 1.5, 0.05); },
+    upgrade: () => arp(523, [0, 4, 7, 12], 0.05, 'square', 0.07),
+    sell:    () => arp(784, [0, -5], 0.06, 'triangle', 0.08),
+    horn:    () => { tone(196, 0.5, 'sawtooth', 0.06); tone(294, 0.5, 'sawtooth', 0.05, 1, 0.08); },
+    arrow:   () => noise(0.05, 0.06, 4000),
+    ice:     () => tone(1400, 0.1, 'triangle', 0.04, 0.6),
+    boom:    () => { noise(0.25, 0.18, 700); tone(90, 0.2, 'square', 0.06, 0.5); },
+    zap:     () => { noise(0.12, 0.12, 6000); tone(900, 0.12, 'sawtooth', 0.04, 2); },
+    pop:     () => tone(620, 0.07, 'square', 0.04, 1.6),
+    bossDie: () => { noise(0.8, 0.3, 800); arp(262, [0, 4, 7, 12, 16], 0.08, 'square', 0.08); },
+    leak:    () => { tone(220, 0.25, 'square', 0.08, 0.5); noise(0.15, 0.15, 900); },
+    waveDone:() => arp(660, [0, 4, 7], 0.07, 'square', 0.07),
+    win:     () => arp(523, [0, 4, 7, 12, 7, 12, 16], 0.09, 'square', 0.09),
+    lose:    () => arp(392, [0, -3, -7, -12], 0.14, 'triangle', 0.09),
+    click:   () => tone(900, 0.04, 'square', 0.05),
+    coin:    () => arp(988, [0, 7], 0.05, 'square', 0.06),
+    nope:    () => tone(160, 0.12, 'square', 0.06)
+  };
+
+
+  /* ---------- music ----------
+     Each song is a two-bar pattern played over a four-chord loop.
+     melody / bass are sixteen steps per bar; numbers are semitones above
+     the chord's root, null is a rest. bass: 1 = root, 5 = fifth.          */
+  const _ = null;
+  const SONGS = {
+    menu: {                               // a little march
+      bpm: 112, root: 60, prog: [0, 5, 7, 0], lead: 'square', leadVol: 0.05, leadLen: 1.5,
+      melody: [[12, _, 12, 14, 16, _, 12, _, 19, _, 16, _, 14, _, _, _],
+               [12, _, 11, _, 9, _, 7, _, 9, _, 11, _, 12, _, _, _]],
+      bass: [1, _, 5, _, 1, _, 5, _, 1, _, 5, _, 1, _, 5, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+    },
+    fields: {                             // bright and bouncy
+      bpm: 124, root: 62, prog: [0, 5, 7, 5], lead: 'square', leadVol: 0.045, leadLen: 1.4,
+      melody: [[12, _, 14, _, 16, _, 19, _, 16, _, 14, _, 12, _, _, _],
+               [11, _, 12, _, 14, _, 12, _, 11, _, 9, _, 7, _, _, _]],
+      bass: [1, _, _, 5, 1, _, _, 5, 1, _, _, 5, 1, _, 5, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], hat: [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+    },
+    desert: {                             // a hot, winding tune
+      bpm: 108, root: 57, prog: [0, 1, 0, -2], lead: 'sawtooth', leadVol: 0.035, leadLen: 1.8,
+      melody: [[12, _, 13, _, 16, _, 17, 16, 13, _, 12, _, 13, _, _, _],
+               [16, _, 13, _, 12, _, 10, _, 12, _, 13, _, 12, _, _, _]],
+      bass: [1, _, 1, _, 5, _, 1, _, 1, _, 1, _, 5, _, 1, _], bassType: 'square',
+      kick: [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0], hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0]
+    },
+    snow: {                               // chilly, with an echo
+      bpm: 100, root: 64, prog: [0, -3, -5, -1], lead: 'triangle', leadVol: 0.06, leadLen: 2.2, echo: true,
+      melody: [[12, _, _, 15, _, _, 19, _, 17, _, 15, _, 12, _, _, _],
+               [10, _, _, 12, _, _, 15, _, 14, _, 12, _, 10, _, _, _]],
+      bass: [1, _, _, _, 5, _, _, _, 1, _, _, _, 5, _, _, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], hat: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+    },
+    boss: {                               // big and tense
+      bpm: 140, root: 57, prog: [0, 0, 1, -1], lead: 'sawtooth', leadVol: 0.04, leadLen: 1.1,
+      melody: [[12, 12, _, 15, _, 12, _, 18, 17, _, 15, _, 12, _, 11, _],
+               [12, _, 15, _, 17, _, 18, _, 17, _, 15, _, 12, _, _, _]],
+      bass: [1, 1, _, 1, 1, _, 1, 1, 1, 1, _, 1, 5, _, 1, _], bassType: 'square',
+      kick: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], hat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    }
+  };
+
+  function drum(kind, t) {
+    if (kind === 'kick') {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(130, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(music); o.start(t); o.stop(t + 0.18);
+    } else {
+      noise(0.03, 0.05, 7000, t - ac.currentTime, music);
+    }
+  }
+
+  function schedule() {
+    const S = SONGS[song];
+    if (!S || !ac) return;
+    const stepDur = 60 / S.bpm / 4;
+    // If the tab was in the background the timer stops; don't play every
+    // missed note in one burst when it comes back.
+    if (next < ac.currentTime - 0.1) next = ac.currentTime + 0.05;
+    while (next < ac.currentTime + 0.14) {
+      const bar = Math.floor(step / 16), i = step % 16;
+      const root = S.root + S.prog[bar % S.prog.length];
+      const when = next - ac.currentTime;
+      if (S.bass[i]) tone(hz(root - 24 + (S.bass[i] === 5 ? 7 : 0)), stepDur * 1.8, S.bassType, 0.09 * duck, 0, when, music);
+      const m = S.melody[bar % S.melody.length][i];
+      if (m !== null) {
+        tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * duck, 0, when, S.echo ? echo : music);
+        if (S.echo) tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * 0.7 * duck, 0, when, music);
+      }
+      if (S.kick[i]) drum('kick', next);
+      if (S.hat[i]) drum('hat', next);
+      next += stepDur;
+      step++;
+    }
+  }
+
+  function start() {
+    if (!ac || timer) return;
+    step = 0; next = ac.currentTime + 0.06;
+    timer = setInterval(schedule, 25);
+  }
+
+  return {
+    sfx(name) { if (!muted && wake() && EFFECTS[name]) EFFECTS[name](); },
+    play(name) {
+      if (song === name && timer) return;
+      clearInterval(timer); timer = null;
+      song = name;
+      if (ac && ac.state !== 'closed') start();       // otherwise the first key press starts it
+    },
+    stop() { clearInterval(timer); timer = null; song = null; },
+    // quieter music behind the questions and the pause menu
+    setDuck(on) { duck = on ? 0.35 : 1; },
+    toggle() {
+      muted = !muted;
+      Save.update({ tgMuted: muted });
+      if (wake()) master.gain.value = muted ? 0 : 1;
+      return muted;
+    },
+    get muted() { return muted; }
+  };
+})();
+/* ==========================================================
+   DRAWING
+
+   The map is drawn into a small 320 x 192 picture (16 pixels a
+   tile) and blown up with smoothing off, so it stays chunky
+   pixel art. The ground only changes when a level starts, so
+   it's drawn once into its own canvas.
+   ========================================================== */
+const TS = 16;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const buf = document.createElement('canvas'); buf.width = MW * TS; buf.height = MH * TS;
+const b = buf.getContext('2d');
+let view = { x: 0, y: 0, s: 1 };            // where the map sits on the screen, and how big
+
+function fit() {
+  cv.width = innerWidth; cv.height = innerHeight;
+  const hud = document.getElementById('hud'), bar = document.getElementById('bar');
+  // a sideways phone: the bars move to the empty sides, so the map gets the full height
+  const side = matchMedia('(max-height: 500px) and (orientation: landscape)').matches;
+  const top = side ? 0 : hud.offsetHeight || 0, bottom = side ? 0 : bar.offsetHeight || 0;
+  const left = side ? hud.offsetWidth || 0 : 0, right = side ? bar.offsetWidth || 0 : 0;
+  const w = innerWidth - left - right, h = innerHeight - top - bottom;
+  const s = Math.min(w / buf.width, h / buf.height);
+  view = { s, x: Math.round(left + (w - buf.width * s) / 2), y: Math.round(top + (h - buf.height * s) / 2) };
+}
+addEventListener('resize', fit);
+
+/* ---------- pixel sprites ---------- */
+// The outline only goes around the OUTSIDE of a sprite. Outlining every
+// pixel (the old way) swallowed small details like eyes on a 10-pixel goblin.
+function makeSprite(map, pal) {
+  const w = map[0].length, h = map.length;
+  const c = document.createElement('canvas'); c.width = w + 2; c.height = h + 2;
+  const g = c.getContext('2d');
+  const filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && map[y][x] !== '.';
+  g.fillStyle = '#1A1024';
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) {
+    if (filled(x, y)) continue;
+    if (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1)) g.fillRect(x + 1, y + 1, 1, 1);
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!filled(x, y)) continue;
+    g.fillStyle = pal[map[y][x]] || '#FF00FF';
+    g.fillRect(x + 1, y + 1, 1, 1);
+  }
+  return c;
+}
+// the same picture tinted (blue when frozen, white when hit)
+function tinted(img, col, a) {
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = 'source-atop'; g.globalAlpha = a; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+
+const TOWER_MAPS = {
+  archer: ['.......RR.......', '......RRRRRR....', '.....RRRRRRRR...', '....RRRRRRRRRR..', '...RRRRRRRRRRRR.', '.....WWWWWWWW...',
+           '.....WkkWWkkW...', '.....WWWWWWWW...', '.....WWWWWWWW...', '.....WWkkWWWW...', '.....WWWWWWWW...', '....SSSSSSSSSS..',
+           '....SsSSSSSSsS..', '...SSSSSSSSSSSS.', '...SSsSSSSSSsSS.', '..SSSSSSSSSSSSSS'],
+  cannon: ['................', '................', '......SSSSSS....', '.....SsSSSSsS...', '.....SSSSSSSS...', '....SSSSSSSSSS..',
+           '....SSsSSSSsSS..', '....SSSSSSSSSS..', '...SSSSSSSSSSSS.', '...SsSSRRRRSSsS.', '...SSSSRRRRSSSS.', '...SSSSSSSSSSSS.',
+           '..SSSSSSSSSSSSSS'],
+  frost:  ['.......CC.......', '......CccC......', '......CccC......', '.....CCccCC.....', '......CccC......', '......CCCC......',
+           '.....CCCCCC.....', '....SSSSSSSS....', '....SsSSSSsS....', '...SSSSSSSSSS...', '...SSsSSSSsSS...', '..SSSSSSSSSSSS..',
+           '..SSSSSSSSSSSS..'],
+  ballista: ['................', '..K..........K..', '..KK........KK..', '...KKKKKKKKKK...', '....KK.RR.KK....', '.......RR.......',
+             '......RRRR......', '.....WWWWWW.....', '....WWWWWWWW....', '...WWWWWWWWWW...', '...WW.WWWW.WW...', '...SSSSSSSSSS...',
+             '..SSSSSSSSSSSS..'],
+  flame:  ['................', '.......Ff.......', '......FffF......', '......FfFF......', '.......Ff.......', '....SSSSSSSS....',
+           '....SkkkkkkS....', '....SkFFFFkS....', '....SkFFFFkS....', '....SkkkkkkS....', '...SSSSSSSSSS...', '...SSsSSSSsSS...',
+           '..SSSSSSSSSSSS..'],
+  tesla:  ['......YYYY......', '.....YyyyyY.....', '.....YyyyyY.....', '......YYYY......', '.......MM.......', '......MMMM......',
+           '.......MM.......', '......MMMM......', '.....MMMMMM.....', '....SSSSSSSS....', '...SSsSSSSsSS...', '..SSSSSSSSSSSS..'],
+  poison: ['................', '.......GG.......', '......GggG......', '.....GGGGGG.....', '....PPPPPPPP....', '....PkPPPPkP....',
+           '....PPPPPPPP....', '...PPPPPPPPPP...', '...PPRRRRRRPP...', '...SSSSSSSSSS...', '..SSSSSSSSSSSS..'],
+  banner: ['....RRRRRRR.....', '....RrRRRrRR....', '....RRRRRRR.....', '....RRRRRR......', '....RRRRR.......', '....P...........',
+           '....P...........', '....P...........', '...SSSSSS.......', '..SSSSSSSSS.....', '..SSSSSSSSSSSS..'],
+  mine:   ['................', '.....YYY...YY...', '....YYYYY.YYYY..', '...KKKKKKKKKKK..', '...KwKKKKKKKwK..', '...KKKKKKKKKKK..',
+           '...KKKKKKKKKKK..', '....WW.....WW...', '...WWWW...WWWW..', '...WWWW...WWWW..', '....WW.....WW...']
+};
+// each level of a tower has its own colour: red, then blue, then gold
+const LEVEL_COL = ['#D63C3C', '#3F8FCC', '#FFC53D'];
+function towerPal(type, lvl) {
+  const R = LEVEL_COL[lvl], r = ['#FF7A6A', '#7FC8FF', '#FFE99A'][lvl];
+  const stone = { S: '#8C91A6', s: '#B8BDCC' };
+  return Object.assign({ R, r, k: '#2A2233' }, stone, {
+    archer: { W: '#A0683A', w: '#C08A56' },
+    cannon: {},
+    frost:  { C: ['#7FE3FF', '#9FEFFF', '#E0FBFF'][lvl], c: '#FFFFFF' },
+    ballista: { K: '#5A3A28', W: '#A0683A' },
+    flame:  { F: '#FF6A2A', f: '#FFE14A' },
+    tesla:  { Y: ['#FFE14A', '#FFF08A', '#FFFFFF'][lvl], y: '#FFFFFF', M: '#6A6E80' },
+    poison: { G: ['#7FE3B6', '#9FF0C8', '#D8FFE8'][lvl], g: '#FFFFFF', P: '#5A8A4A' },
+    banner: { P: '#6A4A2A' },
+    mine:   { Y: '#FFC53D', K: '#6A4A2A', w: '#8A6444', W: '#3A3050' }
+  }[type]);
+}
+
+const ENEMY_MAPS = {
+  goblin: [['.G......G.', '.GG....GG.', '..GGGGGG..', '.GGKGGKGG.', '..GGWWGG..', '..BBBBBB..', '.BBBBBBBB.', '..B....B..', '..B....B..'],
+           { G: '#6FCB4C', K: '#1A1024', W: '#FFFFFF', B: '#8A5A3C' }],
+  wolf:   [['.......GG.', '......GGGG', 'GGGGGGGGKG', 'GGGGGGGGGW', '.GGGGGGG..', '.G.G..G.G.', '.G.G..G.G.'],
+           { G: '#8C91A6', K: '#1A1024', W: '#FFFFFF' }],
+  bat:    [['P...PP...P', 'PP.PPPP.PP', 'PPPPKPKPPP', '.PPPPPPPP.', '..P.PP.P..'], { P: '#8A5AC8', K: '#FFE14A' }],
+  orc:    [['...OOOO...', '..OOOOOO..', '..OKOOKO..', '..OOWWOO..', '.RRRRRRRR.', 'ORRRRRRRRO', 'O.RRRRRR.O', '..RR..RR..', '..RR..RR..'],
+           { O: '#4E8A3A', K: '#1A1024', W: '#FFFFFF', R: '#7A3A2A' }],
+  knight: [['....RR....', '...SSSS...', '..SKKKKS..', '..SSSSSS..', '.YSSSSSSY.', '.YSSSSSSY.', '..SSSSSS..', '..SS..SS..', '..SS..SS..'],
+           { R: '#D63C3C', S: '#B8BDCC', K: '#1A1024', Y: '#FFC53D' }],
+  slime:  [['...LLLL...', '.LLLLLLLL.', 'LLKLLLLKLL', 'LLLLLLLLLL', 'LLLLLLLLLL', '.LLLLLLLL.'], { L: '#58C8A0', K: '#1A1024' }],
+  slimelet: [['.LLLL.', 'LKLLKL', 'LLLLLL', '.LLLL.'], { L: '#7FE3B6', K: '#1A1024' }],
+  shaman: [['....PPPP..Y.', '...PPPPPP.Y.', '...PKPPKP.Y.', '...PPPPPP.Y.', '..PPPPPPPP..', '..PPPPPPPP..', '...PPPPPP...', '...PP..PP...'],
+           { P: '#8A5AC8', K: '#FFE14A', Y: '#C8A86A' }],
+  gargoyle: [['G..........G', 'GG.GGGGGG.GG', 'GGGGKGGKGGGG', '.GGGGGGGGGG.', '..GG.GG.GG..', '...GG..GG...'],
+             { G: '#8C91A6', K: '#FF6A6A' }],
+  troll:  [['.......Y.YY.Y.......', '.......YYYYYY.......', '......TTTTTTTT......', '.....TTTTTTTTTT.....', '....TTKKTTTTKKTT....',
+            '....TTTTTTTTTTTT....', '....TTTWWWWWWTTT....', '...BBBBBBBBBBBBBB...', '..TBBBBBBBBBBBBBBT..', '.TTBBBBBBBBBBBBBBTT.',
+            'TT.BBBBBBBBBBBBBB.TT', 'T..BBBBBBBBBBBBBB..T', '...BBBBB....BBBBB...', '...TTTT......TTTT...', '..TTTTT......TTTTT..'],
+           { Y: '#FFC53D', T: '#6FA84A', K: '#D63C3C', W: '#FFFFFF', B: '#7A5A3A' }],
+  scorpion: [['..............RRR...', '.............R...R..', '.............R..RR..', '..............RRR...', '.............RR.....',
+              '............RR......', 'RR.........RRR......', 'R.R...RRRRRRR.......', '.RRRRRRKRRKRR.......', 'RRRRRRRRRRRRR.......',
+              '.R.R.R.R.R.R.R......'], { R: '#E0602A', K: '#FFE14A', Y: '#FFC53D' }],
+  yeti:   [['......WWWWWWWW......', '.....WWWWWWWWWW.....', '....WWFFFFFFFFWW....', '....WWFKFFFFKFWW....', '....WWFFFTTFFFWW....',
+            '...WWWWFFFFFFWWWW...', '..WWWWWWWWWWWWWWWW..', '.WWWWWWWWWWWWWWWWWW.', 'WW.WWWWWWWWWWWWWW.WW', 'W..WWWWWWWWWWWWWW..W',
+            '...WWWWWW..WWWWWW...', '...WWWWW....WWWWW...', '..WWWWWW....WWWWWW..'],
+           { W: '#F2F7FF', F: '#8CA8C8', K: '#1A1024', T: '#FFFFFF' }]
+};
+const DECO_MAPS = {
+  fields: { tree: [['....GGGG....', '..GGGGgGGG..', '.GGgGGGGGGG.', 'GGGGGGGGgGGG', 'GGgGGGGGGGGG', 'GGGGGgGGGGGG', '.GGGGGGGGgG.',
+                     '..GGGGGGGG..', '....GTTG....', '.....TT.....', '.....TT.....'], { G: '#3E9A3A', g: '#6FCB4C', T: '#6B4530' }],
+            rock: [['..RRRR..', '.RRrRRR.', 'RRRRRRRR', '.RRRRRR.'], { R: '#8C91A6', r: '#C8CEDC' }] },
+  desert: { tree: [['....CC....', '....CC....', 'C...CC....', 'C...CC..C.', 'CC..CC..C.', '.CC.CC.CC.', '..CCCCCC..', '....CC....', '....CC....', '....CC....'], { C: '#4E9A4A', c: '#6FCB4C' }],
+            rock: [['..RRRR..', '.RRrRRR.', 'RRRRRRRR', '.RRRRRR.'], { R: '#C98A5A', r: '#E8B888' }] },
+  snow:   { tree: [['.....GG.....', '....GWGG....', '...GGGGWG...', '....GGGG....', '...GWGGGGG..', '..GGGGGWGG..', '...GGGGGG...',
+                     '..GWGGGGGWG.', '.GGGGGGWGGGG', '.....TT.....', '.....TT.....'], { G: '#2C6E4A', W: '#FFFFFF', T: '#5A3A28' }],
+            rock: [['..RRRR..', '.RRrRRR.', 'RRRRRRRR', '.RRRRRR.'], { R: '#9FB8D8', r: '#E0F0FF' }] }
+};
+const CASTLE_MAP = ['S.S.S......S.S.S', 'SSSSS......SSSSS', 'SsSSS.F....SSsSS', 'SSSSSSFFSSSSSSSS', 'SSSSSSFSSSSSSSSS', 'SSsSSSSSSSSSsSSS',
+                    'SSSSSSSSSSSSSSSS', 'SSSSKKSSSSKKSSSS', 'SSSSKKSSSSKKSSSS', 'SSSSSSSSSSSSSSSS', 'SsSSSSDDDDSSSSsS', 'SSSSSDDDDDDSSSSS',
+                    'SSSSSDDDDDDSSSSS', 'SSSSSDDDDDDSSSSS'];
+const THEMES = {
+  fields: { ground: ['#6CC24A', '#66BA45'], path: '#D2A86E', edge: '#A87E4E', letter: '#3E7A2E', bg: '#2F5A2A' },
+  desert: { ground: ['#EBC57E', '#E4BC74'], path: '#C8955A', edge: '#9A6A3A', letter: '#9A6A3A', bg: '#6A4A2A' },
+  snow:   { ground: ['#EEF4FB', '#E4ECF6'], path: '#A9B8CC', edge: '#7A8AA6', letter: '#7A8AA6', bg: '#2E3E5A' }
+};
+
+let SPR = {};
+function buildSprites() {
+  SPR = { tower: {}, icon: { tower: {}, enemy: {} }, enemy: {}, cold: {}, hit: {}, deco: {} };
+  for (const type of TOWER_ORDER) {
+    SPR.tower[type] = [0, 1, 2].map(l => makeSprite(TOWER_MAPS[type], towerPal(type, l)));
+    SPR.icon.tower[type] = SPR.tower[type][0].toDataURL();
+  }
+  for (const k in ENEMY_MAPS) {
+    const img = makeSprite(ENEMY_MAPS[k][0], ENEMY_MAPS[k][1]);
+    SPR.enemy[k] = img; SPR.cold[k] = tinted(img, '#7FC8FF', 0.45); SPR.hit[k] = tinted(img, '#FFFFFF', 0.7);
+    SPR.icon.enemy[k] = img.toDataURL();
+  }
+  for (const th in DECO_MAPS) for (const k in DECO_MAPS[th]) SPR.deco[th + k] = makeSprite(DECO_MAPS[th][k][0], DECO_MAPS[th][k][1]);
+  SPR.castle = makeSprite(CASTLE_MAP, { S: '#B8BDCC', s: '#8C91A6', K: '#3A3050', D: '#6A4A2A', F: '#D63C3C' });
+}
+
+/* ---------- the ground, drawn once per level ---------- */
+let ground = null;
+function drawGround() {
+  const th = THEMES[G.level.theme];
+  ground = document.createElement('canvas'); ground.width = buf.width; ground.height = buf.height;
+  const g = ground.getContext('2d');
+  const isPath = (x, y) => G.path.tiles.has(x + ',' + y);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    g.fillStyle = th.ground[(x + y) % 2]; g.fillRect(x * TS, y * TS, TS, TS);
+  }
+  // a few blades / pebbles, big enough to read as texture, not as dots
+  let seed = G.level.n * 31 + 5; const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  g.fillStyle = th.letter;
+  for (let i = 0; i < 90; i++) { const x = Math.floor(rnd() * buf.width), y = Math.floor(rnd() * buf.height); g.fillRect(x, y, 2, 1); g.fillRect(x + 1, y - 1, 1, 1); }
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    if (!isPath(x, y)) continue;
+    g.fillStyle = th.path; g.fillRect(x * TS, y * TS, TS, TS);
+    g.fillStyle = th.edge;                              // a border where the path meets the ground
+    if (!isPath(x, y - 1)) g.fillRect(x * TS, y * TS, TS, 2);
+    if (!isPath(x, y + 1)) g.fillRect(x * TS, y * TS + TS - 2, TS, 2);
+    if (!isPath(x - 1, y) && x > 0) g.fillRect(x * TS, y * TS, 2, TS);
+    if (!isPath(x + 1, y) && x < MW - 1) g.fillRect(x * TS + TS - 2, y * TS, 2, TS);
+  }
+  // the monsters' way in: a dark gap and an arrow
+  const [sx, sy] = G.level.path[0], [nx, ny] = G.level.path[1];
+  const ex = Math.max(0, Math.min(MW - 1, sx)), ey = Math.max(0, Math.min(MH - 1, sy));
+  g.fillStyle = 'rgba(26,16,36,.45)'; g.fillRect(ex * TS, ey * TS, TS, TS);
+  // an arrow pointing the way the monsters walk: a chevron, drawn row by row
+  const dx = Math.sign(nx - sx), dy = Math.sign(ny - sy), cx = ex * TS + 8, cy = ey * TS + 8;
+  g.fillStyle = '#FFE14A';
+  for (let i = 0; i < 5; i++) {
+    const along = i - 2, half = 4 - i;               // wide at the back, a point at the front
+    if (dx) g.fillRect(cx + along * dx - 0.5, cy - half, 1, half * 2 + 1);
+    else g.fillRect(cx - half, cy + along * dy - 0.5, half * 2 + 1, 1);
+  }
+  for (const d of G.deco) {
+    const img = SPR.deco[G.level.theme + d.kind];
+    g.drawImage(img, d.x * TS + Math.round((TS - img.width) / 2), d.y * TS + TS - img.height);
+  }
+}
+
+/* ---------- every frame ---------- */
+let pick = null;                    // the tile you've tapped: { x, y }
+function draw() {
+  if (cv.width !== innerWidth || cv.height !== innerHeight) fit();
+  if (!G) return;
+  if (!ground || ground.level !== G.level.id) { drawGround(); ground.level = G.level.id; }
+  const th = THEMES[G.level.theme];
+  b.imageSmoothingEnabled = false;
+  b.drawImage(ground, 0, 0);
+
+  // the castle, with a flag that waves
+  const [ex, ey] = G.end;
+  const cw = SPR.castle.width * 2, ch = SPR.castle.height * 2;
+  b.drawImage(SPR.castle, ex * TS + 8 - cw / 2, ey * TS + TS + 6 - ch, cw, ch);
+  if (G.lives < START_LIVES) {                          // hurt: a crack of smoke
+    b.globalAlpha = 0.5 * (1 - G.lives / START_LIVES);
+    b.fillStyle = '#3A3036'; b.fillRect(ex * TS + 2, ey * TS - 22 - (G.time * 8) % 8, 5, 5);
+    b.globalAlpha = 1;
+  }
+
+  // what you've tapped: a square, and the tower's reach
+  if (pick) {
+    const t = towerAt(pick.x, pick.y);
+    const range = t ? TOWERS[t.type].range[t.lvl] : pick.preview ? TOWERS[pick.preview].range[0] : 0;
+    if (range) {
+      b.fillStyle = 'rgba(255,255,255,.18)'; b.strokeStyle = 'rgba(255,255,255,.7)'; b.lineWidth = 1;
+      b.beginPath(); b.arc(pick.x * TS + 8, pick.y * TS + 8, range * TS, 0, Math.PI * 2); b.fill(); b.stroke();
+    }
+    b.strokeStyle = t || tileFree(pick.x, pick.y) ? '#FFFFFF' : '#FF5A5A';
+    b.strokeRect(pick.x * TS + 0.5, pick.y * TS + 0.5, TS - 1, TS - 1);
+  }
+
+  // towers and monsters, back to front so nearer ones overlap
+  const things = [];
+  for (const t of G.towers) things.push({ y: t.y + 1, draw: () => drawTower(t) });
+  for (const e of G.enemies) { const p = enemyPos(e); things.push({ y: p.y + (ENEMIES[e.type].fly ? 0.6 : 0.3), draw: () => drawEnemy(e, p) }); }
+  things.sort((a, b2) => a.y - b2.y).forEach(o => o.draw());
+
+  // shots
+  for (const s of G.shots) {
+    if (s.kind === 'ball') {
+      b.fillStyle = 'rgba(0,0,0,.25)'; b.fillRect(Math.round(s.x * TS) - 2, Math.round(s.y * TS) + 1, 4, 2);
+      b.fillStyle = '#1A1024'; b.fillRect(Math.round(s.x * TS) - 2, Math.round((s.y - s.h) * TS) - 2, 4, 4);
+    } else if (s.kind === 'arrow') {
+      const a = s.a || 0;
+      b.strokeStyle = '#5A3A28'; b.lineWidth = 1; b.beginPath();
+      b.moveTo(s.x * TS, s.y * TS); b.lineTo(s.x * TS - Math.cos(a) * 5, s.y * TS - Math.sin(a) * 5); b.stroke();
+      b.fillStyle = '#FFFFFF'; b.fillRect(Math.round(s.x * TS), Math.round(s.y * TS), 1, 1);
+    } else {
+      b.fillStyle = '#E0FBFF'; b.fillRect(Math.round(s.x * TS) - 1, Math.round(s.y * TS) - 1, 3, 3);
+      b.fillStyle = 'rgba(127,227,255,.5)'; b.fillRect(Math.round(s.x * TS) - 2, Math.round(s.y * TS) - 2, 5, 5);
+    }
+  }
+  // a flame tower's whoosh
+  for (const z of G.zaps) {
+    if (!z.fire) continue;
+    b.globalAlpha = z.t / 0.18 * 0.5; b.fillStyle = '#FF6A2A';
+    b.beginPath(); b.arc(z.x * TS, z.y * TS, z.r * TS, 0, Math.PI * 2); b.fill();
+    b.globalAlpha = 1;
+  }
+  // lightning: a jagged line through everyone it hit
+  for (const z of G.zaps) {
+    if (z.fire) continue;
+    b.strokeStyle = z.t > 0.08 ? '#FFFFFF' : '#FFE14A'; b.lineWidth = 1; b.beginPath();
+    z.pts.forEach((p, i) => {
+      if (!i) { b.moveTo(p.x * TS, p.y * TS); return; }
+      const q = z.pts[i - 1], mx = (p.x + q.x) / 2 * TS + (Math.random() - 0.5) * 6, my = (p.y + q.y) / 2 * TS + (Math.random() - 0.5) * 6;
+      b.lineTo(mx, my); b.lineTo(p.x * TS, p.y * TS);
+    });
+    b.stroke();
+  }
+  // cannonball bursts
+  for (const p of G.pops) if (p.boom) {
+    b.globalAlpha = p.t / 0.3; b.fillStyle = '#FFB03A';
+    b.beginPath(); b.arc(p.x * TS, p.y * TS, p.boom * TS * (1.2 - p.t / 0.3 * 0.5), 0, Math.PI * 2); b.fill();
+    b.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = th.bg; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(buf, 0, 0, buf.width, buf.height, view.x, view.y, Math.round(buf.width * view.s), Math.round(buf.height * view.s));
+
+  // gold numbers float up (drawn big and sharp on the real screen)
+  ctx.font = `700 ${Math.max(12, Math.round(view.s * 6))}px 'Pixelify Sans', monospace`;
+  ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#1A1024';
+  for (const p of G.pops) if (p.text) {
+    const sx = view.x + p.x * TS * view.s, sy = view.y + (p.y - 0.6 - (0.6 - p.t)) * TS * view.s;
+    ctx.globalAlpha = Math.min(1, p.t * 3);
+    ctx.strokeText(p.text, sx, sy); ctx.fillStyle = '#FFE14A'; ctx.fillText(p.text, sx, sy);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawTower(t) {
+  const T = TOWERS[t.type];
+  const img = SPR.tower[t.type][t.lvl];
+  const x = t.x * TS + Math.round((TS - img.width) / 2), y = t.y * TS + TS - img.height + 1 - (t.flash > 0 ? 1 : 0);
+  // a war banner's helping hand shows as a soft ring
+  if (T.boost) {
+    b.globalAlpha = 0.12 + Math.sin(G.time * 2) * 0.04; b.fillStyle = '#FFC53D';
+    b.beginPath(); b.arc(t.x * TS + 8, t.y * TS + 8, T.range[t.lvl] * TS, 0, Math.PI * 2); b.fill(); b.globalAlpha = 1;
+  }
+  b.fillStyle = 'rgba(0,0,0,.18)'; b.fillRect(t.x * TS + 2, t.y * TS + TS - 3, TS - 4, 3);   // shadow
+  b.drawImage(img, x, y);
+  if (t.type === 'cannon') {                            // the barrel points at its target
+    b.strokeStyle = '#1A1024'; b.lineWidth = 3; b.beginPath();
+    const cx = t.x * TS + 8, cy = y + 7;
+    b.moveTo(cx, cy); b.lineTo(cx + Math.cos(t.aim) * 6, cy + Math.sin(t.aim) * 6); b.stroke();
+  }
+  if (t.type === 'flame') {                             // a flame that flickers
+    const f = Math.floor(G.time * 12) % 3;
+    b.fillStyle = '#FFE14A'; b.fillRect(t.x * TS + 7 + (f - 1), y - 2, 2, 3);
+    b.fillStyle = '#FF6A2A'; b.fillRect(t.x * TS + 7, y, 2, 2);
+  }
+  if (t.type === 'tesla' && t.flash > 0) {              // sparks on the coil
+    b.fillStyle = '#FFFFFF';
+    for (let i = 0; i < 4; i++) b.fillRect(t.x * TS + 4 + Math.floor(Math.random() * 9), y + Math.floor(Math.random() * 5), 1, 1);
+  }
+  if (t.type === 'mine' && !G.inWave) {                 // the gold glints between waves
+    b.fillStyle = Math.floor(G.time * 4) % 2 ? '#FFFFFF' : '#FFE14A';
+    b.fillRect(t.x * TS + 5 + (Math.floor(G.time * 3) % 6), y + 2, 1, 1);
+  }
+  if (t.frozen > 0) {                                   // the Yeti's ice
+    b.globalAlpha = 0.65; b.fillStyle = '#9FEFFF';
+    b.fillRect(t.x * TS + 1, y - 1, TS - 2, img.height + 2);
+    b.globalAlpha = 1; b.fillStyle = '#FFFFFF';
+    b.fillRect(t.x * TS + 3, y + 2, 2, 2); b.fillRect(t.x * TS + 10, y + 6, 2, 2);
+  }
+  // level pips under it
+  for (let i = 0; i <= t.lvl; i++) { b.fillStyle = '#1A1024'; b.fillRect(t.x * TS + 4 + i * 3, t.y * TS + TS - 1, 3, 2); b.fillStyle = LEVEL_COL[t.lvl]; b.fillRect(t.x * TS + 5 + i * 3, t.y * TS + TS - 1, 1, 1); }
+}
+
+function drawEnemy(e, p) {
+  const E = ENEMIES[e.type];
+  const img = e.hitT > 0 ? SPR.hit[e.type] : e.slowMul < 1 ? SPR.cold[e.type] : SPR.enemy[e.type];
+  const bob = Math.round(Math.abs(Math.sin(G.time * (E.fly ? 12 : 9) + e.id * 10)) * (E.fly ? 2 : 1));
+  const lift = E.fly ? 6 : 0;
+  const x = Math.round(p.x * TS - img.width / 2), y = Math.round(p.y * TS + 5 - img.height - bob - lift);
+  if (E.fly) { b.fillStyle = 'rgba(0,0,0,.2)'; b.fillRect(Math.round(p.x * TS) - 4, Math.round(p.y * TS) + 3, 8, 2); }
+  if (p.dx < 0) { b.save(); b.translate(x + img.width, y); b.scale(-1, 1); b.drawImage(img, 0, 0); b.restore(); }
+  else b.drawImage(img, x, y);
+  if (e.burnT > 0) { b.fillStyle = 'rgba(255,106,42,.5)'; b.fillRect(x, y, img.width, img.height); }
+  if (e.poisonT > 0) { b.fillStyle = 'rgba(127,227,182,.45)'; b.fillRect(x, y, img.width, img.height); }
+  if (e.healed > 0) { b.fillStyle = '#7FE3B6'; b.fillRect(Math.round(p.x * TS) - 1, y - 6, 3, 1); b.fillRect(Math.round(p.x * TS), y - 7, 1, 3); }
+  if (e.hp < e.max) {                                   // health bar
+    const w = E.boss ? 20 : 10, bx = Math.round(p.x * TS - w / 2), by = y - 3;
+    b.fillStyle = '#1A1024'; b.fillRect(bx - 1, by - 1, w + 2, 3);
+    b.fillStyle = '#58B83A'; b.fillRect(bx, by, Math.max(1, Math.round(w * e.hp / e.max)), 1);
+  }
+}
+
+// which tile is under a point on the screen
+function tileAt(px, py) {
+  const x = Math.floor((px - view.x) / view.s / TS), y = Math.floor((py - view.y) / view.s / TS);
+  return x >= 0 && y >= 0 && x < MW && y < MH ? { x, y } : null;
+}
+// where a tile is on the screen (for putting the build menu next to it)
+const tileScreen = (x, y) => ({ x: view.x + (x + 0.5) * TS * view.s, y: view.y + (y + 0.5) * TS * view.s, s: TS * view.s });
+/* ==========================================================
+   SCREENS AND CONTROLS
+   ========================================================== */
+const $ = id => document.getElementById(id);
+const show = (id, on) => { const el = $(id); if (el) el.style.display = on ? 'flex' : 'none'; };
+let screen = 'menu', paused = false, speed = 1, worldShown = 0, current = 0, bossSeen = false;
+
+const supplyGold = n => 50 + 10 * n;             // the wagon at the start of a level
+const bonusGold  = w => 25 + 5 * w;              // the optional questions between waves
+const saved = () => Save.get().tgStars || {};
+const isOpen = n => n === 0 || saved()[LEVELS[n - 1].id] !== undefined;
+
+/* ---------- picking a level ---------- */
+function showMenu(w) {
+  if (w !== undefined) worldShown = Math.max(0, Math.min(WORLDS.length - 1, w));
+  screen = 'menu'; paused = false; closePop();
+  ['hud', 'bar', 'pauseCard', 'resultCard'].forEach(id => show(id, false));
+  document.body.classList.remove('playing');
+  // the world's first map with monsters strolling along it, behind the menu
+  newGame(LEVELS[worldShown * 4]); G.silent = true; G.demo = true; G.lives = 999;
+  fit();
+  const s = saved();
+  $('wName').textContent = WORLDS[worldShown].name;
+  $('wPrev').style.visibility = worldShown > 0 ? 'visible' : 'hidden';
+  $('wNext').style.visibility = worldShown < WORLDS.length - 1 ? 'visible' : 'hidden';
+  $('levels').innerHTML = LEVELS.filter(L => L.world === worldShown).map(L => {
+    const open = isOpen(L.n), st = s[L.id];
+    return `<button class="lvl ${open ? '' : 'locked'} ${L.boss ? 'boss' : ''}" data-n="${L.n}" ${open ? '' : 'disabled'}>
+      <b>${open ? (L.boss ? '\u{1F480}' : L.n + 1) : '\u{1F512}'}</b>
+      <span class="lstars">${'★'.repeat(st || 0)}<i>${'★'.repeat(3 - (st || 0))}</i></span>
+      <small>${L.boss ? ENEMIES[L.boss].name : 'Level ' + (L.n + 1)}</small></button>`;
+  }).join('');
+  document.querySelectorAll('#levels .lvl').forEach(bt => bt.onclick = () => startLevel(+bt.dataset.n));
+  show('menu', true);
+  Sound.play('menu');
+  showMute();
+}
+
+/* ---------- playing a level ---------- */
+function startLevel(n) {
+  if (document.activeElement) document.activeElement.blur();
+  current = n; screen = 'play'; paused = false; speed = 1; bossSeen = false; closePop(); pick = null;
+  newGame(LEVELS[n]);
+  ['menu', 'pauseCard', 'resultCard'].forEach(id => show(id, false));
+  show('hud', true); show('bar', true);
+  document.body.classList.add('playing');
+  $('hLevel').textContent = LEVELS[n].name;
+  $('speedBtn').textContent = '▶';
+  fit();
+  Sound.play(LEVELS[n].theme);
+  updateHud(true);
+  const gold = supplyGold(n);
+  // Two questions, not three: a long level has ten wave breaks as well,
+  // and that added up to over twenty questions a level.
+  Quiz.ask({
+    count: 2, title: 'Supply wagon', subtitle: `Answer 2 for ${gold} building gold`,
+    onDone: () => { G.gold += gold; Sound.sfx('coin'); flash(`+${gold} gold!`); updateHud(true); }
+  });
+}
+
+function nextWave() {
+  if (screen !== 'play' || paused || Quiz.isOpen() || !G || G.over || G.sent >= G.waves.length) return;
+  closePop();
+  const early = G.inWave, bonus = earlyBonus();
+  if (startWave()) {
+    flash(early ? `Sent early! +${bonus} gold` : G.sent === G.waves.length ? 'Final wave!' : 'Wave ' + G.sent);
+    updateHud(true);
+  }
+}
+
+function bonus() {
+  if (!G || G.inWave || G.bonusTaken || G.sent === 0 || Quiz.isOpen()) return;
+  closePop();
+  const gold = bonusGold(G.cleared);
+  Quiz.ask({
+    count: 1, title: 'Bonus gold', subtitle: `Answer 1 for ${gold} gold`,
+    onDone: () => { G.gold += gold; G.bonusTaken = true; Sound.sfx('coin'); flash(`+${gold} gold!`); updateHud(true); }
+  });
+}
+
+onEvent.fn = (what, x) => {
+  if (!G || G.demo) return;
+  if (what === 'waveDone') { flash(`Wave cleared! +${x} gold`, 1.4); updateHud(true); }
+  if (what === 'leak') { shake = 0.25; }
+  if (what === 'win' || what === 'lose') setTimeout(finish, 1200);
+};
+
+function finish() {
+  closePop(); pick = null;
+  const L = LEVELS[current], won = G.won;
+  const stars = won ? starsFor(G.lives) : 0;
+  if (won) {
+    const all = Object.assign({}, saved());
+    if (all[L.id] === undefined || stars > all[L.id]) all[L.id] = stars;
+    Save.update({ tgStars: all, tgLevels: LEVELS.length });
+  }
+  Sound.play(won ? 'menu' : null);
+  $('rTitle').textContent = won ? (L.boss ? `${ENEMIES[L.boss].name} beaten!` : 'Castle saved!') : 'The castle fell!';
+  $('rStars').innerHTML = won ? '★'.repeat(stars) + '<i>' + '★'.repeat(3 - stars) + '</i>' : '';
+  $('rMsg').textContent = won
+    ? `Your castle kept ${G.lives} of ${G.maxLives} hearts.` + (stars < 3 ? ' Keep 18 or more for 3 stars.' : '')
+    : `You got to wave ${Math.min(G.sent, G.waves.length)} of ${G.waves.length}. Tip: build near the corners, where monsters walk past for longest, and upgrade your towers.`;
+  $('rNext').style.display = won && LEVELS[current + 1] ? '' : 'none';
+  $('rNext').textContent = LEVELS[current + 1] && LEVELS[current + 1].world !== L.world ? 'Next world ▶' : 'Next level';
+  show('resultCard', true);
+}
+
+function pause(on) {
+  if (screen !== 'play' || (G && G.over)) return;
+  paused = on === undefined ? !paused : on;
+  closePop();
+  Sound.sfx('click');
+  show('pauseCard', paused);
+}
+
+/* ---------- the top bar and the bottom bar ---------- */
+let lastHud = '';
+function updateHud(force) {
+  if (!G || screen !== 'play') return;
+  const alive = G.enemies.length + G.queue.length;
+  const key = [G.lives, G.maxLives, G.gold, G.sent, G.cleared, G.inWave, G.bonusTaken, G.towers.length, alive, G.over].join();
+  if (!force && key === lastHud) return;
+  lastHud = key;
+  $('hLives').textContent = G.maxLives > START_LIVES ? `${G.lives}/${G.maxLives}` : G.lives;
+  $('hGold').textContent = G.gold;
+  $('hWave').textContent = Math.min(G.sent || 1, G.waves.length);
+  $('hWaves').textContent = G.waves.length;
+  $('hLives').parentElement.classList.toggle('low', G.lives <= 5);
+  const more = G.sent < G.waves.length;
+  $('goBtn').style.display = G.over || !more ? 'none' : '';
+  $('goBtn').innerHTML = G.inWave ? `&#9193; Send wave ${G.sent + 1} early <em>+${earlyBonus()}</em>`
+    : G.sent === 0 ? 'Start wave 1 &#9654;' : `Next wave (${G.sent + 1}/${G.waves.length}) &#9654;`;
+  $('goBtn').classList.toggle('early', G.inWave);
+  const canBonus = !G.inWave && !G.over && !G.bonusTaken && G.sent > 0;
+  $('bonusBtn').style.display = canBonus ? '' : 'none';
+  $('bonusBtn').innerHTML = `&#10067; +${bonusGold(G.cleared)} gold`;
+  // what the next wave is made of, so you can plan
+  const summary = G.sent < G.waves.length ? waveSummary(G.sent) : [];
+  $('next').innerHTML = !summary.length || G.over ? ''
+    : `<span>Coming:</span>` + summary.map(([type, n]) => `<i><img src="${SPR.icon.enemy[type]}" alt="">${n}</i>`).join('');
+  $('hint').textContent = G.over ? ''
+    : !G.towers.length ? 'Tap an empty square next to the path to build a tower'
+    : G.inWave ? `${alive} monster${alive === 1 ? '' : 's'} left`
+    : G.sent === 0 ? 'Build a few more, then start the first wave (Space)'
+    : canBonus ? 'Answer a question for bonus gold, or send the next wave'
+    : 'Build, upgrade, or mend the castle - then send the next wave';
+}
+
+let flashTimer = null;
+function flash(msg, secs = 1.2) {
+  const el = $('banner');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.classList.remove('show'), secs * 1000);
+}
+function showMute() {
+  const icon = Sound.muted ? '\u{1F507}' : '\u{1F50A}';
+  ['muteBtn', 'menuMute'].forEach(id => { const el = $(id); if (el) el.textContent = icon; });
+}
+
+/* ---------- the build menu and the tower menu ---------- */
+function closePop() { show('pop', false); if (pick) pick.preview = null; }
+function placePop(tx, ty) {
+  const pop = $('pop'), p = tileScreen(tx, ty);
+  show('pop', true);
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let x = p.x + p.s * 0.8, y = p.y - h / 2;
+  if (x + w > innerWidth - 8) x = p.x - p.s * 0.8 - w;           // not enough room on the right
+  pop.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px';
+  pop.style.top = Math.max(8, Math.min(innerHeight - h - 8, y)) + 'px';
+}
+const rateText = r => (1 / r >= 1 ? (1 / r).toFixed(1) + ' shots/s' : r.toFixed(1) + 's a shot');
+function towerStatLine(type, lvl) {
+  const T = TOWERS[type];
+  if (T.gold) return `<em>${T.gold[lvl]}</em> gold after every wave`;
+  if (T.boost) return `Towers within ${T.range[lvl]} reload ${Math.round((T.boost[lvl] - 1) * 100)}% faster`;
+  return `Damage <b>${T.dmg[lvl]}</b> &middot; reach <b>${T.range[lvl]}</b> &middot; ${rateText(T.rate[lvl])}`
+       + (T.splash ? ` &middot; splash ${T.splash[lvl]}` : '') + (T.chain ? ` &middot; chains ${T.chain[lvl]}` : '')
+       + (T.slow ? ` &middot; slows to ${Math.round(T.slow[lvl] * 100)}%` : '') + (T.burn ? ` &middot; burns ${T.burn[lvl]}/s` : '')
+       + (T.poison ? ` &middot; poison ${T.poison[lvl]}/s` : '');
+}
+function openBuild(tx, ty) {
+  pick = { x: tx, y: ty, preview: null };
+  $('pop').className = 'td-pop wide';
+  $('pop').innerHTML = `<div class="pop-head">Build here</div><div class="pop-list">` + TOWER_ORDER.map((type, i) => {
+    const T = TOWERS[type], locked = !isUnlocked(type), poor = G.gold < T.cost;
+    return `<button class="pop-tower" data-type="${type}" ${locked || poor ? 'disabled' : ''}>
+      <img src="${SPR.icon.tower[type]}" alt="">
+      <span><b>${T.name}</b><small>${locked ? 'Unlocks on level ' + (T.unlock + 1) : towerStatLine(type, 0)}</small>
+      <small class="note">${locked ? '' : T.note}</small></span>
+      <em class="${poor && !locked ? 'poor' : ''}">${locked ? '\u{1F512}' : T.cost}</em></button>`;
+  }).join('') + '</div>';
+  $('pop').querySelectorAll('.pop-tower').forEach(bt => {
+    bt.onmouseenter = bt.onfocus = () => { pick.preview = bt.dataset.type; };
+    bt.onclick = () => { if (build(bt.dataset.type, tx, ty)) { closePop(); pick = { x: tx, y: ty }; updateHud(true); } };
+  });
+  placePop(tx, ty);
+}
+function openTower(t) {
+  pick = { x: t.x, y: t.y };
+  const T = TOWERS[t.type], L = t.lvl, max = L >= 2, cost = max ? 0 : T.up[L];
+  const shoots = !T.gold && !T.boost;
+  const mode = MODES.find(m => m.id === t.mode);
+  const s = stats(t);
+  $('pop').className = 'td-pop';
+  $('pop').innerHTML = `<div class="pop-head">${T.name} <span class="pips">${'\u25CF'.repeat(L + 1)}${'\u25CB'.repeat(2 - L)}</span></div>
+    <p class="pop-stats">${towerStatLine(t.type, L)}${s.boosted ? ' <span class="boosted">(banner boost!)</span>' : ''}</p>
+    ${max ? '<p class="pop-stats">Top level!</p>' : `<button class="pop-up" id="upBtn" ${G.gold < cost ? 'disabled' : ''}>&#11014; Upgrade <em>${cost}</em></button>
+      <p class="pop-stats next">Then: ${towerStatLine(t.type, L + 1)}</p>`}
+    ${shoots ? `<button class="pop-mode" id="modeBtn">Shoots: <b>${mode.name}</b> <small>${mode.note}</small></button>` : ''}
+    <button class="pop-sell" id="sellBtn">Sell for <em>${sellValue(t)}</em></button>`;
+  if (!max) $('upBtn').onclick = () => { if (upgrade(t)) { openTower(t); updateHud(true); } };
+  if (shoots) $('modeBtn').onclick = () => { cycleMode(t); openTower(t); };
+  $('sellBtn').onclick = () => { sell(t); closePop(); pick = null; updateHud(true); };
+  placePop(t.x, t.y);
+}
+// tapping your own castle: mend it, or build the walls up
+function openCastle() {
+  pick = null;
+  const canRepair = G.lives < G.maxLives, wallsLeft = G.walls < MAX_WALLS;
+  $('pop').className = 'td-pop';
+  $('pop').innerHTML = `<div class="pop-head">Your castle</div>
+    <p class="pop-stats">${G.lives} of ${G.maxLives} hearts left</p>
+    <button class="pop-up" id="repBtn" ${!canRepair || G.gold < repairCost() ? 'disabled' : ''}>&#10024; Mend +4 hearts <em>${repairCost()}</em></button>
+    ${canRepair ? '' : '<p class="pop-stats">No damage to mend.</p>'}
+    <button class="pop-up" id="wallBtn" ${!wallsLeft || G.gold < wallCost() ? 'disabled' : ''}>&#129521; Stronger walls +5 max <em>${wallsLeft ? wallCost() : ''}</em></button>
+    ${wallsLeft ? '' : '<p class="pop-stats">The walls are as strong as they go.</p>'}
+    <button class="pop-sell" id="closeBtn">Close</button>`;
+  $('repBtn').onclick = () => { if (repair()) { openCastle(); updateHud(true); flash('Castle mended!', 1); } };
+  $('wallBtn').onclick = () => { if (reinforce()) { openCastle(); updateHud(true); flash('Stronger walls!', 1); } };
+  $('closeBtn').onclick = () => { closePop(); };
+  const p = tileScreen(G.end[0], G.end[1]);
+  placePop(G.end[0], G.end[1]);
+}
+
+/* ---------- controls ---------- */
+cv.addEventListener('pointerdown', e => {
+  if (screen !== 'play' || paused || Quiz.isOpen() || !G || G.over) return;
+  const tile = tileAt(e.clientX, e.clientY);
+  if (!tile) { closePop(); pick = null; return; }
+  if (Math.abs(tile.x - G.end[0]) <= 1 && Math.abs(tile.y - G.end[1]) <= 1) { Sound.sfx('click'); openCastle(); return; }
+  const t = towerAt(tile.x, tile.y);
+  if (t) { Sound.sfx('click'); openTower(t); return; }
+  if (tileFree(tile.x, tile.y)) { Sound.sfx('click'); openBuild(tile.x, tile.y); return; }
+  closePop(); pick = { x: tile.x, y: tile.y };
+  Sound.sfx('nope');
+  flash(G.path.tiles.has(tile.x + ',' + tile.y) ? 'Not on the path!' : 'Can’t build there', 0.8);
+});
+addEventListener('keydown', e => {
+  if (Quiz.isOpen() || screen !== 'play') return;
+  const k = e.key.toLowerCase();
+  if (k === 'escape') { if ($('pop').style.display === 'flex') { closePop(); pick = null; } else pause(); return; }
+  if (k === 'm') { Sound.toggle(); showMute(); return; }
+  if (paused) return;
+  if (k === ' ') { e.preventDefault(); nextWave(); return; }
+  if (k === 'f') { $('speedBtn').click(); return; }
+  // 1-4 build that tower on the square you've tapped
+  if (pick && '123456789'.includes(k) && k !== '' && tileFree(pick.x, pick.y)) {
+    const type = TOWER_ORDER[+k - 1];
+    if (build(type, pick.x, pick.y)) { closePop(); updateHud(true); } else Sound.sfx('nope');
+  }
+  if (k === 'u' && pick && towerAt(pick.x, pick.y)) { const t = towerAt(pick.x, pick.y); if (upgrade(t)) { openTower(t); updateHud(true); } }
+  if (k === 't' && pick && towerAt(pick.x, pick.y)) { cycleMode(towerAt(pick.x, pick.y)); openTower(towerAt(pick.x, pick.y)); }
+});
+
+$('goBtn').onclick = e => { e.currentTarget.blur(); nextWave(); };
+$('bonusBtn').onclick = e => { e.currentTarget.blur(); bonus(); };
+$('speedBtn').onclick = e => { e.currentTarget.blur(); speed = speed === 1 ? 2 : 1; e.currentTarget.textContent = speed === 1 ? '▶' : '▶▶'; Sound.sfx('click'); };
+$('pauseBtn').onclick = e => { e.currentTarget.blur(); pause(); };
+['muteBtn', 'menuMute'].forEach(id => $(id).onclick = e => { e.currentTarget.blur(); Sound.toggle(); showMute(); });
+$('resumeBtn').onclick = () => pause(false);
+$('restartBtn').onclick = () => startLevel(current);
+$('quitBtn').onclick = () => showMenu(LEVELS[current].world);
+$('rNext').onclick = () => startLevel(current + 1);
+$('rAgain').onclick = () => startLevel(current);
+$('rMenu').onclick = () => showMenu(LEVELS[current].world);
+$('wPrev').onclick = () => showMenu(worldShown - 1);
+$('wNext').onclick = () => showMenu(worldShown + 1);
+$('rotateAnyway').onclick = () => { document.body.classList.add('upright-ok'); fit(); };
+
+/* ---------- the loop ---------- */
+let last = 0, shake = 0, demoT = 0;
+function frame(t) {
+  const dt = Math.min(0.05, last ? (t - last) / 1000 : 0.016);
+  last = t;
+  if (screen === 'menu' && G && G.demo) {
+    // the menu's backdrop: goblins and wolves wander to the castle
+    demoT -= dt;
+    if (demoT <= 0) { spawn(Math.random() < 0.7 ? 'goblin' : 'wolf', 0); demoT = 1.1; }
+    step(dt); G.lives = 999;
+  } else if (screen === 'play' && !paused && !Quiz.isOpen() && G && !G.over) {
+    for (let i = 0; i < speed; i++) step(dt);
+    if (!bossSeen && G.enemies.some(e => ENEMIES[e.type].boss)) {
+      bossSeen = true;
+      const boss = G.enemies.find(e => ENEMIES[e.type].boss);
+      flash(`The ${ENEMIES[boss.type].name} is coming!`, 2);
+      Sound.play('boss');
+    }
+    updateHud();
+  }
+  // gold changes while a menu is open, so the buttons grey in and out
+  if (screen === 'play' && $('pop').style.display === 'flex') {
+    $('pop').querySelectorAll('.pop-tower').forEach(bt => { const T = TOWERS[bt.dataset.type]; bt.disabled = !isUnlocked(bt.dataset.type) || G.gold < T.cost; });
+    const tw = pick && towerAt(pick.x, pick.y);
+    if (tw && $('upBtn') && tw.lvl < 2) $('upBtn').disabled = G.gold < TOWERS[tw.type].up[tw.lvl];
+    if ($('repBtn')) { $('repBtn').disabled = G.lives >= G.maxLives || G.gold < repairCost(); $('wallBtn').disabled = G.walls >= MAX_WALLS || G.gold < wallCost(); }
+  }
+  if (shake > 0) { shake -= dt; cv.style.transform = `translate(${(Math.random() - 0.5) * 6}px, ${(Math.random() - 0.5) * 4}px)`; }
+  else if (cv.style.transform) cv.style.transform = '';
+  Sound.setDuck(paused || Quiz.isOpen());
+  draw();
+  requestAnimationFrame(frame);
+}
+
+buildSprites();
+showMenu(0);
+requestAnimationFrame(frame);
+</script>
+
+</body>
+</html>
