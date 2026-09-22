@@ -1221,6 +1221,8 @@ canvas { display: block; }
 .daily-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--mint)); transition: width .4s; }
 .daily-note { display: block; margin-top: 6px; font-size: .8rem; font-weight: 800; color: var(--ink-soft); }
 
+.admin-link { font-size: .8rem; font-weight: 800; color: var(--ink-soft); text-decoration: none; border-bottom: 2px dotted var(--ink-soft); }
+.admin-link:hover { color: var(--ink); }
 .tp-card { margin-top: 30px; background: #fff; border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-sticker); padding: 12px 16px; }
 .tp-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .tp-top h2 { margin: 0; font-size: 1.3rem; }
@@ -1629,6 +1631,7 @@ canvas { display: block; }
   <footer>
     <span id="saveWhere">Saved in this browser.</span>
     <button id="reset">Start over</button>
+    <a class="admin-link" href="admin.html">Admin panel</a>
   </footer>
 
 </main>
