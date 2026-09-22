@@ -1,0 +1,4254 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Mage Run &mdash; Mathcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   style.css — shared look for every page.
+   Exercise book: graph paper, ballpoint blue, red teacher's pen.
+   ============================================================ */
+
+:root {
+  --paper:      #F2F6FB;
+  --grid:       #CFE0F2;
+  --ink:        #16324F;
+  --ink-soft:   #5C7490;
+  --red-pen:    #E03B3B;
+  --gold:       #FFC53D;
+  --mint:       #3FC99A;
+  --grape:      #8B6BDB;
+
+  --shadow-sticker: 2px 3px 0 rgba(22, 50, 79, 0.18);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* the graph paper */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+h1, h2, h3, .chunky {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 20px 18px 64px;
+}
+
+/* --- the header strip, like the front of an exercise book --- */
+.book-label {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.book-label h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+}
+
+.book-label h1 .dot { color: var(--red-pen); }
+
+.stats {
+  display: flex;
+  gap: 16px;
+  font-weight: 700;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.stat .figure {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stat .caption {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.coins .figure  { color: #C98B00; }
+.streak .figure { color: var(--mint); }
+.level .figure  { color: var(--grape); }
+
+/* ============================================================
+   Overall level — one level across every game, shown on the hub.
+   The maths level (1-8) is a different thing and lives in the games.
+   ============================================================ */
+
+.overall { min-width: min(300px, 100%); }
+
+.ov-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+
+.ov-level {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--grape);
+}
+
+.ov-level .word {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  margin-right: 6px;
+}
+
+.ov-coins {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.25rem;
+  color: #C98B00;
+  white-space: nowrap;
+}
+
+.ov-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.ov-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.4s ease-out;
+}
+
+.ov-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- the warm-up question card --- */
+.warmup {
+  margin-top: 26px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.warmup .prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 11vw, 3.6rem);
+  margin: 6px 0 18px;
+  line-height: 1.1;
+}
+
+.warmup .meta {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.answer-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+input[type="number"] {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  width: 140px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+input[type="number"]:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--grape);
+  outline-offset: 2px;
+}
+
+/* stop the little spinner arrows */
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+button {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  padding: 11px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+}
+
+button:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* --- feedback line, written in red pen when you're wrong --- */
+.feedback {
+  min-height: 1.6em;
+  margin-top: 14px;
+  font-weight: 800;
+}
+
+.feedback.good  { color: var(--mint); }
+.feedback.bad   { color: var(--red-pen); }
+
+/* --- the game grid: each tile is a picture of the game being played --- */
+.shelf {
+  display: grid;
+  /* the max matters as much as the min — with 1fr, two tiles on a wide page
+     stretched to half the page each. Cap it and they stay tile-sized. */
+  grid-template-columns: repeat(auto-fit, minmax(175px, 215px));
+  justify-content: start;
+  gap: 16px;
+}
+
+/* on a phone, one tile per row, full width — a 215px column left a strip of nothing */
+@media (max-width: 520px) {
+  .shelf { grid-template-columns: 1fr; }
+  .tile:nth-child(n) { transform: none; }
+}
+
+.tile {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+/* each tile sits a touch crooked, like a sticker on the page */
+.tile:nth-child(4n+1) { transform: rotate(-0.7deg); }
+.tile:nth-child(4n+2) { transform: rotate(0.55deg); }
+.tile:nth-child(4n+3) { transform: rotate(0.4deg); }
+.tile:nth-child(4n+4) { transform: rotate(-0.45deg); }
+
+.tile:hover,
+.tile:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow: 4px 8px 0 rgba(22, 50, 79, 0.22);
+}
+
+/* the picture */
+.tile .cover {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-bottom: 2px solid var(--ink);
+  background: #090F22;
+  overflow: hidden;
+}
+
+.tile .cover svg { display: block; width: 100%; height: 100%; }
+
+/* a tile with no artwork yet can still use a big emoji */
+.tile .cover.emoji {
+  display: grid;
+  place-items: center;
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+}
+
+.cover.blue  { background: #BFE3FF; }
+.cover.mint  { background: #C4F0DF; }
+.cover.gold  { background: #FFE6A8; }
+.cover.grape { background: #DCD2F7; }
+
+.tile-body { display: block; padding: 10px 12px 12px; }
+
+.tile .name {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+  text-align: left;
+  padding: 0;
+  line-height: 1.15;
+}
+
+.tile .blurb {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.tile .prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  min-height: 13px;
+}
+
+.tile .prog-track {
+  flex: 1;
+  height: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.tile .prog-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.5s ease-out;
+}
+
+.tile .state {
+  display: block;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0;
+  color: var(--ink-soft);
+}
+
+.tile .state b { color: var(--ink); }
+.tile .state.go { color: var(--mint); }
+
+.tile.locked { opacity: 0.62; }
+.tile.locked .state { color: var(--ink-soft); }
+.tile.locked:hover { transform: rotate(0deg); box-shadow: var(--shadow-sticker); }
+
+footer {
+  margin-top: 46px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+footer button.armed { background: var(--red-pen); color: #fff; border-color: var(--red-pen); }
+
+footer button {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 520px) {
+  .book-label { flex-direction: column; align-items: flex-start; }
+  .stats { gap: 18px; }
+}
+
+/* ============================================================
+   Question pop-up (js/quiz.js)
+   ============================================================ */
+
+.quiz-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: 50;
+}
+
+.quiz-backdrop.open { display: flex; }
+
+.quiz-card {
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  text-align: center;
+}
+
+.quiz-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.quiz-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.quiz-pips {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin: 14px 0 6px;
+}
+
+.pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.pip.lit { background: var(--mint); }
+
+.quiz-prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2rem, 9vw, 2.9rem);
+  margin: 8px 0 18px;
+  line-height: 1.1;
+}
+
+.shake { animation: shake 0.32s ease; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-9px); }
+  75%      { transform: translateX(9px); }
+}
+
+/* ============================================================
+   In-game HUD — the keycap row
+   ============================================================ */
+
+.game-body {
+  margin: 0;
+  overflow: hidden;
+  background: #0A1624;
+}
+
+canvas { display: block; }
+
+.hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  pointer-events: none;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.keycaps { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.keycap {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.keycap.lit {
+  border-color: #fff;
+  background: var(--gold);
+  color: var(--ink);
+  text-shadow: none;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 16px rgba(255, 197, 61, 0.7);
+}
+
+.keycap.pressed { transform: translateY(3px); box-shadow: none; }
+
+.hud-right { text-align: right; line-height: 1.35; }
+.hud-right .big { font-size: 1.5rem; }
+.hud-right .small { font-size: 0.85rem; opacity: 0.85; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.banner.show { opacity: 1; }
+
+.back-link {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  z-index: 20;
+}
+
+.back-link:hover { color: #fff; }
+
+/* ============================================================
+   Featured game panel on the hub — a dark window into the game
+   world, sitting on the paper page
+   ============================================================ */
+
+.featured {
+  margin-top: 26px;
+  background: #16324F;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 4px 6px 0 rgba(22, 50, 79, 0.28);
+  padding: 26px 24px;
+  color: #fff;
+}
+
+.featured h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 2.5rem);
+}
+
+.featured p {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  color: #BBD3EC;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.featured .keycaps {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 20px 0 22px;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.featured .play {
+  display: inline-block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  padding: 12px 30px;
+  border: 2px solid #0A1624;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.featured .play:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* ============================================================
+   End-of-game results screen (js/results.js)
+   ============================================================ */
+
+.results-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+}
+
+.results-backdrop.open { display: flex; }
+
+.results-card {
+  position: relative;
+  overflow: hidden;
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.4);
+  padding: 26px 22px 22px;
+  text-align: center;
+}
+
+.results-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.7rem, 7vw, 2.3rem);
+  margin: 0;
+}
+
+.results-sub {
+  margin: 4px 0 20px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.results-stats {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.results-stat {
+  flex: 1;
+  max-width: 116px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 13px 8px;
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+
+.results-stat.pop {
+  animation: statPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes statPop {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.results-figure {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.results-stat.score .results-figure { color: var(--mint); }
+.results-stat.coins .results-figure { color: #C98B00; }
+.results-stat.time  .results-figure { color: var(--grape); }
+
+.results-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- level bar --- */
+.results-levelbox {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.results-levelrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.results-levelbadge {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.9rem;
+  background: var(--grape);
+  color: #fff;
+  padding: 4px 13px;
+  border-radius: 999px;
+}
+
+.results-levelbadge.bump { animation: badgeBump 0.5s ease; }
+
+@keyframes badgeBump {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+
+.results-levelnote {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.results-track {
+  height: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.results-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+}
+
+.results-fill.glow { box-shadow: 0 0 14px 2px rgba(255, 197, 61, 0.9); }
+
+/* --- buttons --- */
+.results-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.results-again { width: 100%; }
+
+.results-home {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  padding: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* --- confetti --- */
+.confetti-bit {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(420px) rotate(680deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-bit { display: none; }
+  .results-stat { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Speed Stages — chunky arcade HUD
+   ============================================================ */
+
+.hud { gap: 10px; justify-content: center; }
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(#2E4C78, #1B3151);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  padding: 7px 20px 7px 12px;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pill b { font-size: 1.15rem; }
+.pill.speed  span { color: var(--gold); }
+.pill.hearts span { color: #FF8A98; }
+.pill.wins   span { color: var(--mint); }
+.pill.mult   span { color: #C4AEFF; }
+
+/* left column of square buttons */
+.sidebar {
+  position: fixed;
+  left: 14px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+
+.sidebar button {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 16px;
+  background: linear-gradient(#5AA9E6, #3A7CC4);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+}
+
+.sidebar button span { font-size: 1.9rem; line-height: 1; }
+.sidebar button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+#rebirthBtn { background: linear-gradient(#B88BEA, #8B5FD0); }
+
+/* progress bar along the bottom */
+.bottombar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  background: rgba(20, 32, 52, 0.88);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.bb-level { font-size: 1.05rem; white-space: nowrap; }
+
+.bb-track {
+  flex: 1;
+  height: 17px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bb-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), #FF9F43);
+  transition: width 0.25s ease-out;
+}
+
+.bb-num { font-size: 0.9rem; white-space: nowrap; opacity: 0.9; }
+
+@media (max-width: 620px) {
+  .sidebar button { width: 62px; height: 62px; font-size: 0.7rem; }
+  .sidebar button span { font-size: 1.4rem; }
+  .pill { font-size: 1.05rem; padding: 5px 14px 5px 9px; }
+}
+
+/* --- shop --- */
+.shop-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 55;
+}
+
+.shop-backdrop.open { display: flex; }
+
+.shop-card {
+  width: min(440px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  color: var(--ink);
+}
+
+.shop-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  margin: 0;
+  text-align: center;
+}
+
+.shop-sub {
+  margin: 4px 0 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.shop-item strong {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+}
+
+.shop-item span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.shop-item button { font-size: 0.9rem; padding: 8px 15px; white-space: nowrap; }
+.shop-item button:disabled { background: #E4E9EF; color: var(--ink-soft); cursor: not-allowed; }
+
+.shop-close { width: 100%; margin-top: 6px; background: #fff; }
+
+/* ============================================================
+   Prism Rush — the runner
+   ============================================================ */
+
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+.gd-hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.gd-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.gd-tag {
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.gd-track {
+  flex: 1;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gd-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3FC99A, #FFC53D);
+}
+
+/* start card */
+.gd-start {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  background: rgba(10, 16, 36, 0.86);
+  z-index: 40;
+}
+
+.gd-start h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.4rem, 11vw, 4rem);
+  color: #FFC53D;
+  margin: 0 0 6px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.gd-start p {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.gd-start .gd-small { font-size: 0.85rem; opacity: 0.72; margin-top: 8px; }
+.gd-start button { margin-top: 20px; font-size: 1.25rem; padding: 13px 38px; }
+
+/* --- Prism Rush menu: Geometry Dash style carousel --- */
+.gd-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 35%, #223A6B, #0A1024 70%);
+  z-index: 40;
+}
+
+.gd-menu h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  color: #FFC53D;
+  margin: 0 0 14px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+.carousel { display: flex; align-items: center; gap: 10px; }
+
+.car-arrow {
+  width: 54px;
+  height: 54px;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.car-stage { width: min(330px, 74vw); }
+
+.car-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 18px 22px;
+  border: 4px solid #fff;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--c1), var(--c2));
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+.car-card.locked { filter: grayscale(0.9) brightness(0.5); }
+
+.car-index { font-size: 0.75rem; opacity: 0.7; letter-spacing: 0.08em; }
+.car-title { font-size: 1.7rem; text-shadow: 0 0 18px var(--ac); }
+
+.car-diff {
+  font-size: 0.78rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: #10203A;
+  font-weight: 700;
+}
+
+.car-bestwrap { width: 100%; margin-top: 8px; }
+
+.car-best {
+  height: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.car-best div { height: 100%; background: var(--ac); }
+
+.car-pct {
+  display: block;
+  text-align: center;
+  font-size: 0.76rem;
+  margin-top: 5px;
+  opacity: 0.85;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+
+.car-star { font-size: 0.8rem; color: #FFE066; }
+
+.menu-row { display: flex; gap: 10px; margin-top: 20px; align-items: stretch; }
+
+.big-play { font-size: 1.35rem; padding: 14px 52px; }
+.big-play:disabled { background: #46506A; color: #9AA6B8; cursor: not-allowed; }
+.menu-side { font-size: 0.95rem; padding: 14px 20px; background: #fff; }
+
+.gd-menu .gd-small {
+  color: #fff;
+  opacity: 0.6;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  margin-top: 14px;
+}
+
+.mute-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  width: 46px;
+  height: 46px;
+  font-size: 1.2rem;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  box-shadow: none;
+  z-index: 45;
+}
+
+.skin-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
+/* ============================================================
+   Mage Run — styled after the reference screenshots
+   ============================================================ */
+.px, .px-hud, .ms-screen, .end-box { font-family: 'Pixelify Sans', 'Fredoka', monospace; }
+canvas#cv { image-rendering: pixelated; }
+.banner { font-family: 'Pixelify Sans', monospace; font-weight: 700;
+          text-shadow: 3px 0 0 #1A1024, -3px 0 0 #1A1024, 0 3px 0 #1A1024, 0 -3px 0 #1A1024; }
+
+/* ---------- the bar across the top ---------- */
+.px-hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: none;                           /* shown while playing */
+  flex-direction: column; align-items: stretch;
+  padding: 1.6vh 2.4vw 2.4vh;
+  pointer-events: none; z-index: 20;
+  /* a soft shade so a star high up in the level can't sit on top of the
+     numbers and look like part of the bar */
+  background: linear-gradient(rgba(12, 10, 30, .5), rgba(12, 10, 30, 0));
+}
+.px-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 2vw; white-space: nowrap; }
+@media (max-width: 600px) {
+  /* the bar spilled off a phone screen: smaller type, and everything on one line */
+  /* .px-hud in front so these beat the full-size rules further down */
+  .px-hud .px-level, .px-hud .px-item { font-size: min(4.6vw, 26px); }
+  .px-hud .px-item img { height: min(4.6vw, 26px); }
+  .px-hud .px-hearts { font-size: min(5.2vw, 28px); }
+  .px-hud .px-item .lbl { margin-right: 1vw; }
+  .px-hud .pause { width: 38px; height: 38px; border-width: 4px; font-size: 16px; }
+  .px-hud .px-row { gap: 2.4vw; }
+}
+.px-left { display: flex; flex-direction: column; gap: .4vh; }
+.px-level { font-size: clamp(22px, 4.6vh, 44px); font-weight: 700; color: #B25CF0; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; line-height: 1; }
+.px-hearts { font-size: clamp(22px, 4.8vh, 46px); line-height: 1; letter-spacing: .1em; }
+.px-hearts .on  { color: #E8343F; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.px-hearts .off { color: #4A2A34; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.px-item { display: flex; align-items: center; gap: .6vw; font-size: clamp(22px, 4.6vh, 44px);
+           font-weight: 700; line-height: 1; color: #F2A33A; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.px-item img { height: clamp(22px, 4.6vh, 44px); image-rendering: pixelated; }
+.px-item .lbl { color: #fff; margin-right: .5vw; }
+.px-item .slash { color: #fff; }
+.pause {
+  pointer-events: auto;
+  width: clamp(44px, 8vh, 74px); height: clamp(44px, 8vh, 74px);
+  display: grid; place-items: center; padding: 0;
+  font: 700 clamp(20px, 3.6vh, 34px)/1 'Pixelify Sans', monospace; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024;
+  background: #3F7BC2; border: 6px solid #8E4B37; border-radius: 0;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716;
+}
+.px-btns { display: flex; gap: 8px; }
+.pause#muteBtn { font-size: clamp(16px, 3vh, 28px); }
+.bossbar { align-self: center; margin-top: 1vh; width: min(460px, 60vw); height: 18px;
+           border: 3px solid #1A1024; background: #3A2233; box-shadow: 0 0 0 3px #fff; }
+.bossbar i { display: block; height: 100%; background: linear-gradient(#FF7A5C, #D63C3C); }
+
+/* ---------- world / level picker (the landscape is the canvas behind) ---------- */
+.ms-screen {
+  --c: min(108px, 12.5vh, 13vw);
+  position: fixed; inset: 0;
+  display: none; flex-direction: column; align-items: center;
+  padding: 2.5vh 16px 2vh;
+  background: transparent;
+  z-index: 40; overflow: auto;
+}
+.ms-top { width: 100%; max-width: 1040px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+.ms-back {
+  justify-self: start;
+  width: clamp(42px, min(10vh, 12vw), 92px); height: clamp(42px, min(10vh, 12vw), 92px);
+  display: grid; place-items: center; text-decoration: none;
+  font: 700 clamp(26px, 5vh, 46px)/1 'Pixelify Sans', monospace; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024;
+  background: #3F7BC2; border: 7px solid #8E4B37;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716;
+}
+.ms-title { text-align: center; white-space: nowrap; font-size: clamp(26px, min(7.5vh, 9vw), 72px); font-weight: 700; color: #1A1024;
+            text-shadow: 2px 0 0 #FFFFFF,-2px 0 0 #FFFFFF,0 2px 0 #FFFFFF,0 -2px 0 #FFFFFF,2px 2px 0 #FFFFFF,-2px 2px 0 #FFFFFF,2px -2px 0 #FFFFFF,-2px -2px 0 #FFFFFF, 0 6px 0 rgba(0,0,0,.25); line-height: 1; }
+.ms-title small { display: block; margin-top: .6vh; font-size: .36em; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.ms-points { justify-self: end; text-align: right; font-size: clamp(13px, min(3.8vh, 4vw), 36px); font-weight: 700; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.ms-points b { color: #F2A33A; margin-left: .4em; }
+@media (max-width: 560px) { .ms-points b { display: block; margin: 0; } }
+
+.ms-body { display: flex; align-items: center; gap: 3vw; margin-top: 3vh; }
+.ms-arrow { width: clamp(40px, 8vh, 76px); padding: 0; background: none; border: none; box-shadow: none; cursor: pointer; }
+.ms-arrow svg { width: 100%; display: block; }
+.ms-arrow.left svg { transform: scaleX(-1); }
+.ms-middle { display: flex; flex-direction: column; align-items: center; gap: 2.6vh; }
+.ms-grid { display: grid; grid-template-columns: repeat(5, calc(var(--c) * 1.22)); gap: 2.4vh 1.6vw; justify-content: center; }
+@media (max-aspect-ratio: 1/1) { .ms-grid { grid-template-columns: repeat(3, calc(var(--c) * 1.22)); } }
+
+.cell { display: flex; flex-direction: column; align-items: center; gap: .9vh;
+        padding: 0; background: none; border: none; box-shadow: none; cursor: pointer; }
+.crate {
+  position: relative; width: var(--c); height: var(--c);
+  display: grid; place-items: center;
+  background: #5E6C77;
+  border: calc(var(--c) * .1) solid #8E4B37;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716, 0 7px 0 2px rgba(0,0,0,.28);
+}
+.isboss .crate { background: #6E3A45; }
+.cell:not(.locked):hover .crate  { transform: translateY(-3px); }
+.cell:not(.locked):active .crate { transform: translateY(3px); }
+.cell.locked { cursor: not-allowed; }
+.rv { position: absolute; width: calc(var(--c) * .13); height: calc(var(--c) * .13);
+      background: #909AB2; box-shadow: 0 0 0 2px #2F3344, inset -2px -2px 0 #5F6880; }
+.rv.a { left: calc(var(--c) * -.115); top: calc(var(--c) * -.115); }
+.rv.b { right: calc(var(--c) * -.115); top: calc(var(--c) * -.115); }
+.rv.c { left: calc(var(--c) * -.115); bottom: calc(var(--c) * -.115); }
+.rv.d { right: calc(var(--c) * -.115); bottom: calc(var(--c) * -.115); }
+.num { font-size: calc(var(--c) * .52); font-weight: 700; line-height: 1; color: #6FE04A; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.skull { width: calc(var(--c) * .62); image-rendering: pixelated; }
+.lock { position: relative; width: calc(var(--c) * .44); height: calc(var(--c) * .34);
+        margin-top: calc(var(--c) * .16); background: #0E0A12; }
+.lock::before { content: ''; position: absolute; left: calc(var(--c) * .07); top: calc(var(--c) * -.22);
+        width: calc(var(--c) * .16); height: calc(var(--c) * .2);
+        border: calc(var(--c) * .07) solid #0E0A12; border-bottom: none;
+        border-radius: calc(var(--c) * .12) calc(var(--c) * .12) 0 0; }
+.lock::after { content: ''; position: absolute; left: 44%; top: 30%; width: 12%; height: 42%; background: #5E6C77; }
+.lvstars { display: flex; gap: 2px; }
+.lvstars img { width: calc(var(--c) * .27); image-rendering: pixelated; }
+.lvstars img.mid, .end-stars img.mid { transform: translateY(18%); }
+.ms-help { margin-top: 2.4vh; text-align: center; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; font-size: clamp(12px, 2vh, 17px); line-height: 1.5; }
+
+/* ---------- "new monster!" card ---------- */
+.intro {
+  position: fixed; left: 50%; top: 17vh; transform: translateX(-50%);
+  display: none; align-items: center; gap: 16px;
+  padding: 12px 20px 12px 14px; max-width: min(560px, 92vw);
+  background: #3D4F63; border: 6px solid #8E4B37;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716, 0 8px 0 rgba(0,0,0,.35);
+  color: #fff; z-index: 30; pointer-events: none;
+  font-family: 'Pixelify Sans', monospace;
+  animation: introIn .35s ease-out;
+}
+@keyframes introIn { from { transform: translate(-50%, -20px); opacity: 0; } }
+.intro img { width: 72px; image-rendering: pixelated; flex: none; }
+.intro .ih { font-size: .95rem; font-weight: 700; color: #F2A33A; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.intro .in { font-size: 1.5rem; font-weight: 700; line-height: 1.1; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.intro .it { font-size: 1rem; margin-top: 3px; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+
+/* ---------- end of level ---------- */
+.end-backdrop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+                padding: 20px; background: rgba(8,10,24,.6); z-index: 55; }
+.end-box {
+  width: min(460px, 100%); text-align: center; padding: 26px 24px 20px;
+  background: #3D4F63; border: 9px solid #8E4B37;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716, 0 10px 0 rgba(0,0,0,.4);
+  color: #fff;
+}
+.end-title { margin: 0 0 12px; font-size: 1.8rem; font-weight: 700; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.end-stars { display: flex; justify-content: center; gap: 6px; }
+.end-stars img { width: 78px; image-rendering: pixelated; }
+.end-score { margin: 16px 0 14px; font-size: 1.6rem; font-weight: 700; color: #F2A33A; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.end-rows { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; font-size: 1rem; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+.end-rows b { display: block; font-size: 1.6rem; color: #F2A33A; }
+.end-box button {
+  width: 100%; margin-bottom: 10px; font: 700 1.3rem 'Pixelify Sans', monospace; color: #fff; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024;
+  background: #58B83A; border: 5px solid #8E4B37; border-radius: 0;
+  box-shadow: 0 0 0 3px #2A1716, inset 0 0 0 3px #2A1716;
+}
+.end-box button.ghost { background: #3F7BC2; }
+.end-box a { display: block; margin-top: 6px; color: #DDE6F2; font-size: .95rem; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024,2px 2px 0 #1A1024,-2px 2px 0 #1A1024,2px -2px 0 #1A1024,-2px -2px 0 #1A1024; }
+
+/* ---------- on-screen controls ---------- */
+.touchpad { display: none; }
+@media (pointer: coarse) {
+  .ms-help { display: none; }                              /* 4. keyboard keys mean nothing on a phone */
+  body.playing .touchpad { display: flex; }
+  .touchpad { position: fixed; left: 0; right: 0; bottom: 16px; padding: 0 18px;
+              justify-content: space-between; z-index: 25; }
+  .touchpad .pair { display: flex; gap: min(12px, 2vw); }
+  .touchpad button { width: min(70px, 15vw); height: min(70px, 15vw); font-size: 1.4rem; padding: 0; border-radius: 50%;
+                     border: 3px solid rgba(255,255,255,.7); background: rgba(255,255,255,.18);
+                     color: #fff; box-shadow: none; }
+  #btn-jump { background: rgba(255,197,61,.4); }
+  #btn-fire { background: rgba(200,110,255,.45); }
+}
+
+</style>
+</head>
+<body class="game-body">
+
+<canvas id="cv"></canvas>
+
+<!-- ===== the bar across the top while playing ===== -->
+<div class="px-hud" id="hud">
+  <div class="px-row">
+    <div class="px-left">
+      <span class="px-level" id="lvlName"></span>
+      <span class="px-hearts" id="hearts"></span>
+    </div>
+    <span class="px-item"><img id="icoMagic" alt=""><b id="magic">3</b></span>
+    <span class="px-item"><img id="icoStar" alt=""><b id="stars">0 /3</b></span>
+    <span class="px-item"><span class="lbl">Points</span><b id="points">0</b></span>
+    <span class="px-btns">
+      <button class="pause" id="muteBtn" title="Sound on/off (M)">&#128266;</button>
+      <button class="pause" id="pauseBtn" title="Pause (Esc)">II</button>
+    </span>
+  </div>
+  <div class="bossbar" id="bossbar" style="display:none"><i id="bossfill"></i></div>
+</div>
+
+<div class="banner" id="banner"></div>
+
+<div class="intro" id="intro">
+  <img id="introPic" alt="">
+  <div>
+    <div class="ih" id="introHead">New monster!</div>
+    <div class="in" id="introName"></div>
+    <div class="it" id="introTip"></div>
+  </div>
+</div>
+
+<div class="touchpad">
+  <div class="pair">
+    <button id="btn-left">&#9664;</button>
+    <button id="btn-right">&#9654;</button>
+    <button id="btn-down">&#9660;</button>
+  </div>
+  <div class="pair">
+    <button id="btn-fire">&#10022;</button>
+    <button id="btn-jump">&#9650;</button>
+  </div>
+</div>
+
+<!-- ===== world and level picker ===== -->
+<div class="ms-screen" id="levelSelect">
+  <div class="ms-top">
+    <a class="ms-back" href="index.html" title="Back to Mathcade">&larr;</a>
+    <div class="ms-title"><span id="msWorld">World 1</span><small id="msName">&nbsp;</small></div>
+    <div class="ms-points">POINTS<b id="msPoints">0</b></div>
+  </div>
+  <button class="mute-btn" id="msMute" title="Sound on/off (M)">&#128266;</button>
+  <div class="ms-body">
+    <button class="ms-arrow left" id="msPrev" title="Previous world"><svg viewBox="0 0 12 18"><path d="M1 1h4l6 8-6 8H1l6-8z" fill="#F2B530" stroke="#1A1024" stroke-width="1.2" stroke-linejoin="round"/><path d="M2.4 2.4h1.8l4.6 6.1" fill="none" stroke="#FFE08A" stroke-width="1"/></svg></button>
+    <div class="ms-middle">
+      <div class="ms-grid" id="msGrid"></div>
+      <div id="msBoss"></div>
+    </div>
+    <button class="ms-arrow" id="msNext" title="Next world"><svg viewBox="0 0 12 18"><path d="M1 1h4l6 8-6 8H1l6-8z" fill="#F2B530" stroke="#1A1024" stroke-width="1.2" stroke-linejoin="round"/><path d="M2.4 2.4h1.8l4.6 6.1" fill="none" stroke="#FFE08A" stroke-width="1"/></svg></button>
+  </div>
+  <p class="ms-help">&larr; &rarr; move &nbsp;&middot;&nbsp; &uarr; jump, again in the air to double jump
+     &nbsp;&middot;&nbsp; SPACE fire &nbsp;&middot;&nbsp; &darr; drop through a ledge &nbsp;&middot;&nbsp; Esc pause</p>
+</div>
+
+<!-- ===== paused ===== -->
+<div class="end-backdrop" id="pauseCard">
+  <div class="end-box">
+    <p class="end-title">Paused</p>
+    <button id="resumeBtn">Resume</button>
+    <button class="ghost" id="restartBtn">Restart level</button>
+    <button class="ghost" id="quitBtn">All levels</button>
+  </div>
+</div>
+
+<!-- ===== end of a level ===== -->
+<div class="end-backdrop" id="endCard">
+  <div class="end-box">
+    <p class="end-title" id="endTitle">Level complete</p>
+    <div class="end-stars" id="endStars"></div>
+    <p class="end-score" id="endScore">0 out of 3</p>
+    <div class="end-rows">
+      <div><b id="endPoints">0</b>points</div>
+      <div><b id="endCoins">0</b>XP</div>
+      <div><b id="endLevel">1</b>maths level</div>
+    </div>
+    <button id="endNext">Next level</button>
+    <button class="ghost" id="endLevels">All levels</button>
+    <a href="index.html">Back to Mathcade</a>
+  </div>
+</div>
+
+<script>
+addEventListener('error', e => {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:auto 10px 10px 10px;z-index:99;padding:12px 14px;'
+    + 'background:#3A0F1E;color:#FFD1D7;border:2px solid #FF5A6E;border-radius:10px;'
+    + 'font:600 13px/1.45 monospace;white-space:pre-wrap';
+  d.textContent = 'ERROR: ' + (e.message || 'unknown')
+    + (e.filename ? '\n' + e.filename + ':' + e.lineno : '');
+  document.body.appendChild(d);
+});
+</script>
+<script>
+const Save = (() => {
+  const KEY = 'mathcade';
+
+  const BLANK = {
+    name: 'Player',
+    coins: 0,     // coins you can spend
+    xp: 0,        // every coin ever earned. Spending can't take this away,
+                  // which is why the overall level uses it and not coins.
+    level: 1,     // which MATHS level you're on (1-8) — not the overall level
+    streak: 0,    // correct answers in a row right now
+    best: 0       // best streak ever
+  };
+
+  let data = load();
+  const listeners = [];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { ...BLANK };
+      const saved = JSON.parse(raw);
+      // Anyone who played before the overall level existed: their coins are
+      // the only record of what they earned, so start their XP from those.
+      if (saved.xp === undefined) saved.xp = saved.coins || 0;
+      return { ...BLANK, ...saved };
+    } catch (e) {
+      // Private browsing, or storage full — play on without saving.
+      return { ...BLANK };
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      /* nothing we can do; the game still works for this session */
+    }
+    listeners.forEach(fn => fn(data));
+
+    // --- FIREBASE GOES HERE (later) -------------------------
+    // if (firebase.auth().currentUser) {
+    //   firebase.database()
+    //     .ref('players/' + firebase.auth().currentUser.uid)
+    //     .set(data);
+    // }
+    // --------------------------------------------------------
+  }
+
+  return {
+    get: () => ({ ...data }),
+
+    update(changes) {
+      data = { ...data, ...changes };
+      persist();
+      return { ...data };
+    },
+
+    addCoins(n) {
+      data.coins += n;
+      data.xp    += n;      // the overall level rides along on every coin,
+      persist();            // so no game has to know the level exists
+      return data.coins;
+    },
+
+    // Every game except Prism Rush pays in XP only. Coins are Prism Rush's
+    // own money (for skins), so answering questions elsewhere shouldn't
+    // quietly fill a wallet you can only spend in one game.
+    addXp(n) {
+      data.xp += n;
+      persist();
+      return data.xp;
+    },
+
+    spendCoins(n) {
+      if (data.coins < n) return false;
+      data.coins -= n;      // xp deliberately untouched
+      persist();
+      return true;
+    },
+
+    // One level across every game, worked out from XP.
+    // Level 2 needs 100 XP, then 250, 450, 700, 1000 ... each step 50 more.
+    // There's no top level; it just keeps getting slower.
+    overall() {
+      const xp   = data.xp;
+      const need = n => 25 * n * n + 75 * n;     // XP to reach level n + 1
+      const n    = Math.floor((-75 + Math.sqrt(5625 + 100 * xp)) / 50);
+      const from = need(n);
+      const to   = need(n + 1);
+      return {
+        level: n + 1,
+        xp,
+        into: xp - from,      // XP earned since this level began
+        span: to - from,      // how much XP this level is worth
+        next: to - xp         // XP still to go
+      };
+    },
+
+    // Run a function now and again every time anything changes.
+    onChange(fn) {
+      listeners.push(fn);
+      fn(data);
+    },
+
+    reset() {
+      data = { ...BLANK };
+      persist();
+    }
+  };
+})();
+
+const MathEngine = (() => {
+
+  // --- little helpers -------------------------------------------------
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const pick = arr => arr[rnd(0, arr.length - 1)];
+
+  // --- the question ladder --------------------------------------------
+  // Each level is a function that returns { text, answer }.
+  const LEVELS = [
+    // Made a bit easier on request (twice): same eight steps, gentler numbers.
+    // Each step leans on the friendly cases (2, 5 and 10 times tables,
+    // halves and quarters, 10% / 25% / 50%) and only sometimes mixes in
+    // the harder ones, so a level still stretches you without being a wall.
+
+    // 1 — adding and taking away, small numbers
+    () => {
+      const a = rnd(1, 10), b = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 2 — adding and taking away, two-digit numbers.
+    // Mostly ones with no carrying (23 + 14), and about 1 in 5 that needs it
+    // (38 + 27). Carrying is the skill this step teaches, so it stays in -
+    // just not every time. Subtraction is the same: (a + b) − b needs
+    // borrowing exactly when a + b would have needed carrying.
+    () => {
+      const carry = Math.random() < 0.2;
+      let a, b;
+      do { a = rnd(10, 50); b = rnd(5, 30); }
+      while (((a % 10) + (b % 10) >= 10) !== carry);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 3 — times tables, mostly the friendly ones
+    () => {
+      const a = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const b = rnd(1, 10);
+      return { text: `${a} × ${b}`, answer: a * b };
+    },
+
+    // 4 — division facts, mostly the friendly ones
+    () => {
+      const b = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const answer = rnd(1, 10);
+      return { text: `${b * answer} ÷ ${b}`, answer };
+    },
+
+    // 5 — two steps, order of operations
+    () => {
+      const a = rnd(2, 4), b = rnd(2, 5), c = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} × ${b} + ${c}`, answer: a * b + c }
+        : { text: `${a * b + c} − ${a} × ${b}`, answer: c };
+    },
+
+    // 6 — fractions of an amount, mostly one-halves, quarters and tenths
+    () => {
+      const denom = pick([2, 2, 4, 5, 10]);
+      const numer = Math.random() < 0.8 ? 1 : rnd(1, denom - 1);
+      const whole = denom * rnd(2, 10);
+      return {
+        text: `${numer}/${denom} of ${whole}`,
+        answer: (whole / denom) * numer
+      };
+    },
+
+    // 7 — percentages, mostly 10%, 25% and 50% of round numbers
+    () => {
+      const pct = Math.random() < 0.8 ? pick([10, 25, 50]) : pick([20, 75]);
+      const whole = pick([20, 40, 60, 80, 100]);
+      return { text: `${pct}% of ${whole}`, answer: (whole * pct) / 100 };
+    },
+
+    // 8 — solve for x
+    () => {
+      const a = rnd(2, 4), x = rnd(1, 10), b = rnd(1, 10);
+      return { text: `${a}x + ${b} = ${a * x + b},  x = ?`, answer: x };
+    }
+  ];
+
+  const MAX_LEVEL = LEVELS.length;
+  const STREAK_TO_LEVEL_UP = 3;
+
+  // Coins a single question is worth, before the run multiplier.
+  const baseReward = level => 5 + level * 3;
+
+  // --- a run of questions ---------------------------------------------
+  function startRun(length = 5, { coins = false } = {}) {
+    let index = 0;          // how far through the run
+    let question = null;
+
+    // The difficulty is fixed the moment the run starts. Before this, every
+    // question looked up your level again — so you could deliberately get a
+    // hard one wrong, drop a level, and have the whole restarted run be easy.
+    // Getting one wrong still costs you a level for NEXT time; it just can't
+    // make the run you are in any easier.
+    const runLevel = Save.get().level;
+
+    function make() {
+      const level = runLevel;
+      const q = LEVELS[level - 1]();
+      question = {
+        text: q.text,
+        answer: q.answer,
+        level,
+        number: index + 1,
+        of: length,
+        reward: baseReward(level)
+      };
+      return question;
+    }
+
+    return {
+      current() {
+        return question || make();
+      },
+
+      submit(given) {
+        const q = question || make();
+        const correct = Number(given) === q.answer;
+        const save = Save.get();
+
+        if (correct) {
+          index++;
+          const streak = save.streak + 1;
+          let level = save.level;
+          let levelUp = false;
+
+          if (streak % STREAK_TO_LEVEL_UP === 0 && level < MAX_LEVEL) {
+            level++;
+            levelUp = true;
+          }
+
+          Save.update({ streak, level, best: Math.max(save.best, streak) });
+          if (coins) Save.addCoins(q.reward);   // Prism Rush only
+          else       Save.addXp(q.reward);
+
+          const finished = index >= length;
+          if (!finished) make();
+
+          return {
+            correct: true,
+            reward: q.reward,
+            streak,
+            level,
+            levelUp,
+            finished,
+            answer: q.answer
+          };
+        }
+
+        // Wrong — the run restarts from question 1 and the level eases off.
+        index = 0;
+        const level = Math.max(1, save.level - 1);
+        Save.update({ streak: 0, level });
+        make();
+
+        return {
+          correct: false,
+          reward: 0,
+          streak: 0,
+          level,
+          levelDown: level < save.level,
+          restarted: true,
+          finished: false,
+          answer: q.answer
+        };
+      },
+
+      progress() {
+        return { done: index, total: length };
+      }
+    };
+  }
+
+  // A one-off question with no run attached.
+  function single() {
+    return startRun(1);
+  }
+
+  return { startRun, single, MAX_LEVEL };
+})();
+
+const Quiz = (() => {
+  let root = null;
+  let active = false;
+
+  function build() {
+    root = document.createElement('div');
+    root.className = 'quiz-backdrop';
+    root.innerHTML = `
+      <div class="quiz-card" role="dialog" aria-modal="true">
+        <p class="quiz-title"></p>
+        <p class="quiz-subtitle"></p>
+        <div class="quiz-pips"></div>
+        <p class="quiz-prompt"></p>
+        <div class="answer-row">
+          <input type="number" class="quiz-input" inputmode="numeric"
+                 aria-label="Your answer" autocomplete="off">
+          <button class="quiz-check">Unlock</button>
+        </div>
+        <p class="feedback quiz-feedback"></p>
+      </div>`;
+    document.body.appendChild(root);
+  }
+
+  function ask({ count = 2, title = 'Locked', subtitle = '', onDone, coins = false }) {
+    if (active) return;
+    if (!root) build();
+    active = true;
+
+    const card     = root.querySelector('.quiz-card');
+    const pipsEl   = root.querySelector('.quiz-pips');
+    const promptEl = root.querySelector('.quiz-prompt');
+    const inputEl  = root.querySelector('.quiz-input');
+    const btnEl    = root.querySelector('.quiz-check');
+    const fbEl     = root.querySelector('.quiz-feedback');
+
+    root.querySelector('.quiz-title').textContent = title;
+    root.querySelector('.quiz-subtitle').textContent = subtitle;
+
+    const run = MathEngine.startRun(count, { coins });
+    let earned = 0;
+    let asked = 0;
+    let right = 0;
+
+    function draw() {
+      const q = run.current();
+      const { done } = run.progress();
+      promptEl.textContent = q.text;
+      pipsEl.innerHTML = Array.from({ length: count }, (_, i) =>
+        `<span class="pip ${i < done ? 'lit' : ''}"></span>`).join('');
+      inputEl.value = '';
+      inputEl.focus();
+    }
+
+    function submit() {
+      if (inputEl.value === '') return;
+      const res = run.submit(inputEl.value);
+      asked++;
+      if (res.correct) right++;
+
+      if (res.correct) {
+        earned += res.reward;
+        if (res.finished) {
+          fbEl.className = 'feedback quiz-feedback good';
+          fbEl.textContent = `Unlocked. +${earned} ${coins ? 'coins' : 'XP'}.`;
+          setTimeout(close, 700);
+          return;
+        }
+        fbEl.className = 'feedback quiz-feedback good';
+        fbEl.textContent = res.levelUp
+          ? `Correct — maths level ${res.level} now.`
+          : 'Correct. Next one.';
+      } else {
+        earned = 0;
+        fbEl.className = 'feedback quiz-feedback bad';
+        fbEl.textContent = `It was ${res.answer}. Back to the first question.`;
+        card.classList.remove('shake');
+        void card.offsetWidth;          // restart the animation
+        card.classList.add('shake');
+      }
+      draw();
+    }
+
+    function close() {
+      active = false;
+      root.classList.remove('open');
+      btnEl.removeEventListener('click', submit);
+      inputEl.removeEventListener('keydown', onKey);
+      if (onDone) onDone(earned, { asked, correct: right });
+    }
+
+    function onKey(e) {
+      e.stopPropagation();              // don't let the game read this keypress
+      if (e.key === 'Enter') submit();
+    }
+
+    btnEl.addEventListener('click', submit);
+    inputEl.addEventListener('keydown', onKey);
+
+    fbEl.textContent = '';
+    fbEl.className = 'feedback quiz-feedback';
+    root.classList.add('open');
+    draw();
+  }
+
+  return { ask, isOpen: () => active };
+})();
+</script>
+<script>
+/* ==========================================================
+   MAGE RUN
+
+   Two worlds of ten levels. Every tenth level is a boss, and
+   every level in a world shares that world's background.
+
+   Run right, collect magic, blast the creatures, grab the
+   three stars, reach the doorway. Three questions when you
+   finish — dying never costs you a question.
+
+   y is measured from the top of the grass and goes NEGATIVE
+   upwards, so a ledge at y:-140 floats 140px above it.
+   ========================================================== */
+
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+const RUN = 300, ACCEL = 2400, FRICTION = 2000;
+const GRAVITY = 2100, JUMP = 760, JUMP2 = 660;
+const COYOTE = 0.10, BUFFER = 0.12;
+const PW = 30, PH = 44, PIT = 300;
+
+const MAX_MAGIC = 9, BOLT_SPEED = 560, BOLT_LIFE = 1.0, RELOAD = 0.22;
+const BOSS_HP = 6;
+
+
+/* ==========================================================
+   SOUND — everything is made by the browser from code, no
+   sound files, so it still works offline.
+
+   Sound.sfx('jump')       a sound effect
+   Sound.play('fields')    start a song (does nothing if it's already on)
+   Sound.stop()            stop the music
+   Sound.toggle()          mute / unmute, remembered next time
+   ========================================================== */
+const Sound = (() => {
+  let ac = null, master, music, fx, echo;
+  let muted = !!Save.get().mrMuted;
+  let song = null, step = 0, next = 0, timer = null, duck = 1;
+
+  // Browsers only allow sound after the player has pressed something,
+  // so the audio is switched on by the first key, click or tap.
+  function wake() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = muted ? 0 : 1;
+      master.connect(ac.destination);
+      music = ac.createGain(); music.gain.value = 0.55; music.connect(master);
+      fx = ac.createGain(); fx.gain.value = 0.8; fx.connect(master);
+      // a soft echo, used by the cave song
+      echo = ac.createDelay(); echo.delayTime.value = 0.32;
+      const back = ac.createGain(); back.gain.value = 0.35;
+      echo.connect(back); back.connect(echo); back.connect(music);
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return true;
+  }
+  ['keydown', 'pointerdown', 'touchstart'].forEach(ev =>
+    addEventListener(ev, () => { wake(); if (song && !timer) start(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!ac) return;
+    if (document.hidden) ac.suspend(); else ac.resume();
+  });
+
+  const hz = midi => 440 * Math.pow(2, (midi - 69) / 12);
+
+  function tone(freq, dur, type, vol, slide, when, dest) {
+    const t = (ac.currentTime) + (when || 0);
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || fx);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+
+  let noiseBuf = null;
+  function noise(dur, vol, cutoff, when, dest) {
+    if (!noiseBuf) {
+      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t = ac.currentTime + (when || 0);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = noiseBuf;
+    f.type = 'lowpass'; f.frequency.value = cutoff || 2000;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(dest || fx);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+
+  const arp = (base, steps, gap, type, vol) =>
+    steps.forEach((s, i) => tone(base * Math.pow(2, s / 12), 0.13, type, vol, 0, i * gap));
+
+  const EFFECTS = {
+    jump:       () => tone(380, 0.13, 'square', 0.09, 1.9),
+    jump2:      () => tone(560, 0.15, 'square', 0.09, 2.0),
+    fire:       () => { tone(1300, 0.10, 'sawtooth', 0.05, 0.35); tone(700, 0.08, 'sine', 0.06, 0.5); },
+    empty:      () => tone(140, 0.12, 'square', 0.07, 0.8),
+    hit:        () => { noise(0.07, 0.22, 2400); tone(240, 0.08, 'square', 0.07, 0.6); },
+    kill:       () => { noise(0.2, 0.28, 1400); tone(420, 0.09, 'square', 0.09, 0.45); tone(210, 0.16, 'square', 0.07, 0.5, 0.06); },
+    clink:      () => { tone(1900, 0.07, 'triangle', 0.11); tone(2600, 0.06, 'triangle', 0.07, 1, 0.035); },
+    pop:        () => { noise(0.05, 0.18, 3200); tone(900, 0.05, 'triangle', 0.07, 0.6); },
+    crystal:    () => { tone(1320, 0.07, 'triangle', 0.09); tone(1980, 0.1, 'triangle', 0.07, 1, 0.05); },
+    star:       () => arp(784, [0, 4, 7, 12, 16], 0.055, 'triangle', 0.12),
+    hurt:       () => { tone(330, 0.3, 'sawtooth', 0.11, 0.35); noise(0.14, 0.2, 900); },
+    enemyShot:  () => tone(520, 0.12, 'sine', 0.05, 0.6),
+    checkpoint: () => arp(523, [0, 7, 12], 0.08, 'square', 0.08),
+    newFoe:     () => arp(392, [0, 3, 7, 10], 0.07, 'square', 0.07),
+    bossHit:    () => { noise(0.12, 0.3, 1100); tone(150, 0.16, 'square', 0.1, 0.6); },
+    bossDown:   () => { noise(0.7, 0.35, 900); [0, -3, -7, -12].forEach((s, i) => tone(330 * Math.pow(2, s / 12), 0.22, 'square', 0.09, 0.8, i * 0.12)); },
+    win:        () => arp(523, [0, 4, 7, 12, 7, 12, 16], 0.09, 'square', 0.09),
+    click:      () => tone(900, 0.04, 'square', 0.05)
+  };
+
+  /* ---------- music ----------
+     Each song is a two-bar pattern played over a four-chord loop.
+     melody / bass are sixteen steps per bar; numbers are semitones above
+     the chord's root, null is a rest. bass: 1 = root, 5 = fifth.          */
+  const _ = null;
+  const SONGS = {
+    fields: {                               // cheerful
+      bpm: 124, root: 60, prog: [0, 5, 7, 5], lead: 'square', leadVol: 0.05, leadLen: 1.6,
+      melody: [[12, _, 7, _, 9, _, 7, _, 4, _, 7, _, 12, _, _, _],
+               [11, _, 9, _, 7, _, 4, _, 5, _, 4, _, 2, _, _, _]],
+      bass: [1, _, _, _, 5, _, _, _, 1, _, _, _, 5, _, 1, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+    },
+    ember: {                                // heavy and warm
+      bpm: 108, root: 57, prog: [0, 0, 3, -2], lead: 'sawtooth', leadVol: 0.035, leadLen: 2.2,
+      melody: [[12, _, _, 10, _, _, 7, _, 8, _, 7, _, 3, _, _, _],
+               [7, _, _, 8, _, _, 10, _, 12, _, 10, _, 7, _, _, _]],
+      bass: [1, _, 1, _, 1, _, 5, _, 1, _, 1, _, 1, _, 5, 1], bassType: 'square',
+      kick: [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0], hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1]
+    },
+    frost: {                                // twinkly and slow
+      bpm: 92, root: 64, prog: [0, 3, 5, 3], lead: 'triangle', leadVol: 0.07, leadLen: 3,
+      melody: [[19, _, 15, _, 12, _, 15, _, 19, _, _, _, 17, _, 15, _],
+               [12, _, _, _, 15, _, 14, _, 12, _, _, _, 10, _, _, _]],
+      bass: [1, _, _, _, _, _, _, _, 5, _, _, _, _, _, _, _], bassType: 'sine',
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], hat: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+    },
+    cave: {                                 // sparse, with an echo
+      bpm: 84, root: 62, prog: [0, -2, -4, -2], lead: 'sine', leadVol: 0.09, leadLen: 2.5, echo: true,
+      melody: [[12, _, _, _, _, _, 15, _, _, _, 10, _, _, _, _, _],
+               [7, _, _, _, 8, _, _, _, 10, _, _, _, _, _, _, _]],
+      bass: [1, _, _, _, _, _, _, _, 1, _, _, _, 5, _, _, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], hat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    boss: {                                 // fast and tense
+      bpm: 150, root: 57, prog: [0, 1, 0, -2], lead: 'sawtooth', leadVol: 0.04, leadLen: 1.2,
+      melody: [[12, _, 12, 15, _, 12, _, 10, 12, _, 12, 15, _, 17, _, 15],
+               [12, _, 10, _, 8, _, 7, _, 8, _, 10, _, 7, _, _, _]],
+      bass: [1, 1, _, 1, 1, _, 1, _, 1, 1, _, 1, 5, _, 1, _], bassType: 'square',
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0], hat: [0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1]
+    }
+  };
+
+  function drum(kind, t) {
+    if (kind === 'kick') {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(130, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(music); o.start(t); o.stop(t + 0.18);
+    } else {
+      noise(0.03, 0.05, 7000, t - ac.currentTime, music);
+    }
+  }
+
+  function schedule() {
+    const S = SONGS[song];
+    if (!S || !ac) return;
+    const stepDur = 60 / S.bpm / 4;
+    // If the tab was in the background the timer stops; don't play every
+    // missed note in one burst when it comes back.
+    if (next < ac.currentTime - 0.1) next = ac.currentTime + 0.05;
+    while (next < ac.currentTime + 0.14) {
+      const bar = Math.floor(step / 16), i = step % 16;
+      const root = S.root + S.prog[bar % S.prog.length];
+      const when = next - ac.currentTime;
+      if (S.bass[i]) tone(hz(root - 24 + (S.bass[i] === 5 ? 7 : 0)), stepDur * 1.8, S.bassType, 0.09 * duck, 0, when, music);
+      const m = S.melody[bar % S.melody.length][i];
+      if (m !== null) {
+        tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * duck, 0, when, S.echo ? echo : music);
+        if (S.echo) tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * 0.7 * duck, 0, when, music);
+      }
+      if (S.kick[i]) drum('kick', next);
+      if (S.hat[i]) drum('hat', next);
+      next += stepDur;
+      step++;
+    }
+  }
+
+  function start() {
+    if (!ac || timer) return;
+    step = 0; next = ac.currentTime + 0.06;
+    timer = setInterval(schedule, 25);
+  }
+
+  return {
+    sfx(name) { if (!muted && wake() && EFFECTS[name]) EFFECTS[name](); },
+    play(name) {
+      if (song === name && timer) return;
+      clearInterval(timer); timer = null;
+      song = name;
+      if (ac && ac.state !== 'closed') start();       // otherwise the first key press starts it
+    },
+    stop() { clearInterval(timer); timer = null; song = null; },
+    // quieter music behind the questions and the pause menu
+    setDuck(on) { duck = on ? 0.35 : 1; },
+    toggle() {
+      muted = !muted;
+      Save.update({ mrMuted: muted });
+      if (wake()) master.gain.value = muted ? 0 : 1;
+      return muted;
+    },
+    get muted() { return muted; }
+  };
+})();
+const WORLDS = [
+  {
+    name: 'Green Fields',
+    crags: false,
+    sky: ['#3F8FCC', '#62AADB'],
+    cloud: '#EEF3F7',
+    cloudShade: '#C6ECF4',
+    cloudBase: '#74D4E7',
+    far: '#2F5A52',
+    meadow: '#6DAA5A',
+    meadowDark: '#548F47',
+    meadowLight: '#88C26E',
+    rock: '#8C91A6',
+    rockLight: '#B5BACB',
+    rockDark: '#5F6379',
+    grass: '#62BC3C',
+    grassLight: '#A2E856',
+    grassDark: '#3E8B2C',
+    dirt: '#583C5A',
+    pebble: '#6F4F71',
+    pebbleDark: '#432D45',
+    levels: [
+    { name:'1-1', boss:false, goal:3180, bossKind:'', newFoe:'skull',
+      ground:[[0,680],[850,780],[1810,600],[2600,780]],
+      plats:[[150,-150,160],[370,-260,140],[720,-190,120],[1000,-130,160],[1220,-240,140],[1670,-180,120],[2450,-170,120],[2750,-130,160],[2970,-250,140]],
+      magic:[[230,-178],[130,-28],[200,-28],[240,-28],[1080,-158],[990,-28],[1030,-28],[1110,-28],[1940,-28],[2010,-28],[2050,-28],[2830,-158],[2740,-28],[2780,-28],[2840,-28]],
+      stars:[[1290,-345],[3040,-355],[440,-365]],
+      spikes:[[1280,80],[3070,60]],
+      foes:[[1100,1400,0,'skull'],[2060,2270,0,'skull'],[2850,3130,0,'skull']] },
+    { name:'1-2', boss:false, goal:3360, bossKind:'', newFoe:'',
+      ground:[[0,980],[1160,560],[1890,820],[2880,680]],
+      plats:[[150,-130,160],[370,-250,140],[1020,-190,120],[1760,-160,120],[2040,-140,160],[2260,-260,140],[2750,-180,120],[3030,-150,160],[3250,-250,140]],
+      magic:[[230,-158],[140,-28],[190,-28],[240,-28],[1290,-28],[1340,-28],[1410,-28],[2120,-168],[2010,-28],[2070,-28],[2150,-28],[3110,-178],[3020,-28],[3060,-28],[3140,-28]],
+      stars:[[3320,-355],[2330,-365],[440,-355]],
+      spikes:[[2500,80]],
+      foes:[[1410,1580,0,'skull'],[2140,2460,0,'skull'],[3130,3420,0,'skull']] },
+    { name:'1-3', boss:false, goal:4240, bossKind:'', newFoe:'bat',
+      ground:[[0,820],[1020,840],[2010,540],[2730,780],[3660,780]],
+      plats:[[150,-140,160],[370,-240,140],[860,-150,120],[1170,-140,160],[1390,-250,140],[1900,-160,120],[2590,-150,120],[2880,-130,160],[3100,-240,140],[3550,-150,120],[3810,-130,160],[4030,-230,140]],
+      magic:[[230,-168],[120,-28],[180,-28],[250,-28],[1250,-168],[1150,-28],[1210,-28],[1280,-28],[2130,-28],[2200,-28],[2260,-28],[2960,-158],[2870,-28],[2910,-28],[2990,-28],[3890,-158],[3790,-28],[3850,-28],[3900,-28]],
+      stars:[[1460,-355],[3170,-345],[4100,-335]],
+      spikes:[[1610,60],[3040,80],[3990,60]],
+      foes:[[200,440,-85,'bat'],[1220,1460,-85,'bat'],[1270,1530,0,'skull'],[2260,2410,0,'skull'],[2930,3170,-75,'bat'],[2980,3280,0,'skull'],[3860,4100,-75,'bat'],[3910,4290,0,'skull']] },
+    { name:'1-4', boss:false, goal:3700, bossKind:'', newFoe:'',
+      ground:[[0,960],[1140,620],[1920,960],[3060,840]],
+      plats:[[150,-140,160],[370,-240,140],[1000,-180,120],[1800,-190,120],[2070,-150,160],[2290,-270,140],[2920,-160,120],[3210,-130,160],[3430,-230,140]],
+      magic:[[230,-168],[140,-28],[190,-28],[240,-28],[1260,-28],[1340,-28],[1400,-28],[2150,-178],[2060,-28],[2100,-28],[2180,-28],[3290,-158],[3180,-28],[3250,-28],[3310,-28]],
+      stars:[[3500,-335],[2360,-375],[440,-345]],
+      spikes:[[2250,70],[3670,60]],
+      foes:[[200,440,-85,'bat'],[1390,1620,0,'skull'],[2120,2360,-95,'bat'],[2170,2450,0,'skull'],[3260,3500,-75,'bat'],[3310,3690,0,'skull']] },
+    { name:'1-5', boss:false, goal:4750, bossKind:'', newFoe:'',
+      ground:[[0,620],[800,800],[1780,580],[2510,600],[3310,540],[4010,940]],
+      plats:[[660,-190,120],[950,-160,160],[1170,-270,140],[1640,-150,120],[2400,-150,120],[3150,-190,120],[3890,-190,120],[4160,-160,160],[4380,-280,140]],
+      magic:[[130,-28],[200,-28],[240,-28],[1030,-188],[940,-28],[1000,-28],[1050,-28],[1920,-28],[1970,-28],[2020,-28],[2630,-28],[2690,-28],[2750,-28],[3450,-28],[3500,-28],[3550,-28],[4240,-188],[4150,-28],[4210,-28],[4260,-28]],
+      stars:[[1240,-375],[4450,-385],[2460,-255]],
+      spikes:[[1430,60],[4460,60]],
+      foes:[[1000,1240,-105,'bat'],[1050,1330,0,'skull'],[2030,2220,0,'skull'],[2760,2970,0,'skull'],[3560,3710,0,'skull'],[4210,4450,-105,'bat'],[4260,4500,0,'skull']] },
+    { name:'1-6', boss:false, goal:4840, bossKind:'', newFoe:'hopper',
+      ground:[[0,780],[970,540],[1670,540],[2410,800],[3370,740],[4300,740]],
+      plats:[[150,-130,160],[370,-240,140],[820,-150,120],[1550,-180,120],[2250,-160,120],[2560,-140,160],[2780,-260,140],[3250,-150,120],[3520,-130,160],[3740,-240,140],[4150,-160,120],[4450,-160,160],[4670,-270,140]],
+      magic:[[230,-158],[120,-28],[190,-28],[250,-28],[1100,-28],[1170,-28],[1230,-28],[1810,-28],[1860,-28],[1920,-28],[2640,-168],[2530,-28],[2610,-28],[2650,-28],[3600,-158],[3500,-28],[3560,-28],[3610,-28],[4530,-188],[4440,-28],[4490,-28],[4560,-28]],
+      stars:[[2850,-365],[4740,-375],[3810,-345]],
+      spikes:[[2820,80],[3900,60],[4770,60]],
+      foes:[[200,440,-75,'bat'],[1220,1370,0,'hopper'],[1920,2070,0,'skull'],[2610,2850,-85,'bat'],[2660,3040,0,'hopper'],[3570,3810,-75,'bat'],[3620,3860,0,'skull'],[4500,4740,-105,'bat'],[4550,4850,0,'hopper']] },
+    { name:'1-7', boss:false, goal:4790, bossKind:'', newFoe:'',
+      ground:[[0,660],[830,860],[1890,880],[2920,920],[4030,960]],
+      plats:[[150,-150,160],[370,-270,140],[700,-190,120],[980,-150,160],[1200,-260,140],[1730,-170,120],[2040,-140,160],[2260,-260,140],[2810,-170,120],[3070,-140,160],[3290,-260,140],[3880,-180,120],[4180,-140,160],[4400,-250,140]],
+      magic:[[230,-178],[130,-28],[180,-28],[260,-28],[1060,-178],[960,-28],[1010,-28],[1070,-28],[2120,-168],[2020,-28],[2090,-28],[2140,-28],[3150,-168],[3050,-28],[3110,-28],[3160,-28],[4260,-168],[4170,-28],[4210,-28],[4270,-28]],
+      stars:[[1270,-365],[3360,-365],[2330,-365]],
+      spikes:[[1360,80],[2400,80],[3390,80],[4420,80]],
+      foes:[[200,440,-95,'bat'],[1030,1270,-95,'bat'],[1080,1420,0,'hopper'],[2090,2330,-85,'bat'],[2140,2380,0,'hopper'],[3120,3360,-85,'bat'],[3170,3470,0,'hopper'],[4230,4470,-85,'bat'],[4280,4520,0,'hopper']] },
+    { name:'1-8', boss:false, goal:5470, bossKind:'', newFoe:'',
+      ground:[[0,760],[940,720],[1860,960],[3010,680],[3860,720],[4770,900]],
+      plats:[[150,-160,160],[370,-260,140],[800,-190,120],[1090,-160,160],[1310,-260,140],[1700,-150,120],[2010,-160,160],[2230,-270,140],[2860,-160,120],[3160,-140,160],[3380,-240,140],[3730,-180,120],[4010,-140,160],[4230,-250,140],[4620,-170,120],[4920,-130,160],[5140,-230,140]],
+      magic:[[230,-188],[120,-28],[200,-28],[260,-28],[1170,-188],[1070,-28],[1120,-28],[1190,-28],[2090,-188],[2000,-28],[2050,-28],[2100,-28],[3240,-168],[3150,-28],[3200,-28],[3260,-28],[4090,-168],[4000,-28],[4040,-28],[4100,-28],[5000,-158],[4900,-28],[4970,-28],[5010,-28]],
+      stars:[[1380,-365],[3450,-345],[5210,-335]],
+      spikes:[[1290,60],[2450,60],[4230,80],[5180,80]],
+      foes:[[200,440,-105,'bat'],[1140,1380,-105,'bat'],[1190,1490,0,'hopper'],[2060,2300,-105,'bat'],[2110,2390,0,'skull'],[3210,3450,-85,'bat'],[3260,3550,0,'skull'],[4060,4300,-85,'bat'],[4110,4410,0,'hopper'],[4970,5210,-75,'bat'],[5020,5360,0,'hopper']] },
+    { name:'1-9', boss:false, goal:5210, bossKind:'', newFoe:'',
+      ground:[[0,700],[860,820],[1840,780],[2820,700],[3710,580],[4450,960]],
+      plats:[[150,-160,160],[370,-280,140],[740,-190,120],[1010,-130,160],[1230,-230,140],[1720,-190,120],[1990,-130,160],[2210,-230,140],[2660,-180,120],[2970,-140,160],[3190,-260,140],[3560,-170,120],[4330,-150,120],[4600,-130,160],[4820,-230,140]],
+      magic:[[230,-188],[140,-28],[200,-28],[250,-28],[1090,-158],[990,-28],[1040,-28],[1100,-28],[2070,-158],[1960,-28],[2020,-28],[2090,-28],[3050,-168],[2940,-28],[3000,-28],[3080,-28],[3830,-28],[3890,-28],[3970,-28],[4680,-158],[4590,-28],[4630,-28],[4700,-28]],
+      stars:[[1300,-335],[3260,-365],[4890,-335]],
+      spikes:[[1510,80],[2390,60],[4860,80]],
+      foes:[[200,440,-105,'bat'],[1060,1300,-75,'bat'],[1110,1410,0,'hopper'],[2040,2280,-75,'bat'],[2090,2470,0,'hopper'],[3020,3260,-85,'bat'],[3070,3350,0,'hopper'],[3960,4150,0,'hopper'],[4650,4890,-75,'bat'],[4700,4960,0,'hopper']] },
+    { name:'1-10', boss:true, goal:2060, bossKind:'skullking', newFoe:'',
+      ground:[[0,2200]],
+      plats:[[320,-150,150],[700,-230,140],[1180,-150,150],[1560,-230,140]],
+      magic:[[200,-28],[330,-28],[460,-28],[590,-28],[720,-28],[850,-28],[980,-28],[1110,-28],[1240,-28],[1370,-28],[1500,-28],[1630,-28],[1760,-28],[1890,-28],[2020,-28],[390,-178],[1250,-178]],
+      stars:[[770,-335],[1630,-335],[1100,-70]],
+      spikes:[],
+      foes:[[520,1700,0,'boss']] }
+    ]
+  },
+  {
+    name: 'Ember Reach',
+    crags: true,
+    sky: ['#E3A96B', '#F0C68F'],
+    cloud: '',
+    cloudShade: '',
+    cloudBase: '',
+    far: '#C8684A',
+    meadow: '#8A4438',
+    meadowDark: '#6A3230',
+    meadowLight: '#A8573F',
+    rock: '#9E5A46',
+    rockLight: '#C9785A',
+    rockDark: '#6A3834',
+    grass: '#D98A48',
+    grassLight: '#F4B86C',
+    grassDark: '#A8612E',
+    dirt: '#4A2C30',
+    pebble: '#61393C',
+    pebbleDark: '#381F24',
+    lava: true,
+    levels: [
+    { name:'2-1', boss:false, goal:4020, bossKind:'', newFoe:'charger',
+      ground:[[0,940],[1120,660],[1950,680],[2790,680],[3660,560]],
+      plats:[[150,-140,160],[370,-250,140],[980,-190,120],[1270,-140,160],[1490,-240,140],[1820,-180,120],[2100,-140,160],[2320,-260,140],[2670,-190,120],[2940,-140,160],[3160,-240,140],[3510,-190,120]],
+      magic:[[230,-168],[130,-28],[180,-28],[250,-28],[310,-28],[1350,-168],[1250,-28],[1300,-28],[1380,-28],[1420,-28],[2180,-168],[2070,-28],[2150,-28],[2210,-28],[2260,-28],[3020,-168],[2930,-28],[2990,-28],[3050,-28],[3090,-28],[3780,-28],[3840,-28],[3910,-28],[3960,-28]],
+      stars:[[1560,-345],[3230,-345],[2390,-365]],
+      spikes:[],
+      foes:[[200,440,-85,'bat'],[1320,1560,-85,'bat'],[1370,1640,0,'charger'],[2150,2390,-85,'bat'],[2200,2490,0,'charger'],[2990,3230,-85,'bat'],[3040,3330,0,'charger'],[3910,4080,0,'hopper']] },
+    { name:'2-2', boss:false, goal:4580, bossKind:'', newFoe:'',
+      ground:[[0,680],[880,720],[1790,980],[2930,840],[3960,820]],
+      plats:[[150,-160,160],[370,-280,140],[720,-170,120],[1030,-140,160],[1250,-240,140],[1640,-180,120],[1940,-160,160],[2160,-260,140],[2810,-160,120],[3080,-150,160],[3300,-260,140],[3810,-160,120],[4110,-150,160],[4330,-260,140]],
+      magic:[[230,-188],[120,-28],[190,-28],[250,-28],[320,-28],[1110,-168],[1010,-28],[1060,-28],[1120,-28],[1190,-28],[2020,-188],[1920,-28],[1990,-28],[2030,-28],[2100,-28],[3160,-178],[3060,-28],[3130,-28],[3170,-28],[3230,-28],[4190,-178],[4090,-28],[4140,-28],[4220,-28],[4280,-28]],
+      stars:[[1320,-345],[3370,-365],[2230,-365]],
+      spikes:[[1330,80],[2460,60],[3500,70],[4370,70]],
+      foes:[[200,440,-105,'bat'],[1080,1320,-85,'bat'],[1130,1460,0,'charger'],[1990,2230,-105,'bat'],[2040,2380,0,'charger'],[2440,2630,0,'charger'],[3130,3370,-95,'bat'],[3180,3420,0,'charger'],[3480,3630,0,'hopper'],[4160,4400,-95,'bat'],[4210,4570,0,'skull']] },
+    { name:'2-3', boss:false, goal:4850, bossKind:'', newFoe:'',
+      ground:[[0,580],[770,760],[1740,660],[2560,860],[3580,700],[4430,620]],
+      plats:[[620,-180,120],[920,-150,160],[1140,-270,140],[1570,-180,120],[1890,-130,160],[2110,-230,140],[2440,-180,120],[2710,-130,160],[2930,-250,140],[3460,-160,120],[3730,-160,160],[3950,-260,140],[4320,-160,120]],
+      magic:[[130,-28],[200,-28],[250,-28],[320,-28],[1000,-178],[890,-28],[960,-28],[1010,-28],[1090,-28],[1970,-158],[1880,-28],[1930,-28],[1990,-28],[2060,-28],[2790,-158],[2680,-28],[2750,-28],[2820,-28],[2870,-28],[3810,-188],[3710,-28],[3760,-28],[3830,-28],[3900,-28],[4560,-28],[4620,-28],[4680,-28],[4730,-28]],
+      stars:[[1210,-375],[3000,-355],[2180,-335]],
+      spikes:[[1100,70],[3170,70]],
+      foes:[[970,1210,-95,'bat'],[1020,1380,0,'hopper'],[1940,2180,-75,'bat'],[1990,2210,0,'hopper'],[2760,3000,-75,'bat'],[2810,3030,0,'charger'],[3090,3280,0,'charger'],[3780,4020,-105,'bat'],[3830,4130,0,'charger'],[4680,4910,0,'hopper']] },
+    { name:'2-4', boss:false, goal:5230, bossKind:'', newFoe:'spitter',
+      ground:[[0,840],[1000,980],[2130,760],[3080,780],[4070,540],[4810,620]],
+      plats:[[150,-130,160],[370,-230,140],[880,-190,120],[1150,-140,160],[1370,-240,140],[2020,-180,120],[2280,-160,160],[2500,-260,140],[2930,-160,120],[3230,-140,160],[3450,-250,140],[3900,-180,120],[4650,-150,120]],
+      magic:[[230,-158],[140,-28],[190,-28],[240,-28],[320,-28],[1230,-168],[1140,-28],[1180,-28],[1250,-28],[1300,-28],[2360,-188],[2260,-28],[2320,-28],[2380,-28],[2430,-28],[3310,-168],[3220,-28],[3260,-28],[3330,-28],[3380,-28],[4200,-28],[4270,-28],[4310,-28],[4370,-28],[4930,-28],[5000,-28],[5070,-28],[5130,-28]],
+      stars:[[1440,-345],[3520,-355],[2570,-365]],
+      spikes:[[1730,60],[2620,80],[3570,60]],
+      foes:[[200,440,-75,'bat'],[1200,1440,-85,'bat'],[1250,1610,0,'spitter'],[1670,1840,0,'charger'],[2330,2570,-105,'bat'],[2380,2750,0,'hopper'],[3280,3520,-85,'bat'],[3330,3570,0,'spitter'],[4320,4470,0,'hopper'],[5060,5290,0,'hopper']] },
+    { name:'2-5', boss:false, goal:4970, bossKind:'', newFoe:'',
+      ground:[[0,580],[780,820],[1760,900],[2810,620],[3580,620],[4410,760]],
+      plats:[[620,-170,120],[930,-150,160],[1150,-250,140],[1640,-150,120],[1910,-150,160],[2130,-250,140],[2700,-170,120],[3470,-170,120],[4240,-180,120],[4560,-150,160],[4780,-260,140]],
+      magic:[[120,-28],[180,-28],[240,-28],[300,-28],[1010,-178],[910,-28],[960,-28],[1030,-28],[1100,-28],[1990,-178],[1890,-28],[1940,-28],[2020,-28],[2070,-28],[2930,-28],[3010,-28],[3050,-28],[3110,-28],[3720,-28],[3770,-28],[3830,-28],[3880,-28],[4640,-178],[4530,-28],[4610,-28],[4660,-28],[4730,-28]],
+      stars:[[1220,-355],[4850,-365],[2200,-355]],
+      spikes:[[1270,70],[2490,70],[4920,60]],
+      foes:[[980,1220,-95,'bat'],[1030,1370,0,'spitter'],[1960,2200,-95,'bat'],[2010,2310,0,'hopper'],[2370,2520,0,'charger'],[3060,3290,0,'skull'],[3830,4050,0,'hopper'],[4610,4850,-95,'bat'],[4660,4980,0,'hopper']] },
+    { name:'2-6', boss:false, goal:5650, bossKind:'', newFoe:'',
+      ground:[[0,720],[920,800],[1930,980],[3120,960],[4230,700],[5090,760]],
+      plats:[[150,-150,160],[370,-270,140],[760,-150,120],[1070,-160,160],[1290,-260,140],[1760,-170,120],[2080,-130,160],[2300,-250,140],[2950,-170,120],[3270,-150,160],[3490,-250,140],[4120,-160,120],[4380,-130,160],[4600,-250,140],[4970,-150,120],[5240,-160,160],[5460,-270,140]],
+      magic:[[230,-178],[120,-28],[200,-28],[250,-28],[300,-28],[1150,-188],[1050,-28],[1110,-28],[1160,-28],[1240,-28],[2160,-158],[2060,-28],[2130,-28],[2180,-28],[2250,-28],[3350,-178],[3240,-28],[3300,-28],[3360,-28],[3420,-28],[4460,-158],[4370,-28],[4430,-28],[4470,-28],[4530,-28],[5320,-188],[5210,-28],[5290,-28],[5340,-28],[5390,-28]],
+      stars:[[1360,-365],[3560,-355],[5530,-375]],
+      spikes:[[1250,80],[2380,80],[3730,70],[5620,80]],
+      foes:[[200,440,-95,'bat'],[1120,1360,-105,'bat'],[1170,1430,0,'spitter'],[2130,2370,-75,'bat'],[2180,2400,0,'hopper'],[2460,2680,0,'hopper'],[3320,3560,-95,'bat'],[3370,3710,0,'charger'],[3770,3940,0,'charger'],[4430,4670,-75,'bat'],[4480,4760,0,'hopper'],[5290,5530,-105,'bat'],[5340,5640,0,'hopper']] },
+    { name:'2-7', boss:false, goal:5300, bossKind:'', newFoe:'knight',
+      ground:[[0,980],[1140,840],[2160,620],[2940,580],[3720,620],[4540,960]],
+      plats:[[150,-160,160],[370,-260,140],[1020,-180,120],[1290,-140,160],[1510,-250,140],[2020,-160,120],[2820,-160,120],[3560,-150,120],[4380,-160,120],[4690,-130,160],[4910,-250,140]],
+      magic:[[230,-188],[120,-28],[200,-28],[260,-28],[320,-28],[1370,-168],[1260,-28],[1330,-28],[1390,-28],[1450,-28],[2290,-28],[2350,-28],[2410,-28],[2470,-28],[3080,-28],[3120,-28],[3200,-28],[3260,-28],[3840,-28],[3900,-28],[3970,-28],[4020,-28],[4770,-158],[4670,-28],[4730,-28],[4790,-28],[4850,-28]],
+      stars:[[1580,-355],[4980,-355],[440,-365]],
+      spikes:[[1750,60],[4890,60]],
+      foes:[[200,440,-105,'bat'],[1340,1580,-85,'bat'],[1390,1630,0,'knight'],[1690,1840,0,'spitter'],[2410,2640,0,'spitter'],[3190,3380,0,'knight'],[3970,4200,0,'spitter'],[4740,4980,-75,'bat'],[4790,5070,0,'charger'],[5130,5350,0,'charger']] },
+    { name:'2-8', boss:false, goal:6420, bossKind:'', newFoe:'',
+      ground:[[0,920],[1080,580],[1810,820],[2810,760],[3760,580],[4510,940],[5660,960]],
+      plats:[[150,-130,160],[370,-240,140],[960,-170,120],[1700,-190,120],[1960,-130,160],[2180,-230,140],[2670,-170,120],[2960,-150,160],[3180,-270,140],[3610,-180,120],[4380,-170,120],[4660,-130,160],[4880,-240,140],[5490,-150,120],[5810,-130,160],[6030,-240,140]],
+      magic:[[230,-158],[130,-28],[200,-28],[240,-28],[310,-28],[1200,-28],[1270,-28],[1320,-28],[1400,-28],[2040,-158],[1950,-28],[2010,-28],[2070,-28],[2130,-28],[3040,-178],[2930,-28],[3010,-28],[3050,-28],[3110,-28],[3880,-28],[3950,-28],[4000,-28],[4070,-28],[4740,-158],[4650,-28],[4710,-28],[4750,-28],[4820,-28],[5890,-158],[5790,-28],[5860,-28],[5900,-28],[5980,-28]],
+      stars:[[3250,-375],[4950,-345],[2250,-335]],
+      spikes:[[2140,80],[3280,80],[4860,80],[6410,70]],
+      foes:[[200,440,-75,'bat'],[1330,1520,0,'knight'],[2010,2250,-75,'bat'],[2060,2340,0,'charger'],[3010,3250,-95,'bat'],[3060,3300,0,'knight'],[4010,4200,0,'hopper'],[4710,4950,-75,'bat'],[4760,5020,0,'hopper'],[5080,5300,0,'knight'],[5860,6100,-75,'bat'],[5910,6150,0,'knight'],[6210,6430,0,'spitter']] },
+    { name:'2-9', boss:false, goal:5910, bossKind:'', newFoe:'',
+      ground:[[0,860],[1020,760],[1940,620],[2710,600],[3510,940],[4650,660],[5470,640]],
+      plats:[[150,-150,160],[370,-270,140],[900,-150,120],[1170,-140,160],[1390,-250,140],[1820,-180,120],[2600,-160,120],[3350,-170,120],[3660,-130,160],[3880,-230,140],[4490,-170,120],[4800,-150,160],[5020,-270,140],[5350,-180,120],[5620,-140,160],[5840,-260,140]],
+      magic:[[230,-178],[120,-28],[200,-28],[250,-28],[300,-28],[1250,-168],[1160,-28],[1210,-28],[1270,-28],[1330,-28],[2060,-28],[2130,-28],[2180,-28],[2250,-28],[2840,-28],[2890,-28],[2950,-28],[3020,-28],[3740,-158],[3630,-28],[3690,-28],[3770,-28],[3810,-28],[4880,-178],[4790,-28],[4850,-28],[4890,-28],[4960,-28],[5700,-168],[5590,-28],[5650,-28],[5730,-28],[5790,-28]],
+      stars:[[1460,-355],[5090,-375],[3950,-335]],
+      spikes:[[1430,60],[4020,60]],
+      foes:[[200,440,-95,'bat'],[1220,1460,-85,'bat'],[1270,1550,0,'skull'],[2190,2420,0,'charger'],[2960,3170,0,'skull'],[3710,3950,-75,'bat'],[3760,4020,0,'skull'],[4080,4300,0,'knight'],[4850,5090,-95,'bat'],[4900,5160,0,'charger'],[5670,5910,-85,'bat'],[5720,5960,0,'knight']] },
+    { name:'2-10', boss:true, goal:2060, bossKind:'magma', newFoe:'',
+      ground:[[0,2200]],
+      plats:[[320,-150,150],[700,-230,140],[1180,-150,150],[1560,-230,140]],
+      magic:[[200,-28],[330,-28],[460,-28],[590,-28],[720,-28],[850,-28],[980,-28],[1110,-28],[1240,-28],[1370,-28],[1500,-28],[1630,-28],[1760,-28],[1890,-28],[2020,-28],[390,-178],[1250,-178]],
+      stars:[[770,-335],[1630,-335],[1100,-70]],
+      spikes:[],
+      foes:[[520,1700,0,'boss']] }
+    ]
+  },
+  {
+    name: 'Frostfall',
+    crags: true,
+    snow: true,
+    sky: ['#16204A', '#3E5A9A'],
+    cloud: '',
+    cloudShade: '',
+    cloudBase: '',
+    far: '#6F86B8',
+    meadow: '#51689A',
+    meadowDark: '#3E5282',
+    meadowLight: '#7F97C7',
+    rock: '#8FA3C8',
+    rockLight: '#F2F7FF',
+    rockDark: '#5A6C94',
+    grass: '#E6F0FA',
+    grassLight: '#FFFFFF',
+    grassDark: '#A9BFD8',
+    dirt: '#3B4466',
+    pebble: '#4C5780',
+    pebbleDark: '#2C3350',
+    levels: [
+    { name:'3-1', boss:false, goal:5480, bossKind:'', newFoe:'ghost',
+      ground:[[0,540],[720,740],[1650,840],[2690,920],[3820,720],[4740,940]],
+      plats:[[580,-190,120],[870,-130,160],[1090,-230,140],[1500,-190,120],[1800,-130,160],[2020,-230,140],[2530,-170,120],[2840,-150,160],[3060,-270,140],[3650,-170,120],[3970,-130,160],[4190,-240,140],[4580,-190,120],[4890,-130,160],[5110,-250,140]],
+      magic:[[130,-28],[200,-28],[250,-28],[310,-28],[370,-28],[950,-158],[850,-28],[910,-28],[960,-28],[1020,-28],[1100,-28],[1880,-158],[1770,-28],[1850,-28],[1910,-28],[1950,-28],[2030,-28],[2920,-178],[2820,-28],[2890,-28],[2950,-28],[3010,-28],[3070,-28],[4050,-158],[3960,-28],[4000,-28],[4070,-28],[4120,-28],[4200,-28],[4970,-158],[4870,-28],[4930,-28],[5000,-28],[5040,-28],[5110,-28]],
+      stars:[[1160,-335],[3130,-375],[5180,-355]],
+      spikes:[[1070,70],[2100,80],[3240,60],[4330,60],[5190,60]],
+      foes:[[920,1160,-120,'ghost'],[970,1250,0,'knight'],[1850,2090,-120,'ghost'],[1900,2280,0,'hopper'],[2890,3130,-95,'bat'],[2940,3200,0,'knight'],[3260,3470,0,'spitter'],[4020,4260,-120,'ghost'],[4070,4350,0,'knight'],[4940,5180,-120,'ghost'],[4990,5210,0,'hopper'],[5270,5490,0,'knight']] },
+    { name:'3-2', boss:false, goal:5720, bossKind:'', newFoe:'',
+      ground:[[0,780],[950,660],[1780,920],[2900,920],[3990,940],[5120,800]],
+      plats:[[150,-130,160],[370,-240,140],[820,-150,120],[1100,-130,160],[1320,-250,140],[1650,-170,120],[1930,-140,160],[2150,-250,140],[2740,-170,120],[3050,-150,160],[3270,-270,140],[3860,-190,120],[4140,-150,160],[4360,-250,140],[4970,-180,120],[5270,-130,160],[5490,-230,140]],
+      magic:[[230,-158],[120,-28],[200,-28],[250,-28],[300,-28],[370,-28],[1180,-158],[1090,-28],[1150,-28],[1190,-28],[1270,-28],[1320,-28],[2010,-168],[1900,-28],[1960,-28],[2020,-28],[2100,-28],[2140,-28],[3130,-178],[3030,-28],[3090,-28],[3150,-28],[3200,-28],[3280,-28],[4220,-178],[4120,-28],[4170,-28],[4240,-28],[4300,-28],[4360,-28],[5350,-158],[5240,-28],[5300,-28],[5360,-28],[5430,-28],[5480,-28]],
+      stars:[[1390,-355],[3340,-375],[5560,-335]],
+      spikes:[[2330,70],[3610,70],[4520,70],[5730,80]],
+      foes:[[200,440,-75,'bat'],[1150,1390,-75,'bat'],[1200,1470,0,'charger'],[1980,2220,-85,'bat'],[2030,2370,0,'spitter'],[2430,2560,0,'charger'],[3100,3340,-95,'bat'],[3150,3390,0,'spitter'],[3450,3670,0,'hopper'],[4190,4430,-120,'ghost'],[4240,4580,0,'skull'],[4640,4790,0,'spitter'],[5320,5560,-120,'ghost'],[5370,5670,0,'spitter']] },
+    { name:'3-3', boss:false, goal:5390, bossKind:'', newFoe:'',
+      ground:[[0,720],[890,920],[2020,600],[2800,720],[3680,960],[4830,760]],
+      plats:[[150,-140,160],[370,-250,140],[760,-150,120],[1040,-140,160],[1260,-250,140],[1850,-180,120],[2660,-150,120],[2950,-150,160],[3170,-250,140],[3560,-150,120],[3830,-140,160],[4050,-240,140],[4680,-190,120],[4980,-160,160],[5200,-260,140]],
+      magic:[[230,-168],[130,-28],[180,-28],[260,-28],[300,-28],[360,-28],[1120,-168],[1030,-28],[1090,-28],[1130,-28],[1200,-28],[1270,-28],[2140,-28],[2200,-28],[2260,-28],[2330,-28],[2390,-28],[3030,-178],[2920,-28],[2990,-28],[3050,-28],[3110,-28],[3180,-28],[3910,-168],[3800,-28],[3870,-28],[3940,-28],[3980,-28],[4040,-28],[5060,-188],[4950,-28],[5010,-28],[5070,-28],[5130,-28],[5210,-28]],
+      stars:[[1330,-355],[3240,-355],[5270,-365]],
+      spikes:[[1640,60],[3270,80],[4190,80],[5380,80]],
+      foes:[[200,440,-120,'ghost'],[1090,1330,-120,'ghost'],[1140,1480,0,'hopper'],[1540,1670,0,'knight'],[2270,2480,0,'charger'],[3000,3240,-120,'ghost'],[3050,3290,0,'skull'],[3880,4120,-120,'ghost'],[3930,4270,0,'spitter'],[4330,4500,0,'spitter'],[5030,5270,-120,'ghost'],[5080,5360,0,'skull']] },
+    { name:'3-4', boss:false, goal:6000, bossKind:'', newFoe:'golem',
+      ground:[[0,840],[1000,560],[1720,560],[2470,620],[3270,840],[4320,880],[5400,800]],
+      plats:[[150,-130,160],[370,-240,140],[880,-190,120],[1600,-160,120],[2320,-180,120],[3130,-150,120],[3420,-150,160],[3640,-250,140],[4150,-190,120],[4470,-150,160],[4690,-270,140],[5240,-150,120],[5550,-160,160],[5770,-260,140]],
+      magic:[[230,-158],[120,-28],[190,-28],[260,-28],[320,-28],[380,-28],[1130,-28],[1190,-28],[1240,-28],[1320,-28],[1360,-28],[1860,-28],[1910,-28],[1960,-28],[2040,-28],[2090,-28],[2600,-28],[2650,-28],[2730,-28],[2780,-28],[2840,-28],[3500,-178],[3410,-28],[3470,-28],[3530,-28],[3570,-28],[3650,-28],[4550,-178],[4460,-28],[4520,-28],[4560,-28],[4630,-28],[4690,-28],[5630,-188],[5540,-28],[5580,-28],[5650,-28],[5710,-28],[5780,-28]],
+      stars:[[4760,-375],[3710,-355],[5840,-365]],
+      spikes:[[3780,70],[4950,60],[5750,80]],
+      foes:[[200,440,-120,'ghost'],[1250,1420,0,'golem'],[1970,2140,0,'golem'],[2720,2940,0,'knight'],[3470,3710,-120,'ghost'],[3520,3820,0,'knight'],[4520,4760,-120,'ghost'],[4570,4850,0,'charger'],[4910,5060,0,'golem'],[5600,5840,-120,'ghost'],[5650,5990,0,'spitter']] },
+    { name:'3-5', boss:false, goal:5740, bossKind:'', newFoe:'',
+      ground:[[0,940],[1120,920],[2210,560],[2940,880],[4040,840],[5040,900]],
+      plats:[[150,-160,160],[370,-260,140],[980,-190,120],[1270,-150,160],[1490,-260,140],[2080,-190,120],[2810,-180,120],[3090,-150,160],[3310,-270,140],[3860,-180,120],[4190,-150,160],[4410,-250,140],[4920,-180,120],[5190,-160,160],[5410,-280,140]],
+      magic:[[230,-188],[140,-28],[190,-28],[260,-28],[310,-28],[370,-28],[1350,-178],[1240,-28],[1310,-28],[1370,-28],[1440,-28],[1490,-28],[2340,-28],[2410,-28],[2460,-28],[2520,-28],[2590,-28],[3170,-178],[3080,-28],[3120,-28],[3180,-28],[3240,-28],[3310,-28],[4270,-178],[4160,-28],[4230,-28],[4300,-28],[4340,-28],[4420,-28],[5270,-188],[5170,-28],[5220,-28],[5290,-28],[5350,-28],[5410,-28]],
+      stars:[[1560,-365],[3380,-375],[5480,-385]],
+      spikes:[[1750,70],[3550,80],[4610,80],[5690,80]],
+      foes:[[200,440,-120,'ghost'],[1320,1560,-95,'bat'],[1370,1590,0,'hopper'],[1650,1870,0,'spitter'],[2460,2630,0,'golem'],[3140,3380,-120,'ghost'],[3190,3410,0,'golem'],[3470,3680,0,'knight'],[4240,4480,-120,'ghost'],[4290,4570,0,'knight'],[5240,5480,-120,'ghost'],[5290,5650,0,'knight']] },
+    { name:'3-6', boss:false, goal:6060, bossKind:'', newFoe:'',
+      ground:[[0,700],[900,780],[1870,860],[2910,560],[3670,980],[4850,660],[5680,580]],
+      plats:[[150,-130,160],[370,-250,140],[740,-180,120],[1050,-140,160],[1270,-240,140],[1720,-190,120],[2020,-130,160],[2240,-230,140],[2770,-150,120],[3510,-150,120],[3820,-160,160],[4040,-260,140],[4690,-190,120],[5000,-140,160],[5220,-250,140],[5550,-190,120]],
+      magic:[[230,-158],[130,-28],[180,-28],[250,-28],[320,-28],[370,-28],[1130,-168],[1020,-28],[1100,-28],[1150,-28],[1220,-28],[1280,-28],[2100,-158],[2010,-28],[2050,-28],[2130,-28],[2170,-28],[2250,-28],[3030,-28],[3090,-28],[3160,-28],[3230,-28],[3280,-28],[3900,-188],[3800,-28],[3860,-28],[3930,-28],[3970,-28],[4040,-28],[5080,-168],[4980,-28],[5050,-28],[5090,-28],[5160,-28],[5210,-28],[5800,-28],[5870,-28],[5930,-28],[5990,-28],[6040,-28]],
+      stars:[[1340,-345],[5290,-355],[2310,-335]],
+      spikes:[[1210,80],[2540,80],[4340,80]],
+      foes:[[200,440,-120,'ghost'],[1100,1340,-85,'bat'],[1150,1510,0,'golem'],[2070,2310,-120,'ghost'],[2120,2480,0,'knight'],[3160,3330,0,'golem'],[3870,4110,-105,'bat'],[3920,4260,0,'spitter'],[4320,4510,0,'charger'],[5050,5290,-120,'ghost'],[5100,5370,0,'hopper'],[5930,6120,0,'knight']] },
+    { name:'3-7', boss:false, goal:6480, bossKind:'', newFoe:'bird',
+      ground:[[0,860],[1030,960],[2170,800],[3180,660],[4000,800],[5010,580],[5800,880]],
+      plats:[[150,-160,160],[370,-260,140],[900,-180,120],[1180,-150,160],[1400,-270,140],[2030,-160,120],[2320,-130,160],[2540,-230,140],[3010,-170,120],[3330,-130,160],[3550,-250,140],[3880,-190,120],[4150,-130,160],[4370,-230,140],[4840,-180,120],[5630,-180,120],[5950,-160,160],[6170,-270,140]],
+      magic:[[230,-188],[130,-28],[180,-28],[240,-28],[300,-28],[370,-28],[1260,-178],[1150,-28],[1230,-28],[1280,-28],[1330,-28],[1400,-28],[2400,-158],[2310,-28],[2350,-28],[2420,-28],[2490,-28],[2550,-28],[3410,-158],[3300,-28],[3370,-28],[3440,-28],[3500,-28],[3550,-28],[4230,-158],[4120,-28],[4190,-28],[4250,-28],[4300,-28],[4380,-28],[5140,-28],[5210,-28],[5260,-28],[5330,-28],[5390,-28],[6030,-188],[5940,-28],[6000,-28],[6060,-28],[6100,-28],[6180,-28]],
+      stars:[[1470,-375],[3620,-355],[2610,-335]],
+      spikes:[[1560,70],[2660,70],[4610,70],[6310,80]],
+      foes:[[200,440,-230,'bird'],[1230,1470,-230,'bird'],[1280,1600,0,'spitter'],[1660,1850,0,'golem'],[2370,2610,-230,'bird'],[2420,2640,0,'knight'],[3380,3620,-230,'bird'],[3430,3670,0,'spitter'],[4200,4440,-120,'ghost'],[4250,4630,0,'golem'],[5260,5450,0,'knight'],[6000,6240,-230,'bird'],[6050,6430,0,'knight']] },
+    { name:'3-8', boss:false, goal:6530, bossKind:'', newFoe:'',
+      ground:[[0,940],[1090,740],[2030,600],[2850,760],[3770,860],[4830,860],[5910,820]],
+      plats:[[150,-140,160],[370,-260,140],[980,-180,120],[1240,-140,160],[1460,-240,140],[1870,-180,120],[2670,-190,120],[3000,-130,160],[3220,-230,140],[3650,-170,120],[3920,-160,160],[4140,-280,140],[4670,-170,120],[4980,-150,160],[5200,-250,140],[5730,-150,120],[6060,-160,160],[6280,-270,140]],
+      magic:[[230,-168],[120,-28],[190,-28],[260,-28],[320,-28],[360,-28],[1320,-168],[1230,-28],[1290,-28],[1330,-28],[1390,-28],[1460,-28],[2150,-28],[2220,-28],[2280,-28],[2350,-28],[2410,-28],[3080,-158],[2990,-28],[3050,-28],[3100,-28],[3150,-28],[3210,-28],[4000,-188],[3900,-28],[3950,-28],[4010,-28],[4090,-28],[4150,-28],[5060,-178],[4960,-28],[5030,-28],[5080,-28],[5140,-28],[5200,-28],[6140,-188],[6040,-28],[6090,-28],[6170,-28],[6230,-28],[6290,-28]],
+      stars:[[1530,-345],[3290,-335],[5270,-355]],
+      spikes:[[1520,70],[3380,80],[4220,70],[5500,60],[6320,70]],
+      foes:[[200,440,-120,'ghost'],[1290,1530,-120,'ghost'],[1340,1690,0,'charger'],[2280,2490,0,'spitter'],[3050,3290,-230,'bird'],[3100,3320,0,'knight'],[3970,4210,-230,'bird'],[4020,4260,0,'knight'],[4320,4490,0,'knight'],[5030,5270,-120,'ghost'],[5080,5320,0,'golem'],[5380,5550,0,'golem'],[6110,6350,-230,'bird'],[6160,6440,0,'knight']] },
+    { name:'3-9', boss:false, goal:7290, bossKind:'', newFoe:'',
+      ground:[[0,980],[1200,740],[2110,620],[2920,540],[3650,920],[4780,940],[5920,580],[6670,820]],
+      plats:[[150,-150,160],[370,-260,140],[1020,-180,120],[1350,-150,160],[1570,-270,140],[1980,-190,120],[2770,-160,120],[3500,-170,120],[3800,-150,160],[4020,-260,140],[4610,-180,120],[4930,-130,160],[5150,-250,140],[5760,-170,120],[6540,-150,120],[6820,-130,160],[7040,-230,140]],
+      magic:[[230,-178],[140,-28],[180,-28],[250,-28],[300,-28],[370,-28],[1430,-178],[1340,-28],[1400,-28],[1450,-28],[1500,-28],[1580,-28],[2230,-28],[2290,-28],[2370,-28],[2430,-28],[2480,-28],[3050,-28],[3100,-28],[3170,-28],[3240,-28],[3290,-28],[3880,-178],[3770,-28],[3830,-28],[3910,-28],[3950,-28],[4010,-28],[5010,-158],[4900,-28],[4960,-28],[5020,-28],[5100,-28],[5140,-28],[6050,-28],[6110,-28],[6170,-28],[6230,-28],[6290,-28],[6900,-158],[6800,-28],[6860,-28],[6930,-28],[6990,-28],[7050,-28]],
+      stars:[[1640,-375],[5220,-355],[7110,-335]],
+      spikes:[[1630,70],[4220,70],[5530,60],[7160,60]],
+      foes:[[200,440,-230,'bird'],[1400,1640,-120,'ghost'],[1450,1790,0,'knight'],[2360,2580,0,'spitter'],[3170,3320,0,'golem'],[3850,4090,-230,'bird'],[3900,4160,0,'spitter'],[4220,4430,0,'charger'],[4980,5220,-230,'bird'],[5030,5410,0,'knight'],[6170,6360,0,'knight'],[6870,7110,-120,'ghost'],[6920,7200,0,'spitter']] },
+    { name:'3-10', boss:true, goal:2060, bossKind:'wraith', newFoe:'',
+      ground:[[0,2200]],
+      plats:[[320,-150,150],[700,-230,140],[1180,-150,150],[1560,-230,140]],
+      magic:[[200,-28],[330,-28],[460,-28],[590,-28],[720,-28],[850,-28],[980,-28],[1110,-28],[1240,-28],[1370,-28],[1500,-28],[1630,-28],[1760,-28],[1890,-28],[2020,-28],[390,-178],[1250,-178]],
+      stars:[[770,-335],[1630,-335],[1100,-70]],
+      spikes:[],
+      foes:[[520,1700,0,'boss']] }
+    ]
+  },
+  {
+    name: 'Crystal Caverns',
+    cave: true,
+    sky: ['#150C26', '#2E1A4A'],
+    cloud: '',
+    cloudShade: '',
+    cloudBase: '',
+    far: '#2A1B45',
+    meadow: '#34224F',
+    meadowDark: '#261840',
+    meadowLight: '#4A3270',
+    rock: '#5A4680',
+    rockLight: '#8A74B8',
+    rockDark: '#3A2A5A',
+    grass: '#3FD6C0',
+    grassLight: '#A8FFF2',
+    grassDark: '#1F8A80',
+    dirt: '#2A1B3E',
+    pebble: '#3C2A58',
+    pebbleDark: '#1C1230',
+    levels: [
+    { name:'4-1', boss:false, goal:6640, bossKind:'', newFoe:'worm',
+      ground:[[0,560],[760,820],[1780,580],[2580,780],[3520,560],[4250,600],[5030,660],[5860,980]],
+      plats:[[600,-180,120],[910,-140,160],[1130,-260,140],[1620,-160,120],[2400,-170,120],[2730,-160,160],[2950,-270,140],[3400,-150,120],[4120,-190,120],[4890,-150,120],[5180,-130,160],[5400,-240,140],[5730,-170,120],[6010,-130,160],[6230,-250,140]],
+      magic:[[130,-28],[180,-28],[250,-28],[310,-28],[370,-28],[990,-168],[900,-28],[960,-28],[1010,-28],[1070,-28],[1140,-28],[1910,-28],[1970,-28],[2040,-28],[2100,-28],[2150,-28],[2810,-188],[2710,-28],[2780,-28],[2820,-28],[2890,-28],[2940,-28],[3650,-28],[3700,-28],[3770,-28],[3840,-28],[3890,-28],[4380,-28],[4430,-28],[4490,-28],[4560,-28],[4610,-28],[5260,-158],[5170,-28],[5220,-28],[5290,-28],[5350,-28],[5410,-28],[6090,-158],[5980,-28],[6050,-28],[6120,-28],[6170,-28],[6230,-28]],
+      stars:[[1200,-365],[3020,-375],[6300,-355]],
+      spikes:[[1410,70],[3130,70],[6210,70]],
+      foes:[[960,1200,-120,'ghost'],[1010,1250,0,'worm'],[2030,2220,0,'golem'],[2780,3020,-105,'bat'],[2830,3130,0,'spitter'],[3770,3940,0,'spitter'],[4500,4710,0,'spitter'],[5230,5470,-120,'ghost'],[5280,5550,0,'knight'],[6060,6300,-230,'bird'],[6110,6410,0,'knight'],[6470,6690,0,'worm']] },
+    { name:'4-2', boss:false, goal:6280, bossKind:'', newFoe:'',
+      ground:[[0,580],[760,700],[1640,840],[2700,720],[3630,800],[4630,800],[5580,900]],
+      plats:[[620,-190,120],[910,-130,160],[1130,-240,140],[1500,-150,120],[1790,-150,160],[2010,-270,140],[2520,-190,120],[2850,-160,160],[3070,-280,140],[3460,-150,120],[3780,-130,160],[4000,-230,140],[4470,-170,120],[4780,-130,160],[5000,-230,140],[5470,-150,120],[5730,-130,160],[5950,-230,140]],
+      magic:[[130,-28],[200,-28],[260,-28],[310,-28],[380,-28],[990,-158],[880,-28],[950,-28],[1020,-28],[1060,-28],[1120,-28],[1870,-178],[1770,-28],[1820,-28],[1900,-28],[1960,-28],[2020,-28],[2930,-188],[2820,-28],[2890,-28],[2950,-28],[3000,-28],[3060,-28],[3860,-158],[3760,-28],[3830,-28],[3880,-28],[3930,-28],[3990,-28],[4860,-158],[4760,-28],[4820,-28],[4870,-28],[4940,-28],[5010,-28],[5810,-158],[5700,-28],[5770,-28],[5830,-28],[5900,-28],[5950,-28]],
+      stars:[[1200,-345],[3140,-385],[5070,-335]],
+      spikes:[[2010,70],[3250,70],[4160,60],[5180,80],[6130,60]],
+      foes:[[960,1200,-120,'ghost'],[1010,1230,0,'charger'],[1840,2080,-230,'bird'],[1890,2150,0,'worm'],[2210,2340,0,'worm'],[2900,3140,-120,'ghost'],[2950,3190,0,'worm'],[3830,4070,-120,'ghost'],[3880,4140,0,'hopper'],[4830,5070,-120,'ghost'],[4880,5140,0,'golem'],[5780,6020,-120,'ghost'],[5830,6090,0,'charger'],[6150,6340,0,'skull']] },
+    { name:'4-3', boss:false, goal:6890, bossKind:'', newFoe:'',
+      ground:[[0,560],[770,920],[1910,700],[2790,640],[3640,600],[4390,940],[5540,680],[6410,680]],
+      plats:[[600,-190,120],[920,-130,160],[1140,-250,140],[1730,-180,120],[2060,-130,160],[2280,-230,140],[2650,-170,120],[2940,-130,160],[3160,-240,140],[3470,-160,120],[4280,-160,120],[4540,-160,160],[4760,-280,140],[5370,-160,120],[5690,-130,160],[5910,-230,140],[6260,-150,120],[6560,-130,160],[6780,-240,140]],
+      magic:[[130,-28],[180,-28],[250,-28],[320,-28],[360,-28],[1000,-158],[910,-28],[960,-28],[1030,-28],[1070,-28],[1140,-28],[2140,-158],[2050,-28],[2090,-28],[2170,-28],[2230,-28],[2280,-28],[3020,-158],[2920,-28],[2970,-28],[3030,-28],[3110,-28],[3170,-28],[3760,-28],[3830,-28],[3900,-28],[3950,-28],[4000,-28],[4620,-188],[4510,-28],[4590,-28],[4640,-28],[4690,-28],[4770,-28],[5770,-158],[5670,-28],[5720,-28],[5800,-28],[5850,-28],[5920,-28],[6640,-158],[6540,-28],[6590,-28],[6660,-28],[6710,-28],[6790,-28]],
+      stars:[[1210,-355],[3230,-345],[4830,-385]],
+      spikes:[[1220,60],[4980,70]],
+      foes:[[970,1210,-230,'bird'],[1020,1300,0,'hopper'],[1360,1550,0,'spitter'],[2110,2350,-120,'ghost'],[2160,2460,0,'spitter'],[2990,3230,-230,'bird'],[3040,3260,0,'golem'],[3890,4100,0,'worm'],[4590,4830,-120,'ghost'],[4640,4860,0,'worm'],[4920,5140,0,'golem'],[5740,5980,-230,'bird'],[5790,6070,0,'worm'],[6610,6850,-230,'bird'],[6660,6950,0,'golem']] },
+    { name:'4-4', boss:false, goal:7390, bossKind:'', newFoe:'shielder',
+      ground:[[0,580],[750,980],[1890,840],[2930,820],[3970,640],[4830,860],[5850,580],[6650,940]],
+      plats:[[620,-160,120],[900,-160,160],[1120,-270,140],[1770,-150,120],[2040,-140,160],[2260,-260,140],[2770,-180,120],[3080,-150,160],[3300,-270,140],[3790,-180,120],[4120,-160,160],[4340,-270,140],[4650,-150,120],[4980,-160,160],[5200,-260,140],[5730,-170,120],[6470,-170,120],[6800,-160,160],[7020,-280,140]],
+      magic:[[120,-28],[190,-28],[240,-28],[320,-28],[370,-28],[980,-188],[870,-28],[950,-28],[990,-28],[1060,-28],[1130,-28],[2120,-168],[2010,-28],[2080,-28],[2130,-28],[2210,-28],[2250,-28],[3160,-178],[3070,-28],[3120,-28],[3170,-28],[3250,-28],[3290,-28],[4200,-188],[4100,-28],[4170,-28],[4220,-28],[4270,-28],[4340,-28],[5060,-188],[4960,-28],[5010,-28],[5090,-28],[5140,-28],[5210,-28],[5990,-28],[6040,-28],[6090,-28],[6150,-28],[6220,-28],[6880,-188],[6780,-28],[6840,-28],[6910,-28],[6950,-28],[7010,-28]],
+      stars:[[1190,-375],[3370,-375],[5270,-365]],
+      spikes:[[1100,80],[2320,80],[3480,80],[5380,60],[7100,70]],
+      foes:[[950,1190,-230,'bird'],[1000,1240,0,'shielder'],[1300,1520,0,'golem'],[2090,2330,-230,'bird'],[2140,2420,0,'charger'],[3130,3370,-120,'ghost'],[3180,3540,0,'worm'],[4170,4410,-230,'bird'],[4220,4470,0,'shielder'],[5030,5270,-120,'ghost'],[5080,5360,0,'golem'],[5420,5550,0,'worm'],[6100,6290,0,'golem'],[6850,7090,-230,'bird'],[6900,7260,0,'hopper'],[7320,7450,0,'shielder']] },
+    { name:'4-5', boss:false, goal:6530, bossKind:'', newFoe:'',
+      ground:[[0,560],[730,960],[1870,560],[2600,720],[3490,700],[4360,640],[5180,720],[6050,680]],
+      plats:[[600,-160,120],[880,-140,160],[1100,-250,140],[1730,-190,120],[2470,-170,120],[2750,-140,160],[2970,-250,140],[3360,-180,120],[3640,-140,160],[3860,-250,140],[4230,-160,120],[4510,-150,160],[4730,-270,140],[5040,-190,120],[5330,-140,160],[5550,-260,140],[5940,-190,120],[6200,-140,160],[6420,-240,140]],
+      magic:[[140,-28],[200,-28],[240,-28],[310,-28],[360,-28],[960,-168],[860,-28],[910,-28],[980,-28],[1030,-28],[1110,-28],[2000,-28],[2060,-28],[2130,-28],[2190,-28],[2230,-28],[2830,-168],[2720,-28],[2800,-28],[2850,-28],[2910,-28],[2960,-28],[3720,-168],[3630,-28],[3690,-28],[3750,-28],[3790,-28],[3870,-28],[4590,-178],[4490,-28],[4540,-28],[4610,-28],[4660,-28],[4740,-28],[5410,-168],[5320,-28],[5360,-28],[5430,-28],[5480,-28],[5550,-28],[6280,-168],[6170,-28],[6250,-28],[6300,-28],[6360,-28],[6420,-28]],
+      stars:[[1170,-355],[3040,-355],[4800,-375]],
+      spikes:[[1460,60],[3090,60],[5550,80]],
+      foes:[[930,1170,-120,'ghost'],[980,1220,0,'knight'],[1280,1500,0,'knight'],[2120,2290,0,'worm'],[2800,3040,-230,'bird'],[2850,3130,0,'worm'],[3690,3930,-120,'ghost'],[3740,4050,0,'golem'],[4560,4800,-120,'ghost'],[4610,4860,0,'spitter'],[5380,5620,-120,'ghost'],[5430,5760,0,'shielder'],[6250,6490,-120,'ghost'],[6300,6590,0,'golem']] },
+    { name:'4-6', boss:false, goal:7720, bossKind:'', newFoe:'',
+      ground:[[0,960],[1110,540],[1820,560],[2560,620],[3380,680],[4280,760],[5210,800],[6230,580],[6960,960]],
+      plats:[[150,-130,160],[370,-230,140],[1000,-170,120],[1690,-190,120],[2420,-150,120],[3220,-170,120],[3530,-160,160],[3750,-270,140],[4100,-160,120],[4430,-130,160],[4650,-230,140],[5080,-150,120],[5360,-150,160],[5580,-260,140],[6050,-150,120],[6850,-180,120],[7110,-160,160],[7330,-260,140]],
+      magic:[[230,-158],[120,-28],[200,-28],[260,-28],[320,-28],[360,-28],[1240,-28],[1300,-28],[1350,-28],[1410,-28],[1490,-28],[1960,-28],[2000,-28],[2060,-28],[2120,-28],[2180,-28],[2680,-28],[2740,-28],[2800,-28],[2860,-28],[2920,-28],[3610,-188],[3500,-28],[3580,-28],[3630,-28],[3700,-28],[3750,-28],[4510,-158],[4420,-28],[4480,-28],[4520,-28],[4590,-28],[4660,-28],[5440,-178],[5350,-28],[5390,-28],[5470,-28],[5520,-28],[5570,-28],[6360,-28],[6430,-28],[6490,-28],[6530,-28],[6600,-28],[7190,-188],[7090,-28],[7160,-28],[7210,-28],[7280,-28],[7330,-28]],
+      stars:[[4720,-335],[5650,-365],[3820,-375]],
+      spikes:[[4790,70],[5700,80],[7270,70]],
+      foes:[[200,440,-230,'bird'],[1360,1510,0,'knight'],[2070,2240,0,'shielder'],[2810,3040,0,'shielder'],[3580,3820,-120,'ghost'],[3630,3890,0,'spitter'],[4480,4720,-120,'ghost'],[4530,4750,0,'golem'],[5410,5650,-230,'bird'],[5460,5680,0,'spitter'],[6480,6670,0,'charger'],[7160,7400,-120,'ghost'],[7210,7430,0,'shielder'],[7490,7710,0,'charger']] },
+    { name:'4-7', boss:false, goal:7170, bossKind:'', newFoe:'turret',
+      ground:[[0,700],[900,760],[1870,640],[2700,580],[3440,800],[4400,960],[5530,760],[6490,880]],
+      plats:[[150,-130,160],[370,-230,140],[740,-180,120],[1050,-150,160],[1270,-250,140],[1700,-160,120],[2020,-130,160],[2240,-250,140],[2550,-150,120],[3320,-160,120],[3590,-140,160],[3810,-260,140],[4280,-180,120],[4550,-150,160],[4770,-250,140],[5400,-160,120],[5680,-140,160],[5900,-260,140],[6330,-190,120],[6640,-130,160],[6860,-230,140]],
+      magic:[[230,-158],[140,-28],[180,-28],[240,-28],[320,-28],[360,-28],[1130,-178],[1040,-28],[1100,-28],[1150,-28],[1210,-28],[1260,-28],[2100,-158],[2000,-28],[2060,-28],[2130,-28],[2170,-28],[2240,-28],[2820,-28],[2880,-28],[2960,-28],[3010,-28],[3060,-28],[3670,-168],[3570,-28],[3630,-28],[3680,-28],[3750,-28],[3800,-28],[4630,-178],[4540,-28],[4580,-28],[4640,-28],[4720,-28],[4770,-28],[5760,-168],[5660,-28],[5730,-28],[5780,-28],[5850,-28],[5910,-28],[6720,-158],[6630,-28],[6680,-28],[6740,-28],[6790,-28],[6860,-28]],
+      stars:[[1340,-355],[4840,-355],[6930,-335]],
+      spikes:[[1450,60],[3850,80],[4750,70],[5880,70],[7000,80]],
+      foes:[[200,440,-230,'bird'],[1100,1340,-230,'bird'],[1150,1520,0,'turret'],[2070,2310,-230,'bird'],[2120,2370,0,'golem'],[2950,3140,0,'knight'],[3640,3880,-230,'bird'],[3690,3990,0,'worm'],[4600,4840,-230,'bird'],[4650,4890,0,'charger'],[4950,5170,0,'turret'],[5730,5970,-230,'bird'],[5780,6040,0,'charger'],[6690,6930,-230,'bird'],[6740,7020,0,'hopper'],[7080,7230,0,'shielder']] },
+    { name:'4-8', boss:false, goal:7890, bossKind:'', newFoe:'',
+      ground:[[0,800],[1010,580],[1780,740],[2740,780],[3700,760],[4620,820],[5600,900],[6680,560],[7390,700]],
+      plats:[[150,-140,160],[370,-240,140],[840,-180,120],[1630,-150,120],[1930,-140,160],[2150,-260,140],[2560,-160,120],[2890,-150,160],[3110,-260,140],[3560,-180,120],[3850,-130,160],[4070,-240,140],[4500,-160,120],[4770,-140,160],[4990,-250,140],[5480,-170,120],[5750,-140,160],[5970,-250,140],[6540,-150,120],[7280,-190,120],[7540,-160,160],[7760,-280,140]],
+      magic:[[230,-168],[120,-28],[190,-28],[240,-28],[300,-28],[380,-28],[1140,-28],[1210,-28],[1250,-28],[1310,-28],[1380,-28],[2010,-168],[1910,-28],[1970,-28],[2040,-28],[2080,-28],[2140,-28],[2970,-178],[2860,-28],[2940,-28],[2990,-28],[3060,-28],[3100,-28],[3930,-158],[3830,-28],[3890,-28],[3960,-28],[4020,-28],[4060,-28],[4850,-168],[4760,-28],[4810,-28],[4860,-28],[4920,-28],[4980,-28],[5830,-168],[5740,-28],[5780,-28],[5850,-28],[5910,-28],[5970,-28],[6810,-28],[6880,-28],[6920,-28],[6980,-28],[7040,-28],[7620,-188],[7520,-28],[7590,-28],[7640,-28],[7710,-28],[7770,-28]],
+      stars:[[3180,-365],[5060,-355],[4140,-345]],
+      spikes:[[2090,80],[3050,80],[4170,60],[5110,60],[6210,60]],
+      foes:[[200,440,-120,'ghost'],[1260,1450,0,'worm'],[1980,2220,-120,'ghost'],[2030,2370,0,'shielder'],[2940,3180,-230,'bird'],[2990,3330,0,'knight'],[3900,4140,-230,'bird'],[3950,4290,0,'shielder'],[4820,5060,-120,'ghost'],[4870,5110,0,'knight'],[5800,6040,-230,'bird'],[5850,6090,0,'worm'],[6150,6360,0,'worm'],[6930,7100,0,'hopper'],[7590,7830,-120,'ghost'],[7640,7950,0,'knight']] },
+    { name:'4-9', boss:false, goal:8120, bossKind:'', newFoe:'',
+      ground:[[0,720],[890,860],[1920,840],[2970,940],[4070,780],[5040,620],[5880,660],[6710,640],[7500,820]],
+      plats:[[150,-130,160],[370,-230,140],[760,-170,120],[1040,-140,160],[1260,-260,140],[1790,-180,120],[2070,-160,160],[2290,-280,140],[2800,-170,120],[3120,-130,160],[3340,-230,140],[3950,-190,120],[4220,-150,160],[4440,-250,140],[4890,-190,120],[5700,-150,120],[6030,-150,160],[6250,-250,140],[6580,-150,120],[6860,-160,160],[7080,-270,140],[7390,-180,120],[7650,-140,160],[7870,-260,140]],
+      magic:[[230,-158],[140,-28],[180,-28],[240,-28],[300,-28],[380,-28],[1120,-168],[1020,-28],[1080,-28],[1150,-28],[1210,-28],[1260,-28],[2150,-188],[2060,-28],[2100,-28],[2170,-28],[2230,-28],[2280,-28],[3200,-158],[3090,-28],[3160,-28],[3210,-28],[3290,-28],[3350,-28],[4300,-178],[4200,-28],[4250,-28],[4310,-28],[4390,-28],[4440,-28],[5160,-28],[5220,-28],[5290,-28],[5350,-28],[5420,-28],[6110,-178],[6020,-28],[6060,-28],[6130,-28],[6180,-28],[6240,-28],[6940,-188],[6840,-28],[6890,-28],[6950,-28],[7030,-28],[7080,-28],[7730,-168],[7620,-28],[7690,-28],[7760,-28],[7800,-28],[7870,-28]],
+      stars:[[1330,-365],[3410,-335],[7150,-375]],
+      spikes:[[1560,60],[2250,60],[3700,70],[4680,80],[7890,60]],
+      foes:[[200,440,-75,'bat'],[1090,1330,-85,'bat'],[1140,1480,0,'hopper'],[2120,2360,-105,'bat'],[2170,2430,0,'worm'],[2490,2620,0,'worm'],[3170,3410,-230,'bird'],[3220,3500,0,'charger'],[3560,3770,0,'shielder'],[4270,4510,-230,'bird'],[4320,4540,0,'charger'],[5290,5520,0,'spitter'],[6080,6320,-120,'ghost'],[6130,6370,0,'turret'],[6910,7150,-120,'ghost'],[6960,7210,0,'spitter'],[7700,7940,-230,'bird'],[7750,8050,0,'worm']] },
+    { name:'4-10', boss:true, goal:2060, bossKind:'guardian', newFoe:'',
+      ground:[[0,2200]],
+      plats:[[320,-150,150],[700,-230,140],[1180,-150,150],[1560,-230,140]],
+      magic:[[200,-28],[330,-28],[460,-28],[590,-28],[720,-28],[850,-28],[980,-28],[1110,-28],[1240,-28],[1370,-28],[1500,-28],[1630,-28],[1760,-28],[1890,-28],[2020,-28],[390,-178],[1250,-178]],
+      stars:[[770,-335],[1630,-335],[1100,-70]],
+      spikes:[],
+      foes:[[520,1700,0,'boss']] }
+    ]
+  },
+];
+
+const PER_WORLD = WORLDS[0].levels.length;
+
+/* ---------- every creature in one table ----------
+   w,h   the box you get hurt by / can hit, in world pixels
+   hp    shots to kill
+   speed patrol speed
+   fly   ignores the ground (sits at its own height)
+   name  shown when it first turns up                                */
+const FOE = {
+  skull:   { w: 26, h: 30, hp: 1, speed: 55, pts: 25, name: 'Skull walker' },
+  slime:   { w: 26, h: 30, hp: 1, speed: 55, pts: 25, name: 'Skull walker' },
+  bat:     { w: 26, h: 12, hp: 1, speed: 70, pts: 25, name: 'Bat',        fly: true },
+  hopper:  { w: 24, h: 18, hp: 1, speed: 50, pts: 30, name: 'Hopper' },
+  charger: { w: 34, h: 24, hp: 2, speed: 45, pts: 40, name: 'Charger' },
+  spitter: { w: 26, h: 30, hp: 2, speed: 0,  pts: 40, name: 'Spitter' },
+  knight:  { w: 26, h: 30, hp: 3, speed: 42, pts: 50, name: 'Knight' },
+  ghost:   { w: 24, h: 24, hp: 2, speed: 55, pts: 50, name: 'Ghost',      fly: true },
+  golem:   { w: 40, h: 36, hp: 4, speed: 32, pts: 70, name: 'Ice Golem' },
+  bird:    { w: 28, h: 12, hp: 1, speed: 90, pts: 40, name: 'Crow',       fly: true },
+  worm:     { w: 24, h: 24, hp: 2, speed: 0,  pts: 45, name: 'Burrower' },
+  shielder: { w: 26, h: 30, hp: 2, speed: 40, pts: 45, name: 'Shield Bearer' },
+  turret:   { w: 22, h: 26, hp: 3, speed: 0,  pts: 55, name: 'Crystal Turret' }
+};
+const BOSS = {
+  skullking: { w: 52, h: 60, hp: 6,  speed: 92, name: 'Skull King' },
+  magma:     { w: 80, h: 72, hp: 8,  speed: 70, name: 'Magma Brute' },
+  wraith:    { w: 48, h: 48, hp: 8,  speed: 70, name: 'Frost Wraith', fly: true },
+  guardian:  { w: 80, h: 72, hp: 10, speed: 55, name: 'Gem Guardian' }
+};
+const key = (w, l) => w + '-' + l;
+
+/* ---------- state ---------- */
+let wIdx = 0, lIdx = 0, L = null, TH = null;
+let ground = [], plats = [], magic = [], stars = [], spikes = [], foes = [];
+let bolts = [], bits = [], decor = [];
+let shots = [];                     // fireballs, rocks and ice aimed at you
+let paused = false;
+let cpX = 0, cpHit = false;          // the halfway checkpoint
+
+let player = { x: 60, y: -PH, vx: 0, vy: 0, onGround: false, jumps: 0, face: 1, walk: 0 };
+let hearts = 3, mana = 3, starsGot = 0, points = 0, zapped = 0;
+let coyote = 0, buffer = 0, hurt = 0, drop = 0, shake = 0, reload = 0;
+let safeX = 60, running = false, finished = false, time = 0;
+
+const held = { left: false, right: false, down: false, jump: false, fire: false };
+
+function seeded(n) {
+  let s = n * 9301 + 49297;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+
+/* ---------- progress ---------- */
+const starsFor = (w, l) => (Save.get().mrStars || {})[key(w, l)];
+const isDone   = (w, l) => starsFor(w, l) !== undefined;
+function isOpen(w, l) {
+  if (w === 0 && l === 0) return true;
+  return l === 0 ? isDone(w - 1, PER_WORLD - 1) : isDone(w, l - 1);
+}
+const totalPoints = () => Save.get().mrPoints || 0;
+
+/* ---------- build a level ---------- */
+function loadLevel(w, l) {
+  wIdx = w; lIdx = l;
+  TH = WORLDS[w];
+  L  = TH.levels[l];
+
+  ground = L.ground.map(([x, gw]) => ({ x, y: 0, w: gw, h: 420 }));
+  plats  = L.plats.map(([x, y, pw]) => ({ x, y, w: pw, h: 18 }));
+  magic  = L.magic.map(([x, y]) => ({ x, y, got: false, t: Math.random() * 6 }));
+  stars  = L.stars.map(([x, y]) => ({ x, y, got: false }));
+  spikes = L.spikes.map(([x, sw]) => ({ x, w: sw }));
+  foes   = L.foes.map(([a, b2, y, kind]) => {
+    const spec = kind === 'boss' ? BOSS[L.bossKind || 'skullking'] : FOE[kind];
+    return {
+      a, b: b2, y, kind, spec,
+      x: kind === 'spitter' || kind === 'turret' ? (a + b2) / 2 : a,
+      up: false, rise: 0, stage: 'down', shield: 0,
+      dir: 1, alive: true, t: Math.random() * 6, flash: 0,
+      hp: spec.hp, maxHp: spec.hp, w: spec.w, h: spec.h,
+      jy: 0, jv: 0, cool: 1 + Math.random(), charge: 0,
+      gy: kind === 'boss' ? -spec.h : y            // where a floating one hovers
+    };
+  });
+  bolts = []; bits = []; shots = [];
+
+  const rnd = seeded(w * 31 + l + 7);
+  decor = [];
+  ground.forEach(g => {
+    for (let k = 0; k < Math.floor(g.w / 150); k++) {
+      const x = g.x + 50 + rnd() * (g.w - 100);
+      const r = rnd();
+      decor.push({ x, kind: r < 0.36 ? 'rock' : r < 0.66 ? 'bush' : 'tuft', s: 0.75 + rnd() * 0.6 });
+    }
+  });
+
+  // Checkpoint: the start of the stretch of ground nearest halfway. The first
+  // part of every stretch is a landing zone the level builder keeps clear of
+  // spikes and monsters, so you can never be put back somewhere dangerous.
+  cpHit = false; cpX = 0;
+  if (!L.boss && L.ground.length > 2) {
+    const half = L.goal / 2;
+    const seg = L.ground.slice(1).reduce((best, g) =>
+      Math.abs(g[0] - half) < Math.abs(best[0] - half) ? g : best);
+    cpX = seg[0] + 70;
+  }
+
+  hearts = 3; mana = 3; starsGot = 0; points = 0; zapped = 0;
+  finished = false; safeX = 60;
+  respawn();
+  running = true;
+  updateHud();
+}
+
+function respawn() {
+  player.x = safeX; player.y = -PH - 4;
+  player.vx = 0; player.vy = 0; player.jumps = 0;
+  hurt = 0.9;
+}
+
+/* ---------- collision ---------- */
+const hits = (ax, ay, aw, ah, bx, by, bw, bh) =>
+  ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+
+function moveAndCollide(dt) {
+  player.x += player.vx * dt;
+  for (const bk of ground) {
+    if (!hits(player.x, player.y, PW, PH, bk.x, bk.y, bk.w, bk.h)) continue;
+    if (player.vx > 0) player.x = bk.x - PW;
+    else if (player.vx < 0) player.x = bk.x + bk.w;
+    player.vx = 0;
+  }
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
+
+  const prevBottom = player.y + PH;
+  player.vy += GRAVITY * dt;
+  player.y += player.vy * dt;
+  player.onGround = false;
+
+  for (const bk of ground) {
+    if (!hits(player.x, player.y, PW, PH, bk.x, bk.y, bk.w, bk.h)) continue;
+    if (player.vy > 0) land(bk);
+    else if (player.vy < 0) { player.y = bk.y + bk.h; player.vy = 0; }
+  }
+  if (drop <= 0) {
+    for (const bk of plats) {
+      if (player.vy <= 0) continue;
+      if (prevBottom > bk.y + 2) continue;
+      if (!hits(player.x, player.y, PW, PH, bk.x, bk.y, bk.w, bk.h)) continue;
+      land(bk);
+    }
+  }
+}
+
+function land(bk) {
+  const falling = player.vy;
+  player.y = bk.y - PH; player.vy = 0;
+  if (!player.onGround && falling > 500) puff(player.x + PW / 2, bk.y, 5);
+  player.onGround = true; player.jumps = 0;
+}
+
+/* ---------- shooting ---------- */
+function fire() {
+  if (reload > 0) return;
+  if (mana < 1) { flash('No magic left — find more'); Sound.sfx('empty'); reload = 0.4; return; }
+  mana--; reload = RELOAD;
+  Sound.sfx('fire');
+  bolts.push({
+    x: player.x + PW / 2 + player.face * 14,
+    y: player.y + 26,                 // mid-body, low enough to actually hit a slime
+    vx: player.face * BOLT_SPEED,
+    life: BOLT_LIFE
+  });
+  updateHud();
+}
+
+// the top edge of a creature's box, in world y
+function foeTop(f) {
+  if (f.kind === 'boss')  return f.spec.fly ? f.gy : -f.h;
+  if (f.kind === 'bat')   return f.y + Math.sin(f.t * 2.2) * 16;
+  if (f.kind === 'ghost') return f.gy;
+  if (f.kind === 'bird')  return f.y;
+  if (f.kind === 'worm')  return -f.h * f.rise;    // pokes up out of the ground
+  return -f.h + f.jy;                              // on the ground (hoppers leave it)
+}
+
+/* ---------- one tick ---------- */
+function step(dt) {
+  if (!running || finished || paused || Quiz.isOpen()) return;
+  time += dt;
+  if (hurt > 0) hurt -= dt;
+  if (drop > 0) drop -= dt;
+  if (shake > 0) shake -= dt;
+  if (reload > 0) reload -= dt;
+
+  const want = (held.right ? 1 : 0) - (held.left ? 1 : 0);
+  if (want !== 0) {
+    player.vx = Math.max(-RUN, Math.min(RUN, player.vx + want * ACCEL * dt));
+    player.face = want;
+  } else {
+    const d = FRICTION * dt;
+    player.vx = player.vx > 0 ? Math.max(0, player.vx - d) : Math.min(0, player.vx + d);
+  }
+
+  coyote = player.onGround ? COYOTE : Math.max(0, coyote - dt);
+  buffer = Math.max(0, buffer - dt);
+  if (buffer > 0) {
+    if (held.down && player.onGround && onLedge()) { drop = 0.18; buffer = 0; }
+    else if (coyote > 0 || player.onGround) {
+      player.vy = -JUMP; player.jumps = 1; buffer = 0; coyote = 0;
+      Sound.sfx('jump');
+      puff(player.x + PW / 2, player.y + PH, 3);
+    } else if (player.jumps === 1) {
+      player.vy = -JUMP2; player.jumps = 2; buffer = 0;
+      Sound.sfx('jump2');
+      ring(player.x + PW / 2, player.y + PH / 2);
+    }
+  }
+  if (held.fire) fire();
+
+  moveAndCollide(dt);
+
+  player.walk += Math.abs(player.vx) * dt;
+  if (player.onGround && Math.abs(player.vx) > 120 && Math.random() < dt * 14)
+    puff(player.x + PW / 2 - player.face * 8, player.y + PH, 1);
+
+  foes.forEach(f => { if (f.alive) think(f, dt); });
+
+  // fireballs, rocks and ice. Each one is fenced in to its creature's own
+  // patch of ground, so nothing flies out over a pit at you mid-jump.
+  shots = shots.filter(sh => {
+    sh.life -= dt;
+    sh.vy += sh.g * dt;
+    sh.x += sh.vx * dt; sh.y += sh.vy * dt;
+    if (sh.life <= 0 || sh.x < sh.a || sh.x > sh.b || sh.y > 0) return false;
+    if (hurt <= 0 && hits(player.x, player.y, PW, PH, sh.x - 4, sh.y - 4, 8, 8)) {
+      damage(sh.kind === 'rock' ? 'A rock landed on you' : sh.kind === 'ice' ? 'Hit by ice' : 'Fireball!');
+      return false;
+    }
+    return true;
+  });
+
+  bolts = bolts.filter(bo => {
+    bo.life -= dt;
+    bo.x += bo.vx * dt;
+    if (bo.life <= 0) return false;
+    if (ground.some(bk => hits(bo.x - 6, bo.y - 6, 12, 12, bk.x, bk.y, bk.w, bk.h))) {
+      for (let i = 0; i < 4; i++) sparkle(bo.x, bo.y, '#E8A6FF');
+      return false;
+    }
+    // you can shoot their fireballs and ice out of the air
+    const si = shots.findIndex(sh => hits(bo.x - 6, bo.y - 6, 12, 12, sh.x - 6, sh.y - 6, 12, 12));
+    if (si >= 0) {
+      for (let i = 0; i < 6; i++) sparkle(shots[si].x, shots[si].y, '#FFD9A0');
+      shots.splice(si, 1);
+      Sound.sfx('pop');
+      points += 5;
+      return false;
+    }
+    const f = foes.find(fo => fo.alive && canBeHit(fo) &&
+      hits(bo.x - 6, bo.y - 6, 12, 12, fo.x, foeTop(fo), fo.w, fo.h));
+    if (f && blocks(f, bo)) {
+      // clink: a shield, or the Guardian's barrier
+      for (let i = 0; i < 6; i++) sparkle(bo.x, bo.y, '#D8FFFA');
+      Sound.sfx('clink');
+      return false;
+    }
+    if (f) {
+      f.hp--; f.flash = 0.16;
+      Sound.sfx(f.kind === 'boss' ? (f.hp <= 0 ? 'bossDown' : 'bossHit') : (f.hp <= 0 ? 'kill' : 'hit'));
+      for (let i = 0; i < 8; i++) sparkle(f.x + f.w / 2, foeTop(f) + 8, '#FFC7A0');
+      if (f.hp <= 0) {
+        f.alive = false;
+        zapped++; points += f.kind === 'boss' ? 300 : f.spec.pts;
+        // every creature drops a crystal, so the tough ones pay for themselves
+        magic.push({ x: f.x + f.w / 2, y: -28, got: false, t: 0, drop: true });
+        if (f.kind === 'boss') { flash('The way is open!'); shake = 0.5; }
+        for (let i = 0; i < 16; i++) sparkle(f.x + f.w / 2, foeTop(f) + 8, '#FFE79A');
+      } else if (f.kind === 'boss') {
+        flash('Boss: ' + f.hp + ' hits left');
+      }
+      updateHud();
+      return false;
+    }
+    return true;
+  });
+
+  magic.forEach(m => {
+    // In a boss arena the orbs come back. Without this you could spend all
+    // the magic, and with the boss still standing the door never opens.
+    if (m.got && L.boss && time > m.back) m.got = false;
+    if (m.got) return;
+    m.t += dt * 4;
+    if (near(m.x, m.y, 30)) {
+      m.got = true; m.back = time + 5;
+      Sound.sfx('crystal'); mana = Math.min(MAX_MAGIC, mana + 1); points += 5;
+      sparkle(m.x, m.y, '#C9A6FF'); updateHud();
+    }
+  });
+  stars.forEach(s => {
+    if (s.got) return;
+    if (near(s.x, s.y, 36)) {
+      s.got = true; starsGot++; points += 50;
+      Sound.sfx('star');
+      for (let i = 0; i < 14; i++) sparkle(s.x, s.y, '#FFE79A');
+      flash('Star!'); updateHud();
+    }
+  });
+
+  if (hurt <= 0 && spikes.some(s => player.x + PW > s.x && player.x < s.x + s.w && player.y + PH > -18))
+    damage('Ouch — spikes');
+  if (player.y > PIT) damage('Down the gap');
+
+  if (player.onGround && player.y + PH <= 1 && hurt <= 0) {
+    const safe = L.ground.some(([x, gw]) =>
+      player.x + PW / 2 > x + 20 && player.x + PW / 2 < x + gw - 20);
+    if (safe) safeX = Math.round(player.x);
+  }
+
+  bits = bits.filter(p => {
+    p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt;
+    return p.life > 0;
+  });
+
+  if (cpX && !cpHit && player.x > cpX && player.onGround) {
+    cpHit = true;
+    Sound.sfx('checkpoint');
+    for (let i = 0; i < 14; i++) sparkle(cpX + 6, -60, '#FFE79A');
+    flash('Checkpoint!');
+  }
+
+  if (!finished && player.x + PW / 2 > L.goal && doorOpen()) finish();
+}
+
+/* ---------- how each creature behaves ---------- */
+function patrol(f, speed, dt) {
+  f.x += f.dir * speed * dt;
+  if (f.x < f.a) { f.x = f.a; f.dir = 1; }
+  if (f.x > f.b) { f.x = f.b; f.dir = -1; }
+}
+const pcx = () => player.x + PW / 2;
+const pcy = () => player.y + PH / 2;
+
+function shoot(f, vx, vy, kind, g, y) {
+  if (Math.abs(f.x - player.x) < 520) Sound.sfx('enemyShot');   // only the ones near you
+  shots.push({
+    x: f.x + f.w / 2, y: y === undefined ? foeTop(f) + f.h * 0.45 : y,
+    vx, vy, g: g || 0, kind, life: 3,
+    a: f.kind === 'boss' ? 20 : f.a - 20,          // the fence
+    b: f.kind === 'boss' ? 2180 : f.b + f.w + 20
+  });
+}
+
+// a Burrower underground can't be hit; your shot passes over it
+const canBeHit = f => f.kind !== 'worm' || f.rise > 0.5;
+
+// shots that bounce off instead of hurting
+function blocks(f, bo) {
+  if (f.kind === 'shielder') return Math.sign(bo.vx) === -f.dir;   // hit its shield side
+  if (f.kind === 'boss' && L.bossKind === 'guardian') return f.shield > 0;
+  return false;
+}
+
+function think(f, dt) {
+  f.t += dt; f.cool -= dt;
+  if (f.flash > 0) f.flash -= dt;
+  const s = f.spec, dx = pcx() - (f.x + f.w / 2);
+
+  switch (f.kind) {
+    case 'hopper':
+      patrol(f, s.speed, dt);
+      if (f.jy === 0 && f.cool <= 0) { f.jv = -430; f.cool = 1.3 + Math.random() * 0.5; }
+      if (f.jv !== 0 || f.jy < 0) {
+        f.jv += 1500 * dt; f.jy += f.jv * dt;
+        if (f.jy >= 0) { f.jy = 0; f.jv = 0; }
+      }
+      break;
+
+    case 'charger': {
+      // spots you in front of it, then charges until it hits the end of its patch
+      const sees = Math.sign(dx) === f.dir && Math.abs(dx) < 280 && player.y + PH > -60;
+      if (f.charge <= 0 && f.cool <= 0 && sees) f.charge = 1.1;
+      if (f.charge > 0) {
+        const was = f.dir;
+        f.charge -= dt;
+        patrol(f, 230, dt);
+        if (f.dir !== was || f.charge <= 0) { f.charge = 0; f.cool = 1.2; }
+      } else {
+        patrol(f, f.cool > 0.6 ? 0 : s.speed, dt);   // gets its breath back first
+      }
+      break;
+    }
+
+    case 'spitter':
+      f.dir = dx >= 0 ? 1 : -1;
+      if (f.cool <= 0 && Math.abs(dx) < 380 && Math.abs(pcy() - (foeTop(f) + f.h / 2)) < 110) {
+        shoot(f, f.dir * 200, 0, 'fire');
+        f.cool = 2.2;
+      }
+      break;
+
+    case 'ghost': {
+      // drifts after you, through everything, but never leaves its patch
+      const tx = Math.max(f.a, Math.min(f.b, pcx() - f.w / 2));
+      f.x += Math.sign(tx - f.x) * Math.min(Math.abs(tx - f.x), s.speed * dt);
+      const ty = Math.max(-230, Math.min(-f.h, pcy() - f.h / 2));
+      f.gy += Math.sign(ty - f.gy) * Math.min(Math.abs(ty - f.gy), 40 * dt);
+      f.dir = dx >= 0 ? 1 : -1;
+      break;
+    }
+
+    case 'bird':
+      patrol(f, s.speed, dt);
+      if (f.cool <= 0 && Math.abs(dx) < 16 && pcy() > f.y) {
+        shoot(f, 0, 0, 'rock', 900);
+        f.cool = 1.6;
+      }
+      break;
+
+    case 'worm':
+      // down -> rumble (a warning) -> up -> down again, somewhere new
+      if (f.cool <= 0) {
+        if (f.stage === 'down') {
+          f.x = f.a + Math.random() * Math.max(0, f.b - f.a);
+          f.stage = 'warn'; f.cool = 0.7;
+        } else if (f.stage === 'warn') {
+          f.stage = 'up'; f.cool = 1.4;
+        } else {
+          f.stage = 'down'; f.cool = 1.4 + Math.random() * 0.8;
+        }
+      }
+      if (f.stage === 'warn' && Math.random() < dt * 20) puff(f.x + f.w / 2, 0, 1);
+      f.rise = f.stage === 'up' ? Math.min(1, f.rise + dt * 5) : Math.max(0, f.rise - dt * 5);
+      f.dir = dx >= 0 ? 1 : -1;
+      break;
+
+    case 'turret':
+      f.dir = dx >= 0 ? 1 : -1;
+      if (f.cool <= 0 && Math.abs(dx) < 380) {
+        [-80, 0, 80].forEach(vy => shoot(f, f.dir * 190, vy, 'crystal'));
+        f.cool = 2.6;
+      }
+      break;
+
+    case 'boss':
+      bossThink(f, dt, dx);
+      break;
+
+    default:                                         // skull, knight, golem, bat, shielder
+      patrol(f, s.speed, dt);
+  }
+
+  if (f.kind === 'worm' && f.rise < 0.5) return;     // harmless while underground
+  if (hurt <= 0 && hits(player.x, player.y, PW, PH, f.x, foeTop(f), f.w, f.h))
+    damage(s.name + ' got you');
+}
+
+function bossThink(f, dt, dx) {
+  const s = f.spec;
+  if (L.bossKind === 'wraith') {
+    // Hovers a steady distance away on whichever side it is on, and fires
+    // ice at you. (It used to float straight into you, so you couldn't
+    // avoid touching it — the bot lost every heart, the boss healed, repeat.)
+    const side = (f.x + f.w / 2) >= pcx() ? 1 : -1;
+    const tx = Math.max(300, Math.min(1880, pcx() + side * 230 - f.w / 2));
+    f.x += Math.sign(tx - f.x) * Math.min(Math.abs(tx - f.x), s.speed * dt);
+    const ty = Math.max(-240, Math.min(-f.h, pcy() - f.h / 2));
+    f.gy += Math.sign(ty - f.gy) * Math.min(Math.abs(ty - f.gy), 50 * dt);
+    f.dir = dx >= 0 ? 1 : -1;
+    if (f.cool <= 0) {
+      const dy = pcy() - (f.gy + f.h / 2), d = Math.hypot(dx, dy) || 1;
+      shoot(f, dx / d * 170, dy / d * 170, 'ice');   // slow enough to dodge or shoot
+      f.cool = 3.0;
+    }
+    return;
+  }
+  if (L.bossKind === 'guardian') {
+    // shield up for a while (throws a spread of crystals), then down: that
+    // gap is your chance to hurt it
+    f.shield -= dt;
+    if (f.shield < -2.8) {
+      f.shield = 2.6;
+      const dir = dx >= 0 ? 1 : -1;
+      [-110, -40, 0].forEach(vy => shoot(f, dir * 200, vy, 'crystal', 0, -30));
+    }
+    patrol(f, f.shield > 0 ? s.speed : s.speed * 0.4, dt);
+    return;
+  }
+  patrol(f, s.speed, dt);
+  if (L.bossKind === 'magma' && f.cool <= 0 && Math.abs(dx) < 700) {
+    // a fireball rolling along the ground: jump it, or shoot it
+    shoot(f, (dx >= 0 ? 1 : -1) * 210, 0, 'fire', 0, -14);
+    f.cool = 2.4;
+  }
+}
+
+const bossAlive = () => foes.some(f => f.kind === 'boss' && f.alive);
+const doorOpen  = () => !L.boss || !bossAlive();
+
+function onLedge() {
+  return plats.some(bk => Math.abs((player.y + PH) - bk.y) < 3 &&
+                          player.x + PW > bk.x && player.x < bk.x + bk.w);
+}
+const near = (x, y, r) =>
+  Math.abs(player.x + PW / 2 - x) < r && Math.abs(player.y + PH / 2 - y) < r;
+
+function puff(x, y, n) {
+  for (let i = 0; i < n; i++) bits.push({ x, y,
+    vx: (Math.random() - 0.5) * 70, vy: -Math.random() * 40, g: 60,
+    life: 0.35 + Math.random() * 0.25, r: 2, c: 'rgba(255,255,255,.8)' });
+}
+function sparkle(x, y, c) {
+  bits.push({ x, y, vx: (Math.random() - 0.5) * 130, vy: -40 - Math.random() * 95,
+    g: 220, life: 0.45, r: 2, c: c || '#FFE79A' });
+}
+function ring(x, y) {
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    bits.push({ x, y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, g: 0, life: 0.3, r: 2, c: '#E8A6FF' });
+  }
+}
+
+function damage(why) {
+  hearts--; shake = 0.34;
+  Sound.sfx('hurt'); updateHud(); flash(why);
+  if (hearts <= 0) {
+    flash(cpHit ? 'Out of hearts — back to the checkpoint' : 'Out of hearts — back to the start');
+    safeX = cpHit ? cpX : 60; hearts = 3; mana = Math.max(mana, 3);
+    magic.forEach(m => m.got = false);
+    // The boss does NOT heal. Running out of hearts already sends you back
+    // to the start; wiping out all the damage you'd done on top of that was
+    // the one thing that made the last boss feel impossible.
+    shots = [];
+    updateHud();
+  }
+  respawn();
+}
+
+/* ---------- finishing ---------- */
+function finish() {
+  finished = true; running = false;
+  Sound.stop();
+  Sound.sfx('win');
+  const startLv = Save.get().level;
+
+  Quiz.ask({
+    count: 3,
+    title: L.name + ' cleared',
+    subtitle: 'Three questions to bank it',
+    onDone: (earned) => {
+      const all = Object.assign({}, Save.get().mrStars || {});
+      const had = all[key(wIdx, lIdx)];
+      if (had === undefined || starsGot > had) all[key(wIdx, lIdx)] = starsGot;
+      Save.update({ mrStars: all, mrPoints: totalPoints() + points + earned });
+      showEnd(earned, startLv);
+    }
+  });
+}
+
+/* ==========================================================
+   SCREENS
+   ========================================================== */
+let browseWorld = 0;
+const show = (id, on) => { document.getElementById(id).style.display = on ? 'flex' : 'none'; };
+
+// Draw a pixel map into a little picture the page can use as an <img>,
+// so the crates show the same monster and stars as the game itself.
+const imgCache = {};
+function spriteURL(map, pal, scale) {
+  const id = map.join('') + JSON.stringify(pal) + scale;
+  if (imgCache[id]) return imgCache[id];
+  const w = map[0].length, h = map.length;
+  const c = document.createElement('canvas');
+  c.width = (w + 2) * scale; c.height = (h + 2) * scale;
+  const g = c.getContext('2d');
+  for (let pass = 0; pass < 2; pass++) {
+    for (let r = 0; r < h; r++) for (let col = 0; col < w; col++) {
+      const ch = map[r][col];
+      if (ch === '.') continue;
+      const x = (col + 1) * scale, y = (r + 1) * scale;
+      if (pass === 0) {
+        g.fillStyle = '#1A1024';
+        g.fillRect(x - scale, y, scale * 3, scale);
+        g.fillRect(x, y - scale, scale, scale * 3);
+      } else {
+        g.fillStyle = pal[ch]; g.fillRect(x, y, scale, scale);
+      }
+    }
+  }
+  return (imgCache[id] = c.toDataURL());
+}
+const GREY_STAR = { Y: '#8C7E66', y: '#A69880' };
+
+/* --- the card you get when a level is done --- */
+function showEnd(earned, startLv) {
+  const s = starsGot;
+  document.getElementById('endTitle').textContent =
+    L.boss ? BOSS[L.bossKind].name + ' beaten!' : 'Level ' + L.name + ' complete';
+  document.getElementById('endStars').innerHTML = [0, 1, 2].map(n =>
+    '<img class="' + (n === 1 ? 'mid' : '') + '" src="' +
+    spriteURL(STAR, n < s ? STAR_INK : GREY_STAR, 5) + '">').join('');
+  document.getElementById('endScore').textContent = s + ' out of 3';
+  document.getElementById('endPoints').textContent = points;
+  document.getElementById('endCoins').textContent  = earned;
+  document.getElementById('endLevel').textContent  = Save.get().level
+    + (Save.get().level > startLv ? ' (up!)' : '');
+
+  const nxt = nextLevel();
+  const btn = document.getElementById('endNext');
+  btn.style.display = nxt ? '' : 'none';
+  btn.onclick = () => startLevel(nxt[0], nxt[1]);
+  show('endCard', true);
+}
+
+function nextLevel() {
+  if (lIdx + 1 < PER_WORLD) return [wIdx, lIdx + 1];
+  if (wIdx + 1 < WORLDS.length) return [wIdx + 1, 0];
+  return null;
+}
+
+/* --- the world / level picker --- */
+function crate(w, i) {
+  const lv = WORLDS[w].levels[i];
+  const open = isOpen(w, i);
+  const got = starsFor(w, i) || 0;
+  const face = !open ? '<span class="lock"></span>'
+             : lv.boss ? '<img class="skull" src="' + lookURL('boss', lv.bossKind, 4) + '">'
+             : '<span class="num">' + (i + 1) + '</span>';
+  const pips = [0, 1, 2].map(n =>
+    '<img class="' + (n === 1 ? 'mid' : '') + '" src="' +
+    spriteURL(STAR, open && n < got ? STAR_INK : GREY_STAR, 3) + '">').join('');
+  return '<button class="cell' + (open ? '' : ' locked') + (lv.boss ? ' isboss' : '') + '"'
+       + ' data-l="' + i + '"' + (open ? '' : ' disabled') + '>'
+       + '<span class="crate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i>'
+       + face + '</span><span class="lvstars">' + pips + '</span></button>';
+}
+
+function showLevels(w) {
+  browseWorld = Math.max(0, Math.min(WORLDS.length - 1, w));
+  const world = WORLDS[browseWorld];
+  document.getElementById('msWorld').textContent  = 'World ' + (browseWorld + 1);
+  document.getElementById('msName').textContent   = world.name;
+  document.getElementById('msPoints').textContent = totalPoints();
+  document.getElementById('msPrev').style.visibility = browseWorld > 0 ? 'visible' : 'hidden';
+  document.getElementById('msNext').style.visibility =
+    browseWorld < WORLDS.length - 1 ? 'visible' : 'hidden';
+
+  const levels = world.levels.map((lv, i) => i);
+  document.getElementById('msGrid').innerHTML =
+    levels.filter(i => !world.levels[i].boss).map(i => crate(browseWorld, i)).join('');
+  document.getElementById('msBoss').innerHTML =
+    levels.filter(i =>  world.levels[i].boss).map(i => crate(browseWorld, i)).join('');
+
+  document.querySelectorAll('#levelSelect .cell').forEach(bt => {
+    bt.onclick = () => startLevel(browseWorld, +bt.dataset.l);
+  });
+
+  inMenu = true;
+  paused = false; show('pauseCard', false);
+  document.body.classList.remove('playing');       // hides the touch buttons
+  show('intro', false);
+  show('endCard', false);
+  show('hud', false);
+  show('levelSelect', true);
+  Sound.play(songFor(world));
+  showMute();
+}
+
+function startLevel(w, l) {
+  // a button left focused would get "pressed" again by Space, which now fires
+  if (document.activeElement) document.activeElement.blur();
+  inMenu = false;
+  document.body.classList.add('playing');
+  show('levelSelect', false);
+  show('endCard', false);
+  show('hud', true);
+  camY = 0; camYSmooth = 0;
+  paused = false; show('pauseCard', false);
+  loadLevel(w, l);
+  Sound.play(L.boss ? 'boss' : songFor(WORLDS[w]));
+  introduce();
+}
+
+const songFor = T => T.cave ? 'cave' : T.snow ? 'frost' : T.lava ? 'ember' : 'fields';
+
+function showMute() {
+  const icon = Sound.muted ? '\u{1F507}' : '\u{1F50A}';
+  ['muteBtn', 'msMute'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = icon; });
+}
+
+/* ---------- "new monster!" card ---------- */
+const TIPS = {
+  skull:   'Walks up and down. One shot, or jump right over it.',
+  bat:     'Guards the ledges. Shoot it before you jump up.',
+  hopper:  'Leaps into the air. Shoot it, or run past while it is down.',
+  charger: 'Charges when it sees you coming! Takes 2 hits.',
+  spitter: 'Spits fireballs. Jump them, or shoot them out of the air. 2 hits.',
+  knight:  'Wears armour. Takes 3 hits.',
+  ghost:   'Floats after you, straight through walls. 2 hits.',
+  golem:   'Big and slow, but tough. 4 hits.',
+  bird:    'Drops rocks when you are underneath. Keep moving!',
+  skullking: 'The first boss. Keep your distance and hit it 6 times.',
+  magma:   'Rolls fireballs along the ground — jump them or shoot them. 8 hits.',
+  wraith:  'Keeps its distance and fires ice. Shoot the ice down! 8 hits.',
+  worm:     'Hides underground. Watch for the ground rumbling — hit it while it is up. 2 hits.',
+  shielder: 'Shots bounce off its shield. Jump over and hit it from behind! 2 hits.',
+  turret:   'Fires three crystals at once. Jump between them, or shoot them. 3 hits.',
+  guardian: 'Puts up a shield, then drops it. Only hit it while the shield is down! 10 hits.'
+};
+let introTimer = null;
+function introduce() {
+  const kind = L.boss ? L.bossKind : L.newFoe;
+  if (!kind) return;
+  const name = L.boss ? BOSS[kind].name : FOE[kind].name;
+  document.getElementById('introPic').src = L.boss ? lookURL('boss', kind, 4) : lookURL(kind, '', 4);
+  document.getElementById('introHead').textContent = L.boss ? 'Boss!' : 'New monster!';
+  document.getElementById('introName').textContent = name;
+  document.getElementById('introTip').textContent = TIPS[kind];
+  show('intro', true);
+  Sound.sfx('newFoe');
+  clearTimeout(introTimer);
+  introTimer = setTimeout(() => show('intro', false), 4200);
+}
+
+/* ---------- hud ---------- */
+function updateHud() {
+  const im = document.getElementById('icoMagic');
+  if (im && !im.src) {
+    im.src = spriteURL(ORB, ORB_INK, 4);
+    document.getElementById('icoStar').src = spriteURL(STAR, STAR_INK, 3);
+  }
+  document.getElementById('lvlName').textContent = L ? 'Level ' + L.name : '';
+  document.getElementById('hearts').innerHTML =
+    '<span class="on">♥</span>'.repeat(Math.max(0, hearts)) +
+    '<span class="off">♥</span>'.repeat(Math.max(0, 3 - hearts));
+  document.getElementById('magic').textContent  = mana;
+  document.getElementById('stars').textContent  = starsGot + ' /3';
+  document.getElementById('points').textContent = points;
+  const bossBar = document.getElementById('bossbar');
+  if (L && L.boss && bossAlive()) {
+    const f = foes.find(fo => fo.kind === 'boss');
+    bossBar.style.display = '';
+    document.getElementById('bossfill').style.width = (f.hp / f.maxHp * 100) + '%';
+  } else bossBar.style.display = 'none';
+}
+
+let flashTimer = null;
+function flash(msg, secs = 1.2) {
+  const el = document.getElementById('banner');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.classList.remove('show'), secs * 1000);
+}
+
+/* ==========================================================
+   DRAWING — styled after the reference screenshots.
+
+   Everything goes into a small buffer (380 wide) that is then
+   blown up with smoothing off. Circles and hills are drawn a
+   row or column at a time with whole pixels, because the
+   canvas's own curves come out soft and turn to mush when
+   they're enlarged.
+   ========================================================== */
+
+const SCALE = 0.5;
+let VW = 380, VIEW = VW / SCALE;      // VW shrinks on an upright phone, see fit()
+const buf = document.createElement('canvas');
+const b   = buf.getContext('2d');
+let VH = 260, FLOORV = 210, W = 0, H = 0, camX = 0, camY = 0;
+let inMenu = false;
+let camYSmooth = 0;               // the smooth camera height; camY is it snapped to pixels
+
+function fit() {
+  W = cv.width  = innerWidth;
+  H = cv.height = innerHeight;
+  // On an upright phone a 380-wide picture made everything tiny, with the
+  // mage lost at the bottom of a sky the size of the screen. Show less of the
+  // world instead, so the characters stay a sensible size.
+  const upright = H > W;
+  VW = upright ? 220 : 380;
+  VIEW = VW / SCALE;
+  VH = Math.max(170, Math.round(VW * H / W));
+  buf.width = VW; buf.height = VH;
+  FLOORV = Math.round(VH * (upright ? 0.70 : 0.82));   // room for thumbs below
+  ctx.imageSmoothingEnabled = false;
+}
+addEventListener('resize', fit);
+
+const vx = x => Math.round((x - camX) * SCALE);
+const vy = y => Math.round(FLOORV + (y - camY) * SCALE);
+const vs = n => Math.round(n * SCALE);
+
+// a repeatable 0..1 for any whole number, so textures never crawl
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+function disc(x, y, r, colour) {
+  b.fillStyle = colour;
+  for (let dy = -r; dy <= r; dy++) {
+    const half = Math.round(Math.sqrt(r * r - dy * dy));
+    b.fillRect(Math.round(x - half), Math.round(y + dy), half * 2, 1);
+  }
+}
+
+/* ---------- sprites: one letter per pixel ---------- */
+function sprite(map, pal, x, y, flip, scale = 1, lift) {
+  const w = map[0].length;
+  const each = fn => {
+    for (let r = 0; r < map.length; r++) for (let c = 0; c < w; c++) {
+      const ch = map[r][c];
+      if (ch === '.') continue;
+      fn(ch, flip ? w - 1 - c : c, r + (lift ? lift(ch, c, r) : 0));
+    }
+  };
+  b.fillStyle = '#1A1024';                                   // outline first
+  each((ch, c, r) => {
+    b.fillRect(x + (c - 1) * scale, y + r * scale, scale * 3, scale);
+    b.fillRect(x + c * scale, y + (r - 1) * scale, scale, scale * 3);
+  });
+  each((ch, c, r) => {
+    b.fillStyle = pal[ch];
+    b.fillRect(x + c * scale, y + r * scale, scale, scale);
+  });
+}
+
+const MAGE = [
+  '.......HH.......',
+  '......HHHH......',
+  '.....HHHHHH.....',
+  '....HHHHHHHH....',
+  '....HhhhhhhH....',
+  '.HHHHHHHHHHHHHH.',
+  'HHHHHHHHHHHHHHHH',
+  '..YYFFFFFFFFYY..',
+  '..YFFwKFFwKFFY..',
+  '..YFFKKFFKKFFY..',
+  '..YFFFFFFFFFFY..',
+  '...FFFFmmFFFF...',
+  '....FFFFFFFF....',
+  '...RRRRRRRRRR...',
+  '..RRRrRRRRrRRR..',
+  '..RRRRRRRRRRRR..',
+  '..RRRRRRRRRRRR..',
+  '...RRRRRRRRRR...',
+  '...RRRRRRRRRR...',
+  '..RRRRRRRRRRRR..',
+  '...BBB....BBB...',
+  '...BBB....BBB...'
+];
+const MAGE_INK = { H: '#4B2C84', h: '#8A62D8', Y: '#F6CF4E', F: '#FFD9B0', K: '#1A1024',
+                   w: '#FFFFFF', m: '#C8505A', R: '#5E3FA8', r: '#8E70DE', B: '#3A2618' };
+
+// the horned skull creature from the reference
+const MONSTER = [
+  '..W.......W..',
+  '.WW.......WW.',
+  '.WWWWWWWWWWW.',
+  'WWWWWWWWWWWWW',
+  'WWKKKWWWKKKWW',
+  'WWKKKWWWKKKWW',
+  'WWWWWWKWWWWWW',
+  '.WWKWKWKWKWW.',
+  '..RRRRRRRRR..',
+  '.RRRRRRRRRRR.',
+  'RRrRRRRRRRrRR',
+  'RR.RRRRRRR.RR',
+  '...RRRRRRR...',
+  '...RRR.RRR...',
+  '..RRRR.RRRR..'
+];
+const MONSTER_INK = { W: '#EFE8F4', K: '#1A1024', R: '#D63C3C', r: '#FF7A66' };
+const FLASH_INK   = { W: '#FFFFFF', K: '#FFFFFF', R: '#FFFFFF', r: '#FFFFFF' };
+
+const BAT_UP = [
+  'P...........P',
+  'PP..PPPPP..PP',
+  '.PPPPYPYPPPP.',
+  '..PPPPPPPPP..',
+  '....PpppP....'
+];
+const BAT_DOWN = [
+  '....PPPPP....',
+  '...PPYPYPP...',
+  '.PPPPPPPPPPP.',
+  'PP..PpppP..PP',
+  'P...........P'
+];
+const BAT_INK = { P: '#7B4FC9', p: '#B08CF0', Y: '#FFE066' };
+
+const STAR = [
+  '.....Y.....',
+  '....YYY....',
+  '....YyY....',
+  'YYYYYYYYYYY',
+  '.YYYyYYYYY.',
+  '..YYYYYYY..',
+  '..YYYYYYY..',
+  '.YYYY.YYYY.',
+  '.YYY...YYY.',
+  'YY.......YY'
+];
+const STAR_INK = { Y: '#FFD23F', y: '#FFF3AE' };
+
+const ORB = [
+  '...p...',
+  '..pPp..',
+  '.pPPPp.',
+  'pPPwPPp',
+  'pPPPPPp',
+  '.pPPPp.',
+  '..pPp..',
+  '...p...'
+];
+const ORB_INK = { P: '#9B5CFF', p: '#CDAEFF', w: '#FFFFFF' };
+
+const HOPPER = [
+  '...GGGGGG...',
+  '..GGGGGGGG..',
+  '.GWKGGGGWKG.',
+  '.GKKGGGGKKG.',
+  'GGGGGGGGGGGG',
+  'GGGggggggGGG',
+  'GGGGGGGGGGGG',
+  '.GGGGGGGGGG.',
+  'GG..GGGG..GG'
+];
+const HOPPER_INK = { G: '#58C04A', g: '#2E6A2A', W: '#FFFFFF', K: '#1A1024' };
+
+const CHARGER = [
+  '.....BBBBBBB.....',
+  '...BBBBBBBBBBB...',
+  '..BBBBBBBBBBBBB..',
+  '.BBBBBBBBBBBKBBB.',
+  'BBBBBBBBBBBBBBBBn',
+  'BBBBBBBBBBBBBBnnn',
+  'BBBBBBBBBBBBBBWn.',
+  'BBBBBBBBBBBBBB...',
+  '.BBBBBBBBBBBBB...',
+  '.BB.BB....BB.BB..',
+  '.BB.BB....BB.BB..',
+  '.dd.dd....dd.dd..'
+];
+const CHARGER_INK = { B: '#8A5A3C', n: '#E3A07A', K: '#1A1024', W: '#FFFFFF', d: '#3A2618' };
+const CHARGING_INK = Object.assign({}, CHARGER_INK, { K: '#FF3B3B', B: '#A0603A' });
+
+const SPITTER = [
+  '....RRRRR....',
+  '..RRRRRRRRR..',
+  '.RRYRRRRRYRR.',
+  'RRRRRRRRRRRRR',
+  'RRKKKKKKKKKRR',
+  'RRKWKWKWKWKRR',
+  '.RRRRRRRRRRR.',
+  '...RRRRRRR...',
+  '.....GGG.....',
+  '..LL.GGG.LL..',
+  '.LLLLGGGLLLL.',
+  '.....GGG.....',
+  '...GGGGGGG...',
+  '..ggggggggg..',
+  '..ggggggggg..'
+];
+const SPITTER_INK = { R: '#E0503A', Y: '#FFD23F', K: '#2A0E14', W: '#FFFFFF',
+                      G: '#3E8B2C', L: '#62BC3C', g: '#6E4A3A' };
+
+const KNIGHT = [
+  '...GGGRGGG...',
+  '..GGGGGGGGG..',
+  '.GGGGGGGGGGG.',
+  'GGWWWWWWWWWGG',
+  'GWWKKKWKKKWWG',
+  'GWWKKKWKKKWWG',
+  'GWWWWWKWWWWWG',
+  '.WWKWKWKWKWW.',
+  '..AAAAAAAAA..',
+  '.AAAAAAAAAAA.',
+  'AAaAAAAAAAaAA',
+  'AA.AAAAAAA.AA',
+  '...AAAAAAA...',
+  '...AAA.AAA...',
+  '..AAAA.AAAA..'
+];
+const KNIGHT_INK = { G: '#7C8499', R: '#D63C3C', W: '#EFE8F4', K: '#1A1024', A: '#9AA3B8', a: '#D2D8E6' };
+
+const GHOST = [
+  '...WWWWWW...',
+  '..WWWWWWWW..',
+  '.WWWWWWWWWW.',
+  '.WWKKWWKKWW.',
+  'WWWKKWWKKWWW',
+  'WWWWWWWWWWWW',
+  'WWWWWKKWWWWW',
+  'WWWWWKKWWWWW',
+  'WWWWWWWWWWWW',
+  'WWWWWWWWWWWW',
+  'WW.WWW.WWW.W',
+  'W...W...W...'
+];
+const GHOST_INK = { W: '#D8E6FF', K: '#2A3560' };
+
+const GOLEM = [
+  '.....IIIIIIIIII.....',
+  '....IIIIIIIIIIII....',
+  '...IIiIIIIIIIIiII...',
+  '...IIIIIIIIIIIIII...',
+  '...IIKKKIIIIKKKII...',
+  '...IIKBKIIIIKBKII...',
+  '...IIIIIIIIIIIIII...',
+  '....IIIIDDDDIIII....',
+  '.IIIIIIIIIIIIIIIIII.',
+  'IIIIIIIIIIIIIIIIIIII',
+  'IIiIIIIIIIIIIIIIIiII',
+  'III.IIIIIIIIIIII.III',
+  'III.IIIIIIIIIIII.III',
+  'II..IIIIIIIIIIII..II',
+  '....IIIIIIIIIIII....',
+  '....IIIII..IIIII....',
+  '....IIIII..IIIII....',
+  '...IIIIII..IIIIII...'
+];
+const GOLEM_INK = { I: '#9FD4F0', i: '#E6F7FF', K: '#1F3A5A', B: '#4FD2FF', D: '#1F3A5A' };
+const MAGMA_INK = { I: '#D8452F', i: '#FFB03A', K: '#2A0E0E', B: '#FFE14A', D: '#2A0E0E' };
+const WRAITH_INK = { W: '#BFE3FF', K: '#0E1F4A' };
+
+const BIRD_UP = [
+  'D............D',
+  'DD..........DD',
+  '.DDD.DDDD.DDD.',
+  '...DDDDDDDDWY.',
+  '....DDDDDD....'
+];
+const BIRD_DOWN = [
+  '.....DDDD.....',
+  '...DDDDDDDDWY.',
+  '.DDDDDDDDDD...',
+  'DD..........DD',
+  'D............D'
+];
+const BIRD_INK = { D: '#3B3550', W: '#FFFFFF', Y: '#FFB02E' };
+
+const WORM = [
+  '...PPPPPP...',
+  '..PPPPPPPP..',
+  '.PPWKPPWKPP.',
+  '.PPKKPPKKPP.',
+  '.PPPPPPPPPP.',
+  '.PPmmmmmmPP.',
+  '.PPPPPPPPPP.',
+  '..PpPPPPpP..',
+  '..PPPPPPPP..',
+  '..PpPPPPpP..',
+  '..PPPPPPPP..',
+  '..PpPPPPpP..'
+];
+const WORM_INK = { P: '#D86AA8', p: '#A8487E', W: '#FFFFFF', K: '#1A1024', m: '#5A1A3A' };
+
+const TURRET = [
+  '.....C.....',
+  '....CCC....',
+  '...CCcCC...',
+  '..CCCcCCC..',
+  '.CCCCKCCCC.',
+  '.CCCKKKCCC.',
+  '.CCCCKCCCC.',
+  '..CCCcCCC..',
+  '...CCcCC...',
+  '....CCC....',
+  '...ggggg...',
+  '..ggggggg..',
+  '.ggggggggg.'
+];
+const TURRET_INK = { C: '#6FE0D8', c: '#D8FFFA', K: '#1A1024', g: '#4A3A5E' };
+const SHIELDER_INK = { G: '#3E5C9A', R: '#6FE0D8', W: '#EFE8F4', K: '#1A1024', A: '#5A7CC0', a: '#9DB8EE' };
+const GUARDIAN_INK = { I: '#8A6BE0', i: '#D8C8FF', K: '#1A1024', B: '#6FE0D8', D: '#1A1024' };
+
+// which picture belongs to which creature, and at what size
+function foeLook(kind, bossKind) {
+  if (kind === 'boss') {
+    if (bossKind === 'magma')  return { map: GOLEM,   ink: MAGMA_INK,  scale: 2 };
+    if (bossKind === 'wraith') return { map: GHOST,   ink: WRAITH_INK, scale: 2 };
+    if (bossKind === 'guardian') return { map: GOLEM, ink: GUARDIAN_INK, scale: 2 };
+    return { map: MONSTER, ink: MONSTER_INK, scale: 2 };
+  }
+  switch (kind) {
+    case 'bat':     return { map: BAT_UP,  ink: BAT_INK,     scale: 1 };
+    case 'hopper':  return { map: HOPPER,  ink: HOPPER_INK,  scale: 1 };
+    case 'charger': return { map: CHARGER, ink: CHARGER_INK, scale: 1 };
+    case 'spitter': return { map: SPITTER, ink: SPITTER_INK, scale: 1 };
+    case 'knight':  return { map: KNIGHT,  ink: KNIGHT_INK,  scale: 1 };
+    case 'ghost':   return { map: GHOST,   ink: GHOST_INK,   scale: 1 };
+    case 'golem':   return { map: GOLEM,   ink: GOLEM_INK,   scale: 1 };
+    case 'bird':    return { map: BIRD_UP, ink: BIRD_INK,    scale: 1 };
+    case 'worm':    return { map: WORM,    ink: WORM_INK,    scale: 1 };
+    case 'turret':  return { map: TURRET,  ink: TURRET_INK,  scale: 1 };
+    case 'shielder':return { map: KNIGHT,  ink: SHIELDER_INK, scale: 1 };
+    default:        return { map: MONSTER, ink: MONSTER_INK, scale: 1 };
+  }
+}
+const lookURL = (kind, bossKind, scale) => {
+  const l = foeLook(kind, bossKind);
+  return spriteURL(l.map, l.ink, scale * l.scale);
+};
+
+/* ---------- the backdrop ----------
+   Each world has its own scene, not just its own colours. (Worlds 1-3 used
+   to share one meadow, one set of boulders and - for 2 and 3 - one row of
+   rocks, so they all looked the same.) Every layer's offset is rounded to a
+   whole pixel so the layer slides as one piece and never shimmers.        */
+// base is where the scenery meets the play area, horizon is the far line
+function drawBackdrop(T, cx, base, horizon) {
+  if (T.cave) return drawCave(T, cx, base, horizon);
+  if (T.lava) return drawVolcano(T, cx, base, horizon);
+  if (T.snow) return drawFrost(T, cx, base, horizon);
+  drawFields(T, cx, base, horizon);
+}
+
+// a layer that repeats every `period` pixels, moving at `par` of the camera
+const layerOff = (cx, par) => Math.round(cx * SCALE * par);
+
+/* ---------- world 1: the reference look ---------- */
+function drawFields(T, cx, base, horizon) {
+  const g = b.createLinearGradient(0, 0, 0, horizon);
+  g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]);
+  b.fillStyle = g; b.fillRect(0, 0, VW, VH);
+
+  // one long bank of cloud sitting on the horizon
+  const off = layerOff(cx, 0.07) % 96;
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = -3; i < VW / 32 + 4; i++) {
+      const k = ((i % 3) + 3) % 3;
+      const x = i * 32 - off + (k === 1 ? 10 : 0);
+      const r = 13 + k * 6, y = horizon - 6 - k * 7;
+      if (pass === 0) disc(x, y + 5, r + 3, T.cloudBase);
+      if (pass === 1) disc(x, y + 1, r, T.cloudShade);
+      if (pass === 2) disc(x - 3, y - 2, r - 3, T.cloud);
+    }
+  }
+
+  // rolling hills
+  const hillOff = layerOff(cx, 0.16);
+  b.fillStyle = T.far;
+  for (let x = 0; x < VW; x++) {
+    const w = x + hillOff;
+    const top = horizon + 4 - Math.round(Math.sin(w * 0.045) * 4 + Math.sin(w * 0.012) * 6 + 6);
+    b.fillRect(x, top, 1, VH - top);
+  }
+
+  // the meadow, with grass blades fixed to their spot
+  const mTop = horizon + 14;
+  b.fillStyle = T.meadow; b.fillRect(0, mTop, VW, VH - mTop);
+  const grassOff = layerOff(cx, 0.34);
+  for (let y = mTop + 3; y < base + 40 && y < VH; y += 4) {
+    for (let x = 0; x < VW; x++) {
+      const n = hash((x + grassOff) * 7 + y * 131);
+      if (n < 0.05)       { b.fillStyle = T.meadowDark;  b.fillRect(x, y, 1, 3); }
+      else if (n > 0.975) { b.fillStyle = T.meadowLight; b.fillRect(x, y, 1, 2); }
+    }
+  }
+
+  // boulders
+  const rockOff = layerOff(cx, 0.34);
+  for (let i = -1; i < VW / 150 + 2; i++) {
+    const n = Math.floor(rockOff / 150) + i;
+    const x = n * 150 - rockOff + Math.round(hash(n) * 60);
+    const gy = mTop + Math.round((base - mTop) * (0.45 + hash(n + 9) * 0.35));
+    const r = 9 + Math.round(hash(n + 3) * 6);
+    disc(x, gy, r + 1, T.rockDark);
+    disc(x, gy - 1, r, T.rock);
+    disc(x - Math.round(r * 0.35), gy - Math.round(r * 0.4), Math.round(r * 0.45), T.rockLight);
+    b.fillStyle = T.rockDark; b.fillRect(x - r - 1, gy + 1, r * 2 + 2, Math.ceil(r * 0.6));
+    disc(x + r + 5, gy + 3, Math.round(r * 0.5), T.rockDark);
+    disc(x + r + 5, gy + 2, Math.round(r * 0.45), T.rock);
+  }
+}
+
+/* ---------- world 2: a volcano, mesas and a lava river ---------- */
+function drawVolcano(T, cx, base, horizon) {
+  const now = performance.now() / 1000;
+  const g = b.createLinearGradient(0, 0, 0, base);
+  g.addColorStop(0, '#F4D29A'); g.addColorStop(0.55, T.sky[0]); g.addColorStop(1, '#C8583A');
+  b.fillStyle = g; b.fillRect(0, 0, VW, VH);
+
+  // the volcano, far off, with a glowing crater and a plume of smoke
+  const period = 900, vOff = layerOff(cx, 0.05) % period;
+  for (const k of [0, 1]) {
+    const px = Math.round(VW * 0.66) - vOff + k * period;
+    if (px < -140 || px > VW + 140) continue;
+    const peakY = horizon - 74;
+    for (let x = px - 130; x <= px + 130; x++) {
+      if (x < 0 || x >= VW) continue;
+      const d = Math.abs(x - px);
+      const top = d < 12 ? peakY + 3 : peakY + Math.round((d - 12) * 0.62);
+      b.fillStyle = x < px ? '#8C4436' : '#6E3530';
+      b.fillRect(x, top, 1, VH - top);
+    }
+    disc(px, peakY + 2, 12, 'rgba(255,170,60,.35)');
+    b.fillStyle = '#FFB03A'; b.fillRect(px - 11, peakY + 1, 22, 3);
+    b.fillStyle = '#FFE14A'; b.fillRect(px - 7, peakY + 1, 14, 1);
+    b.fillStyle = '#FF6A2A';                          // lava running down
+    for (let i = 0; i < 28; i++) {
+      b.fillRect(px - 6 - Math.round(i * 0.62), peakY + 4 + i, 2, 1);
+      if (i < 18) b.fillRect(px + 7 + Math.round(i * 0.62), peakY + 4 + i, 2, 1);
+    }
+    for (let i = 0; i < 7; i++) {                     // smoke
+      const rise = (now * 11 + i * 13) % 90;
+      const sx = px + Math.round(Math.sin(i * 1.7 + now * 0.4) * 5 + rise * 0.25);
+      b.globalAlpha = 0.5 * (1 - rise / 90);
+      disc(sx, peakY - 6 - Math.round(rise), 4 + Math.round(rise * 0.09), '#5E4A48');
+    }
+    b.globalAlpha = 1;
+  }
+
+  // flat-topped mesas, with layered rock lines
+  const mesaBase = horizon + 26, mOff = layerOff(cx, 0.15);
+  b.fillStyle = T.rock; b.fillRect(0, mesaBase - 4, VW, VH);
+  for (let i = -1; i < VW / 130 + 2; i++) {
+    const n = Math.floor(mOff / 130) + i;
+    const x0 = n * 130 - mOff + Math.round(hash(n + 1) * 40);
+    const w = 44 + Math.round(hash(n + 2) * 50), h = 26 + Math.round(hash(n + 3) * 30);
+    for (let x = x0; x < x0 + w; x++) {
+      if (x < 0 || x >= VW) continue;
+      const edge = Math.min(x - x0, x0 + w - 1 - x);
+      const top = mesaBase - h + (edge < 3 ? 3 - edge : 0);
+      b.fillStyle = T.far; b.fillRect(x, top, 1, mesaBase - top);
+      b.fillStyle = T.rockLight; b.fillRect(x, top, 1, 2);
+      b.fillStyle = T.rock;
+      for (let s = top + 8; s < mesaBase - 2; s += 7) b.fillRect(x, s, 1, 1);
+    }
+  }
+
+  // the scorched ground in front, and rock spires on it
+  const mTop = horizon + 14 + 20;
+  b.fillStyle = T.meadow; b.fillRect(0, mTop, VW, VH - mTop);
+  const spOff = layerOff(cx, 0.32);
+  for (let i = -1; i < VW / 95 + 2; i++) {
+    const n = Math.floor(spOff / 95) + i;
+    const cx0 = n * 95 - spOff + Math.round(hash(n + 7) * 50);
+    const hw = 6 + Math.round(hash(n + 8) * 5), h = 34 + Math.round(hash(n + 9) * 30);
+    const foot = mTop + 16 + Math.round(hash(n + 4) * 10);
+    for (let dx = -hw; dx <= hw; dx++) {
+      const x = cx0 + dx;
+      if (x < 0 || x >= VW) continue;
+      const top = foot - Math.round(h * (1 - Math.abs(dx) / (hw + 1)));
+      b.fillStyle = dx < 0 ? T.meadowLight : T.meadowDark;
+      b.fillRect(x, top, 1, foot - top);
+    }
+  }
+  const crackOff = layerOff(cx, 0.34);
+  b.fillStyle = '#E0504A';
+  for (let y = mTop + 6; y < base - 12; y += 6)
+    for (let x = 0; x < VW; x++)
+      if (hash((x + crackOff) * 13 + y * 71) < 0.008) b.fillRect(x, y, 4, 1);
+
+  // the lava river in the distance, gently glowing
+  const riverY = base - 11, rOff = layerOff(cx, 0.34);
+  b.fillStyle = '#B83A2A'; b.fillRect(0, riverY, VW, 6);
+  b.fillStyle = '#E0504A'; b.fillRect(0, riverY + 1, VW, 3);
+  const tick = Math.floor(now * 3);
+  for (let x = 0; x < VW; x++) {
+    const n = hash((x + rOff) * 5 + tick * 997);
+    if (n > 0.93) { b.fillStyle = '#FFB03A'; b.fillRect(x, riverY + 1 + (n > 0.97 ? 1 : 0), 2, 1); }
+  }
+
+  // embers drifting up
+  for (let i = 0; i < 30; i++) {
+    const x = ((hash(i) * VW - layerOff(cx, 0.2) + Math.sin(now + i) * 5) % VW + VW) % VW;
+    const y = VH - ((hash(i + 9) * VH + now * (10 + hash(i + 5) * 14)) % VH);
+    b.fillStyle = hash(i + 4) > 0.5 ? '#FFB03A' : '#FF6A2A';
+    b.fillRect(x | 0, y | 0, 1, 1);
+  }
+}
+
+/* ---------- world 3: a frozen night with the aurora ---------- */
+function drawFrost(T, cx, base, horizon) {
+  const now = performance.now() / 1000;
+  const g = b.createLinearGradient(0, 0, 0, base);
+  g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]);
+  b.fillStyle = g; b.fillRect(0, 0, VW, VH);
+
+  for (let i = 0; i < 46; i++) {                     // stars
+    const sx = Math.floor(hash(i * 7) * VW), sy = Math.floor(hash(i * 13) * horizon * 0.85);
+    b.fillStyle = hash(i + Math.floor(now / 0.7)) > 0.85 ? '#FFFFFF' : '#9FB4E8';
+    b.fillRect(sx, sy, 1, 1);
+  }
+
+  // the moon
+  const mx = Math.round(VW * 0.8), my = Math.round(VH * 0.13);
+  disc(mx, my, 20, 'rgba(220,230,255,.10)');
+  disc(mx, my, 11, '#E8EEFF');
+  disc(mx - 3, my - 2, 3, '#C9D2EA'); disc(mx + 4, my + 3, 2, '#C9D2EA');
+
+  // the aurora: two slow ribbons of light
+  for (const [col, at, amp, sp] of [['#5FE0A0', 0.16, 9, 0.35], ['#A07BFF', 0.25, 7, 0.5]]) {
+    for (let x = 0; x < VW; x++) {
+      const y = Math.round(VH * at + Math.sin(x * 0.024 + now * sp) * amp + Math.sin(x * 0.07 + now * 0.8) * 3);
+      b.globalAlpha = 0.14; b.fillStyle = col; b.fillRect(x, y, 1, 16);
+      b.globalAlpha = 0.32; b.fillRect(x, y + 3, 1, 3);
+    }
+  }
+  b.globalAlpha = 1;
+
+  // snow-capped mountains
+  const mOff = layerOff(cx, 0.12);
+  for (let x = 0; x < VW; x++) {
+    const w = x + mOff;
+    const tri = 1 - Math.abs(((w % 90) / 45) - 1);
+    const h = 18 + Math.round(tri * 42 + hash(Math.floor(w / 90)) * 12);
+    const top = horizon + 10 - h;
+    b.fillStyle = T.far; b.fillRect(x, top, 1, VH - top);
+    b.fillStyle = '#EAF2FF'; b.fillRect(x, top, 1, tri > 0.55 ? 3 + Math.round((tri - 0.55) * 14) : 2);
+  }
+
+  // rolling snowdrifts
+  const mTop = horizon + 14;
+  const dOff = layerOff(cx, 0.24);
+  for (let x = 0; x < VW; x++) {
+    const w = x + dOff;
+    const top = mTop - 4 + Math.round(Math.sin(w * 0.03) * 4 + Math.sin(w * 0.011) * 5);
+    b.fillStyle = '#8EA3D2'; b.fillRect(x, top, 1, VH - top);
+    b.fillStyle = '#DCE7FA'; b.fillRect(x, top, 1, 1);
+  }
+
+  // snowy pine trees, two rows
+  for (const [par, spacing, scale, col] of [[0.3, 46, 0.75, '#2E4272'], [0.42, 64, 1, '#1E2E54']]) {
+    const tOff = layerOff(cx, par);
+    for (let i = -1; i < VW / spacing + 2; i++) {
+      const n = Math.floor(tOff / spacing) + i;
+      const x0 = n * spacing - tOff + Math.round(hash(n * 3 + par * 10) * 26);
+      const h = Math.round((30 + hash(n + 11) * 22) * scale);
+      const foot = mTop + Math.round((10 + hash(n + 13) * 12) * scale) + (scale < 1 ? 0 : 10);
+      b.fillStyle = '#1A2440'; b.fillRect(x0 - 1, foot - 3, 3, 4);
+      for (let r = 0; r < h; r++) {
+        const tier = r % Math.max(6, Math.round(h / 3));
+        const hw = Math.round(1 + r * 0.26 - tier * 0.25);
+        const y = foot - h + r - 3;
+        b.fillStyle = col; b.fillRect(x0 - hw, y, hw * 2 + 1, 1);
+        if (tier === 0 && r > 0) { b.fillStyle = '#DDE8F8'; b.fillRect(x0 - hw, y, hw * 2 + 1, 1); }
+      }
+      b.fillStyle = '#FFFFFF'; b.fillRect(x0, foot - h - 3, 1, 1);
+    }
+  }
+
+  // sparkles in the snowfield in front
+  const sOff = layerOff(cx, 0.34);
+  b.fillStyle = '#FFFFFF';
+  for (let y = mTop + 22; y < base + 20 && y < VH; y += 5)
+    for (let x = 0; x < VW; x++)
+      if (hash((x + sOff) * 11 + y * 53) < 0.006) b.fillRect(x, y, 1, 1);
+}
+
+/* ---------- world 4: underground ---------- */
+function drawCave(T, cx, base, horizon) {
+  const g = b.createLinearGradient(0, 0, 0, VH);
+  g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]);
+  b.fillStyle = g; b.fillRect(0, 0, VW, VH);
+
+  // the far wall, with stalactites hanging from the roof
+  const farOff = Math.round(cx * SCALE * 0.15);
+  for (let x = 0; x < VW; x++) {
+    const w = x + farOff;
+    const tooth = Math.abs(((w * 1.0) % 26) - 13) / 13;
+    const drop = 18 + Math.round((1 - tooth) * 34 * hash(Math.floor(w / 26)));
+    b.fillStyle = T.far; b.fillRect(x, 0, 1, drop);
+    b.fillStyle = T.meadowDark; b.fillRect(x, drop - 2, 1, 2);
+  }
+
+  // crystals set into the wall, glowing
+  const crOff = Math.round(cx * SCALE * 0.3);
+  for (let i = -1; i < VW / 70 + 2; i++) {
+    const n = Math.floor(crOff / 70) + i;
+    const x = n * 70 - crOff + Math.round(hash(n) * 40);
+    // on the wall, between the stalactites and the floor (lower down they
+    // were being painted over by the cave floor and never showed)
+    const y = Math.round(58 + hash(n + 5) * Math.max(10, horizon - 50));
+    const col = hash(n + 2) > 0.5 ? '#6FE0D8' : '#E07BD8';
+    const pulse = 5 + Math.round(Math.sin(performance.now() / 600 + n) * 1.5);
+    b.globalAlpha = 0.25; disc(x, y, pulse + 3, col); b.globalAlpha = 1;
+    b.fillStyle = '#1A1024'; b.fillRect(x - 2, y - 5, 5, 10);
+    b.fillStyle = col;       b.fillRect(x - 1, y - 4, 3, 8);
+    b.fillStyle = '#FFFFFF'; b.fillRect(x, y - 3, 1, 3);
+  }
+
+  // the cave floor behind you, with rocks
+  b.fillStyle = T.meadow; b.fillRect(0, horizon + 20, VW, VH);
+  const rockOff = Math.round(cx * SCALE * 0.34);
+  for (let i = -1; i < VW / 120 + 2; i++) {
+    const n = Math.floor(rockOff / 120) + i;
+    const x = n * 120 - rockOff + Math.round(hash(n) * 50);
+    const gy = horizon + 20 + Math.round((base - horizon - 20) * (0.4 + hash(n + 9) * 0.4));
+    const r = 7 + Math.round(hash(n + 3) * 6);
+    disc(x, gy + 1, r + 1, T.rockDark); disc(x, gy, r, T.rock);
+    disc(x - Math.round(r * 0.35), gy - Math.round(r * 0.4), Math.round(r * 0.4), T.rockLight);
+    b.fillStyle = T.rockDark; b.fillRect(x - r - 1, gy + 1, r * 2 + 2, Math.ceil(r * 0.6));
+  }
+
+  // glowing specks drifting up through the air
+  const now = performance.now() / 1000;
+  for (let i = 0; i < 36; i++) {
+    const x = ((hash(i) * VW - Math.round(cx * SCALE * 0.2) + Math.sin(now + i) * 6) % VW + VW) % VW;
+    const y = VH - ((hash(i + 9) * VH + now * (6 + hash(i + 5) * 8)) % VH);
+    b.fillStyle = hash(i + 4) > 0.5 ? '#A8FFF2' : '#F0B8FF';
+    b.fillRect(x | 0, y | 0, 1, 1);
+  }
+}
+
+/* ---------- a chunk of ground or a floating ledge ---------- */
+function drawBlock(blk, isGround) {
+  const x = vx(blk.x), y = vy(blk.y), w = vs(blk.w);
+  if (x > VW + 2 || x + w < -2) return;
+  const h = isGround ? VH - y + 2 : vs(blk.h);
+  const cap = isGround ? 7 : 5;          // chunky grass, like the reference
+
+  b.fillStyle = TH.dirt; b.fillRect(x, y, w, h);
+
+  // the cobblestone band under the grass, and down both sides
+  for (let row = 0; row < (isGround ? 3 : 2); row++) {
+    for (let i = row * 2; i < w - 1; i += 4) {
+      b.fillStyle = hash(blk.x + i * 3 + row * 17) < 0.5 ? TH.pebble : TH.pebbleDark;
+      b.fillRect(x + i, y + cap + row * 2, 3, 2);
+    }
+  }
+  const sideDepth = Math.min(h, isGround ? 70 : h);
+  for (let j = cap; j < sideDepth; j += 3) {
+    b.fillStyle = hash(blk.x + j) < 0.5 ? TH.pebble : TH.pebbleDark;
+    b.fillRect(x, y + j, 2, 2);
+    b.fillRect(x + w - 2, y + j + 1, 2, 2);
+  }
+
+  // grass: overhangs the edge a pixel, bright top line, tufts poking up
+  b.fillStyle = TH.grassDark; b.fillRect(x - 1, y, w + 2, cap);
+  b.fillStyle = TH.grass;     b.fillRect(x - 1, y, w + 2, cap - 1);
+  b.fillStyle = TH.grassLight; b.fillRect(x, y, w, 1);
+  for (let i = 0; i < w; i += 2) {
+    const n = hash(blk.x + i * 5);
+    if (n < 0.45) { b.fillStyle = n < 0.2 ? TH.grassLight : TH.grass; b.fillRect(x + i, y - 1, 1, 1); }
+    if (n < 0.1)  { b.fillStyle = TH.grassLight; b.fillRect(x + i, y - 2, 1, 1); }
+    if (n > 0.85) { b.fillStyle = TH.grassDark; b.fillRect(x + i, y + cap, 1, 1); }
+  }
+  if (!isGround) { b.fillStyle = 'rgba(0,0,0,.28)'; b.fillRect(x, y + h, w, 1); }
+}
+
+/* ---------- the level ---------- */
+function drawFoe(f) {
+  if (!f.alive) return;
+  const x = vx(f.x), top = vy(foeTop(f));
+  if (x < -60 || x > VW + 60) return;
+  const look = foeLook(f.kind, L.bossKind);
+  let map = look.map, ink = look.ink;
+  const step = Math.floor(f.t * 6) % 2;
+  const flip = f.dir < 0;
+
+  if (f.kind === 'bat')  map = Math.sin(f.t * 9) > 0 ? BAT_UP : BAT_DOWN;
+  if (f.kind === 'bird') map = Math.sin(f.t * 8) > 0 ? BIRD_UP : BIRD_DOWN;
+  if (f.kind === 'charger' && f.charge > 0) ink = CHARGING_INK;
+  if (f.flash > 0) ink = Object.fromEntries(Object.keys(ink).map(k => [k, '#FFFFFF']));
+
+  // walkers step their feet; everything else just floats or hops
+  const walkers = { skull: 13, slime: 13, knight: 13, golem: 15, charger: 9 };
+  const feetRow = f.kind === 'boss' && !f.spec.fly ? 13 : walkers[f.kind];
+  const lift = feetRow ? (ch, c, r) => (r >= feetRow ? ((c < map[0].length / 2 ? step : 1 - step) ? -1 : 0) : 0) : null;
+
+  if (f.kind === 'worm') {
+    // only the part that has come up out of the ground is drawn
+    const rows = Math.round(map.length * f.rise);
+    if (rows > 0) sprite(map.slice(0, rows), ink, x, vy(0) - rows, flip, 1);
+    return;
+  }
+
+  if (f.kind === 'ghost' || (f.kind === 'boss' && f.spec.fly)) b.globalAlpha = 0.75 + Math.sin(f.t * 5) * 0.15;
+  sprite(map, ink, x, top + (f.kind === 'bat' || f.kind === 'bird' ? 1 : 0), flip, look.scale, lift);
+  b.globalAlpha = 1;
+
+  if (f.kind === 'shielder') {
+    // the shield, on the side it is facing
+    const sx = flip ? x - 3 : x + 12;
+    b.fillStyle = '#1A1024'; b.fillRect(sx - 1, top + 4, 5, 13);
+    b.fillStyle = '#FFC53D'; b.fillRect(sx, top + 5, 3, 11);
+    b.fillStyle = '#6FE0D8'; b.fillRect(sx + 1, top + 7, 1, 7);
+  }
+  if (f.kind === 'boss' && L.bossKind === 'guardian' && f.shield > 0) {
+    // the barrier: a shimmering ring you can't shoot through
+    const cx = x + 20, cy = top + 18, r = 26 + Math.round(Math.sin(f.t * 8) * 1.5);
+    b.globalAlpha = 0.35; disc(cx, cy, r, '#6FE0D8'); b.globalAlpha = 1;
+    b.fillStyle = '#D8FFFA';
+    for (let i = 0; i < 12; i++) {
+      const ang = i / 12 * Math.PI * 2 + f.t;
+      b.fillRect(Math.round(cx + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r), 2, 2);
+    }
+  }
+
+  if (f.kind === 'boss' && L.bossKind === 'skullking') {
+    // a little gold crown for the Skull King
+    const cx = x + 13, cy = top - 6;
+    b.fillStyle = '#1A1024'; b.fillRect(cx - 1, cy - 1, 28, 8);
+    b.fillStyle = '#FFC53D'; b.fillRect(cx, cy + 2, 26, 4);
+    b.fillRect(cx, cy - 2, 4, 4); b.fillRect(cx + 11, cy - 4, 4, 6); b.fillRect(cx + 22, cy - 2, 4, 4);
+  }
+
+  // tough creatures show how many hits they have left
+  if (f.kind !== 'boss' && f.maxHp > 1) {
+    const w = vs(f.w);
+    b.fillStyle = '#1A1024'; b.fillRect(x - 1, top - 5, w + 2, 4);
+    b.fillStyle = '#3A2233'; b.fillRect(x, top - 4, w, 2);
+    b.fillStyle = '#FF5A4D'; b.fillRect(x, top - 4, Math.round(w * f.hp / f.maxHp), 2);
+  }
+}
+
+function drawMage() {
+  if (hurt > 0 && Math.floor(hurt * 14) % 2) return;
+  const px = vx(player.x), py = vy(player.y);
+  const flip = player.face < 0;
+  const air = !player.onGround;
+  const phase = Math.floor(player.walk / 14) % 2;
+  const moving = player.onGround && Math.abs(player.vx) > 40;
+  const bob = moving && phase ? 1 : 0;
+
+  sprite(MAGE, MAGE_INK, px, py, flip, 1, (ch, c) => {
+    if (ch === 'B') return air ? -1 : moving ? -((c < 8 ? phase : 1 - phase)) : 0;
+    return bob;
+  });
+
+  // staff, and a glowing tip that flares when you fire
+  const sx = px + (flip ? 0 : 15);
+  b.fillStyle = '#1A1024'; b.fillRect(sx - 1, py + 7 + bob, 3, 14);
+  b.fillStyle = '#8A5A3C'; b.fillRect(sx, py + 8 + bob, 1, 12);
+  const glow = reload > 0 ? 4 : 3;
+  disc(sx, py + 6 + bob, glow, 'rgba(255,120,220,.45)');
+  disc(sx, py + 6 + bob, 2, '#FF6FD0');
+  b.fillStyle = '#FFFFFF'; b.fillRect(sx, py + 5 + bob, 1, 1);
+}
+
+function drawScene() {
+  // follow sideways, and up — before, the camera never moved up, so almost
+  // every star (up on the high ledges) was above the top of the screen
+  camX = Math.max(0, player.x - VIEW * 0.33);
+  camX = Math.round(camX * SCALE) / SCALE;           // whole pixels: no wobble
+  const topBand = VH * 0.40;
+  const wantY = Math.min(0, player.y + (FLOORV - topBand) / SCALE);
+  camYSmooth += (wantY - camYSmooth) * 0.12;
+  camY = Math.round(camYSmooth * SCALE) / SCALE;
+  const sh = shake > 0 ? Math.round((Math.random() - 0.5) * 5) : 0;
+
+  const base = Math.round(FLOORV - camY * SCALE * 0.4);
+  drawBackdrop(TH, camX, base, base - Math.round(VH * 0.36));
+
+  // below the grass line is a dark drop — only pits show it
+  const top = vy(0);
+  const pit = b.createLinearGradient(0, top, 0, VH);
+  pit.addColorStop(0, '#231833'); pit.addColorStop(1, '#07050D');
+  b.fillStyle = pit; b.fillRect(0, top, VW, VH - top);
+
+  b.save(); b.translate(0, sh);
+
+  ground.forEach(g2 => drawBlock(g2, true));
+  plats.forEach(p2 => drawBlock(p2, false));
+
+  decor.forEach(d => {
+    const x = vx(d.x), gy = vy(0);
+    if (x < -20 || x > VW + 20) return;
+    if (d.kind === 'rock') {
+      const r = Math.round(3 * d.s) + 1;
+      disc(x, gy - r + 1, r + 1, TH.rockDark); disc(x, gy - r, r, TH.rock);
+      b.fillStyle = TH.rockLight; b.fillRect(x - 1, gy - r * 2 + 1, 2, 1);
+    } else if (d.kind === 'bush') {
+      const r = Math.round(3 * d.s) + 2;
+      disc(x, gy - r + 1, r + 1, TH.grassDark); disc(x, gy - r, r, TH.grass);
+      b.fillStyle = TH.grassLight; b.fillRect(x - 1, gy - r * 2 + 1, 2, 1);
+    } else {
+      b.fillStyle = TH.grassLight;
+      b.fillRect(x - 2, gy - 3, 1, 3); b.fillRect(x, gy - 4, 1, 4); b.fillRect(x + 2, gy - 3, 1, 3);
+    }
+  });
+
+  spikes.forEach(s => {
+    const x = vx(s.x), w = vs(s.w), gy = vy(0);
+    if (x > VW || x + w < 0) return;
+    for (let i = 0; i < w; i += 6) {
+      for (let c = 0; c < 6; c++) {
+        const hgt = Math.round(10 - Math.abs(c - 2.5) * 3.6);
+        b.fillStyle = '#1A1024'; b.fillRect(x + i + c, gy - hgt - 1, 1, hgt + 1);
+        b.fillStyle = c < 3 ? '#F2F5FA' : '#B6BFCC'; b.fillRect(x + i + c, gy - hgt, 1, hgt);
+      }
+    }
+  });
+
+  magic.forEach(m => {
+    if (m.got) return;
+    const x = vx(m.x);
+    if (x < -20 || x > VW + 20) return;
+    sprite(ORB, ORB_INK, x - 3, vy(m.y) - 4 + Math.round(Math.sin(m.t) * 1.5), false);
+  });
+
+  stars.forEach(s => {
+    if (s.got) return;
+    const x = vx(s.x);
+    if (x < -24 || x > VW + 24) return;
+    const y = vy(s.y) + Math.round(Math.sin(time * 2.4 + s.x) * 2);
+    disc(x, y, 9, 'rgba(255,220,90,.25)');
+    sprite(STAR, STAR_INK, x - 5, y - 5, false);
+  });
+
+  foes.forEach(drawFoe);
+
+  bolts.forEach(bo => {
+    const x = vx(bo.x), y = vy(bo.y);
+    disc(x, y, 4, 'rgba(255,120,220,.4)');
+    disc(x, y, 2, '#FF6FD0');
+    b.fillStyle = '#FFFFFF'; b.fillRect(x, y - 1, 1, 1);
+  });
+
+  // the doorway home: a stone arch that glows once it is open
+  const gx = vx(L.goal), gy = vy(0);
+  if (gx > -50 && gx < VW + 50) {
+    const open = doorOpen();
+    b.fillStyle = '#1A1024'; b.fillRect(gx - 18, gy - 64, 36, 64);
+    b.fillStyle = '#8E86A8'; b.fillRect(gx - 17, gy - 63, 34, 63);
+    b.fillStyle = '#B4ADCB'; b.fillRect(gx - 17, gy - 63, 34, 3);
+    b.fillStyle = '#1A1024'; b.fillRect(gx - 12, gy - 54, 24, 54);
+    if (open) {
+      const pulse = Math.round(2 + Math.sin(time * 3) * 1.5);
+      b.fillStyle = 'rgba(255,200,70,.35)';
+      b.fillRect(gx - 11 - pulse, gy - 53 - pulse, 22 + pulse * 2, 53 + pulse);
+      b.fillStyle = '#FFC53D'; b.fillRect(gx - 11, gy - 53, 22, 53);
+      b.fillStyle = '#FFF1BF'; b.fillRect(gx - 7, gy - 47, 14, 47);
+    } else {
+      b.fillStyle = '#3A2F46'; b.fillRect(gx - 11, gy - 53, 22, 53);
+      b.fillStyle = '#6B5E7E';
+      b.fillRect(gx - 5, gy - 32, 10, 9); b.fillRect(gx - 3, gy - 38, 6, 6);
+      b.fillStyle = '#3A2F46'; b.fillRect(gx - 1, gy - 36, 2, 4);
+      b.fillStyle = '#1A1024'; b.fillRect(gx - 1, gy - 29, 2, 4);
+    }
+  }
+
+  if (cpX) {
+    // the checkpoint flag: grey until you reach it, then gold and waving
+    const fx = vx(cpX), fy = vy(0);
+    if (fx > -20 && fx < VW + 20) {
+      b.fillStyle = '#1A1024'; b.fillRect(fx - 1, fy - 44, 4, 44);
+      b.fillStyle = '#C9C2D8'; b.fillRect(fx, fy - 43, 2, 43);
+      const wave = cpHit ? Math.round(Math.sin(time * 6) * 1) : 0;
+      b.fillStyle = '#1A1024'; b.fillRect(fx + 2, fy - 44 + wave, 16, 11);
+      b.fillStyle = cpHit ? '#FFC53D' : '#7C8499';
+      b.fillRect(fx + 2, fy - 43 + wave, 15, 9);
+      if (cpHit) { b.fillStyle = '#FFF1BF'; b.fillRect(fx + 4, fy - 41 + wave, 4, 2); }
+    }
+  }
+
+  drawMage();
+
+  bits.forEach(p => { b.fillStyle = p.c; b.fillRect(vx(p.x) | 0, vy(p.y) | 0, p.r, p.r); });
+
+  // shots coming at you
+  shots.forEach(sh => {
+    const x = vx(sh.x), y = vy(sh.y);
+    if (sh.kind === 'rock') {
+      disc(x, y, 3, '#1A1024'); disc(x, y, 2, '#8C91A6');
+    } else if (sh.kind === 'crystal') {
+      disc(x, y, 4, 'rgba(111,224,216,.35)'); disc(x, y, 2, '#6FE0D8');
+      b.fillStyle = '#FFFFFF'; b.fillRect(x, y - 1, 1, 1);
+    } else if (sh.kind === 'ice') {
+      disc(x, y, 4, 'rgba(160,220,255,.4)'); disc(x, y, 2, '#BFE9FF');
+      b.fillStyle = '#FFFFFF'; b.fillRect(x, y - 1, 1, 1);
+    } else {
+      disc(x, y, 5, 'rgba(255,120,40,.35)'); disc(x, y, 3, '#FF6A2A'); disc(x, y, 1, '#FFE14A');
+    }
+  });
+
+  b.restore();
+
+  if (TH.snow) {
+    const now = performance.now() / 1000;
+    b.fillStyle = '#FFFFFF';
+    for (let i = 0; i < 70; i++) {
+      const x = ((hash(i) * VW + now * (8 + hash(i + 3) * 10) - camX * SCALE * 0.2) % VW + VW) % VW;
+      const y = ((hash(i + 9) * VH + now * (14 + hash(i + 5) * 18)) % VH);
+      b.fillRect(x | 0, y | 0, hash(i + 1) > 0.7 ? 2 : 1, 1);
+    }
+  }
+}
+
+// the level picker has the world's landscape slowly drifting behind it
+function drawMenuScene() {
+  const T = WORLDS[browseWorld];
+  const pan = performance.now() / 1000 * 40;
+  drawBackdrop(T, pan, VH + 4, Math.round(VH * 0.70));
+}
+
+function draw() {
+  // Don't rely only on the resize event: it can be missed or arrive before
+  // the new size is ready (a phone's address bar sliding away, rotating,
+  // going full screen), which left the game drawn in one corner of the
+  // screen. Checking each frame costs nothing.
+  if (cv.width !== innerWidth || cv.height !== innerHeight) fit();
+  if (inMenu) drawMenuScene();
+  else if (L) drawScene();
+  else return;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(buf, 0, 0, VW, VH, 0, 0, W, H);
+}
+
+/* ==========================================================
+   INPUT — Space fires, Up jumps
+   ========================================================== */
+function press(which, down) {
+  if (which === 'jump') { if (down && !held.jump) buffer = BUFFER; held.jump = down; }
+  else held[which] = down;
+}
+
+addEventListener('keydown', e => {
+  if (Quiz.isOpen()) return;
+  const k = e.key.toLowerCase();
+  if (k === 'arrowleft'  || k === 'a') { press('left', true);  e.preventDefault(); }
+  if (k === 'arrowright' || k === 'd') { press('right', true); e.preventDefault(); }
+  if (k === 'arrowdown'  || k === 's') { press('down', true);  e.preventDefault(); }
+  if (k === 'arrowup'    || k === 'w') { press('jump', true);  e.preventDefault(); }
+  if (k === ' ' || k === 'f')          { press('fire', true);  e.preventDefault(); }
+  if (k === 'escape' && running) pause();
+  if (k === 'm') { Sound.toggle(); showMute(); }
+  if (paused) return;
+});
+addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'arrowleft'  || k === 'a') press('left', false);
+  if (k === 'arrowright' || k === 'd') press('right', false);
+  if (k === 'arrowdown'  || k === 's') press('down', false);
+  if (k === 'arrowup'    || k === 'w') press('jump', false);
+  if (k === ' ' || k === 'f')          press('fire', false);
+});
+
+['left', 'right', 'down', 'jump', 'fire'].forEach(id => {
+  const el = document.getElementById('btn-' + id);
+  if (!el) return;
+  const on  = e => { e.preventDefault(); press(id, true);  };
+  const off = e => { e.preventDefault(); press(id, false); };
+  el.addEventListener('touchstart', on,  { passive: false });
+  el.addEventListener('touchend',   off, { passive: false });
+  el.addEventListener('touchcancel', off, { passive: false });   // or a button can stick down
+  el.addEventListener('mousedown',  on);
+  el.addEventListener('mouseup',    off);
+  el.addEventListener('mouseleave', off);
+});
+
+// Pause used to drop you straight back to the level picker, losing the
+// level you were in. Now it actually pauses.
+function pause() {
+  if (inMenu || finished || Quiz.isOpen()) return;
+  paused = !paused;
+  Sound.sfx('click');
+  Object.keys(held).forEach(k => held[k] = false);
+  show('pauseCard', paused);
+}
+
+/* ---------- loop ---------- */
+let last = 0;
+function frame(t) {
+  const dt = Math.min(0.033, last ? (t - last) / 1000 : 0.016);
+  last = t;
+  step(dt);
+  Sound.setDuck(paused || Quiz.isOpen());     // quieter behind menus and questions
+  draw();
+  requestAnimationFrame(frame);
+}
+
+document.getElementById('msPrev').onclick    = () => showLevels(browseWorld - 1);
+document.getElementById('msNext').onclick    = () => showLevels(browseWorld + 1);
+document.getElementById('endLevels').onclick = () => showLevels(wIdx);
+document.getElementById('pauseBtn').onclick  = pause;
+['muteBtn', 'msMute'].forEach(id => {
+  document.getElementById(id).onclick = e => { e.currentTarget.blur(); Sound.toggle(); showMute(); };
+});
+document.getElementById('resumeBtn').onclick  = pause;
+document.getElementById('restartBtn').onclick = () => startLevel(wIdx, lIdx);
+document.getElementById('quitBtn').onclick    = () => showLevels(wIdx);
+
+fit();
+Save.update({ mrLevels: WORLDS.length * PER_WORLD });   // so the front page can say "x of 30"
+showLevels(0);
+requestAnimationFrame(frame);
+
+</script>
+
+</body>
+</html>
