@@ -1307,6 +1307,9 @@ canvas#cv { position: fixed; inset: 0; image-rendering: pixelated; touch-action:
 .rotate-head { margin: 10px 0 0; font-size: 1.7rem; font-weight: 700; color: #FFC53D; }
 .rotate-sub { margin: 0; opacity: .85; max-width: 26ch; }
 .rotate-anyway { margin-top: 18px; background: #fff; font-size: .95rem; }
+
+/* taps shouldn't zoom the page or select text */
+.td-pop button, .td-bar button, .td-hud button, .lvl, .td-card button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="game-body">

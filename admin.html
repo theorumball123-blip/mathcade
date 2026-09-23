@@ -1439,6 +1439,11 @@ const GAMES = [
     line: d => `${Object.keys(d.tgStars || {}).length} of 12 levels · ${sum(d.tgStars)}★`,
     all: () => { const s = {}; for (let w = 0; w < 3; w++) for (let l = 0; l < 4; l++) s[w + '-' + l] = 3; return { tgStars: s, tgLevels: 12 }; },
     clear: { tgStars: {} } },
+  { name: 'Astro Blast', file: 'astro-blast.html',
+    line: d => `${Object.keys(d.abStars || {}).length} of 12 missions \u00b7 ${sum(d.abStars)}\u2605 \u00b7 ${d.abSalvage || 0} salvage`,
+    all: () => { const s = {}; for (let sec = 0; sec < 4; sec++) for (let m = 0; m < 3; m++) s[sec + '-' + m] = 3;
+                 return { abStars: s, abLevels: 12, abUp: { engine: 3, cannon: 3, rapid: 3, shield: 3, bombs: 2, magnet: 2 } }; },
+    clear: { abStars: {} } },
   { name: 'Prism Rush', file: 'prism-rush.html',
     line: d => `${(d.gdCleared ?? -1) + 1} of 8 levels · ${(d.gdSkins || ['gold']).length} skins`,
     all: () => ({ gdCleared: 7, gdBest: Object.fromEntries([...Array(8)].map((_, i) => [i, 100])),
@@ -1503,7 +1508,7 @@ $('saveYou').onclick = () => {
 // The front page works trophies out from your progress, so the ids are copied here.
 const ALL_TROPHY_IDS = ['firstxp','lvl5','lvl10','lvl20','row10','row25','maths8','daily1','daily7',
   'mr1','mrboss','mr3x10','mrbosses','mrall','nctut','ncwin','ncmeadow','nccar','ncghost','nc3x10','ncrocket',
-  'tg1','tgboss','tg3x6','tgall','pr1','pr4','prall','prskin','sl1','sl10'];
+  'tg1','tgboss','tg3x6','tgall','ab1','abboss','ab3x6','aball','pr1','pr4','prall','prskin','sl1','sl10'];
 $('tpAll').onclick = () => {
   const today = new Date().toLocaleDateString('en-CA');
   Save.update({ tpGot: Object.fromEntries(ALL_TROPHY_IDS.map(id => [id, today])) });
@@ -1557,6 +1562,7 @@ const WIPES = [
   { label: 'Wipe Mage Run', run: () => Save.update({ mrStars: {} }) },
   { label: 'Wipe Nitro Cup', run: () => Save.update({ ncStars: {}, ncPlace: {}, ncGhost: {}, ncCash: 0, ncUp: {}, ncCar: {}, ncTut: false }) },
   { label: 'Wipe Tower Guard', run: () => Save.update({ tgStars: {} }) },
+  { label: 'Wipe Astro Blast', run: () => Save.update({ abStars: {}, abSalvage: 0, abUp: {} }) },
   { label: 'Wipe Prism Rush', run: () => Save.update({ gdCleared: -1, gdBest: {}, gdSkins: ['gold'], gdSkin: 'gold' }) },
   { label: 'Wipe Striker League', run: () => striker.set(null) },
   { label: 'Wipe EVERYTHING', run: () => { Save.reset(); striker.set(null); } }
