@@ -1352,9 +1352,26 @@ body.tut .nc-map, body.tut .nc-pos, body.tut .nc-mid { visibility: hidden; }
 .nc-modes button.on { background: #FFC53D; color: #1A1024; }
 .nc-modenote { margin: -6px 0 0; min-height: 1.2em; font-size: clamp(12px, 2vh, 15px); text-align: center; max-width: 720px;
                text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024; }
+.nc-challenge { margin: 0; padding: 8px 14px; background: rgba(127,227,255,.2); border: 3px solid #3F8FCC; border-radius: 12px;
+                 font-size: clamp(13px, 2.2vh, 17px); text-align: center; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024; }
+.nc-diffs { margin-top: -8px; }
+.nc-diffs button { font-size: .9rem; padding: 6px 12px; }
+.nc-diffs button.on { background: #58B83A; color: #fff; }
+.nc-difflabel { align-self: center; font-size: .9rem; opacity: .85; text-shadow: 2px 0 0 #1A1024,-2px 0 0 #1A1024,0 2px 0 #1A1024,0 -2px 0 #1A1024; }
+.item.locked { opacity: .55; filter: grayscale(.7); }
 @media (pointer: coarse) { .duo-btn { display: none; } }          /* two players need a keyboard */
 body.duo .nc-pos, body.duo .nc-mid, body.duo .nc-right, body.duo .nc-map { visibility: hidden; }
 body.trial .nc-pos small { display: none; }
+
+/* touchscreen laptops and Chromebooks: the same buttons a phone gets */
+body.hasTouch.playing .touchpad { display: flex; }
+body.hasTouch .touchpad { position: fixed; left: 0; right: 0; bottom: 14px; padding: 0 16px; justify-content: space-between; z-index: 25; }
+body.hasTouch .touchpad .pair { display: flex; gap: min(14px, 2vw); }
+body.hasTouch .touchpad button { width: min(76px, 17vw); height: min(76px, 17vw); padding: 0; font-size: 1.6rem; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.7); background: rgba(255,255,255,.18); color: #fff; box-shadow: none; }
+body.hasTouch #btn-nitro { background: rgba(63,143,204,.55); }
+body.hasTouch #btn-brake { background: rgba(214,60,60,.45); }
+.touchpad button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="game-body">
@@ -1364,7 +1381,7 @@ body.trial .nc-pos small { display: none; }
 <!-- ===== racing top bar ===== -->
 <div class="nc-hud" id="hud">
   <div class="nc-row">
-    <div class="nc-pos"><b id="pos">6</b><span id="posSuffix">th</span><small> / 6</small></div>
+    <div class="nc-pos"><b id="pos">6</b><span id="posSuffix">th</span><small id="ofCars"> / 6</small></div>
     <div class="nc-mid"><span class="nc-lap">LAP <b id="lap">1</b> / 3</span><span class="nc-time" id="rtime">0:00.0</span></div>
     <div class="nc-right"><span class="nc-speed"><b id="spd">0</b> km/h</span><span class="nc-nitro" id="nitro"></span><span class="nc-slip" id="slip"></span></div>
     <span class="nc-btns">
@@ -1412,6 +1429,13 @@ body.trial .nc-pos small { display: none; }
     <button data-mode="trial">&#9201; Time trial</button>
     <button data-mode="duo" class="duo-btn">&#128101; 2 players</button>
   </div>
+  <div class="nc-modes nc-diffs" id="diffRow">
+    <span class="nc-difflabel">How hard?</span>
+    <button data-diff="easy">Easy</button>
+    <button data-diff="normal">Normal</button>
+    <button data-diff="hard">Hard</button>
+  </div>
+  <p class="nc-challenge" id="challengeNote" style="display:none"></p>
   <p class="nc-modenote" id="modeNote"></p>
   <div class="nc-tracks" id="tracks"></div>
   <div class="nc-row2">
@@ -1469,6 +1493,7 @@ Esc pause</p>
     </div>
     <p class="rmsg" id="rMsg"></p>
     <button class="nc-big" id="rNext">Next track</button>
+    <button class="nc-big blue" id="rShare" style="display:none">&#128279; Challenge a friend</button>
     <button class="nc-big blue" id="rAgain">Race again</button>
     <button class="nc-big blue" id="rMenu">Choose a track</button>
   </div>
@@ -2211,13 +2236,24 @@ const PROP_W = { tree: 1.0, bush: 0.6, pine: 0.8, palm: 0.9, rock: 0.6, lavarock
    Each has one small bonus. They're small on purpose: driving well
    matters much more than which car you're in.                       */
 const CARS = {
-  classic: { name: 'Classic', cost: 0,   perk: 'A good all-rounder' },
-  sports:  { name: 'Sports',  cost: 300, perk: 'Faster on the straights', top: 0.03 },
-  buggy:   { name: 'Buggy',   cost: 300, perk: 'Grips the bends', grip: 0.08 },
-  truck:   { name: 'Truck',   cost: 350, perk: 'Tough: bumps and cones hurt less', tough: true },
-  formula: { name: 'Formula', cost: 600, perk: 'Fast and grippy', top: 0.02, grip: 0.05 },
-  rocket:  { name: 'Rocket',  cost: 800, perk: 'Nitro lasts longer', nitroTime: 0.8 }
+  classic: { name: 'Classic', cost: 0,    perk: 'A good all-rounder' },
+  kart:    { name: 'Kart',    cost: 200,  perk: 'Turns on a coin, but slower', grip: 0.14, top: -0.02 },
+  sports:  { name: 'Sports',  cost: 300,  perk: 'Faster on the straights', top: 0.03 },
+  buggy:   { name: 'Buggy',   cost: 300,  perk: 'Grips the bends', grip: 0.08 },
+  truck:   { name: 'Truck',   cost: 350,  perk: 'Tough: bumps and cones hurt less', tough: true },
+  police:  { name: 'Police',  cost: 450,  perk: 'Tough, and a bit quicker', tough: true, top: 0.015 },
+  bus:     { name: 'Big bus', cost: 500,  perk: 'Nothing shoves it about, but it is slow', tough: true, top: -0.03, grip: 0.05 },
+  formula: { name: 'Formula', cost: 600,  perk: 'Fast and grippy', top: 0.02, grip: 0.05 },
+  monster: { name: 'Monster', cost: 700,  perk: 'Drives over mud and grass better', tough: true, rough: true },
+  rocket:  { name: 'Rocket',  cost: 800,  perk: 'Nitro lasts longer', nitroTime: 0.8 },
+  drift:   { name: 'Drifter', cost: 900,  perk: 'Drift sparks charge faster', driftRate: 0.35 },
+  // not for sale: you earn these
+  champ:   { name: 'Champion', cost: 0, star: 12, perk: 'Fast and tough. Win 12 stars to earn it', top: 0.025, tough: true },
+  ufo:     { name: 'UFO',      cost: 0, star: 40, perk: 'It floats. Grips like nothing else. 40 stars', grip: 0.18, top: 0.01 }
 };
+// the two earned cars appear in the garage once you have the stars
+const starsOwned = () => Object.values(Save.get().ncStars || {}).reduce((a, n) => a + n, 0);
+const carLocked = id => (CARS[id].star || 0) > starsOwned();
 const perk = () => CARS[myCar().body] || CARS.classic;
 // the tutorial listens for these (drifted, hit a pad, used nitro...)
 let onEvent = () => {};
@@ -2238,7 +2274,7 @@ function topSpeed()   { return TOP * (0.70 + 0.05 * up().engine + (perk().top ||
 function gripFactor() { return (1 - 0.09 * up().tyres) * (1 - (perk().grip || 0)); }    // less pull in corners
 function steerFactor() { return 1 + 0.06 * up().tyres; }                                 // and sharper steering
 function nitroTank()  { return 3 + up().nitro; }
-function driftRate()  { return 1 + 0.25 * up().drift; }                      // sparks charge faster
+function driftRate()  { return 1 + 0.25 * up().drift + (perk().driftRate || 0); }   // sparks charge faster
 const trackGrip = () => (TH && TH.grip) || 1;                                 // ice and rain are slippy
 
 const newHeld = () => ({ left: false, right: false, gas: false, brake: false, nitro: false, drift: false });
@@ -2248,15 +2284,25 @@ const heldP2 = newHeld();
 function usePlayer(p) { player = p; held = p.held; }
 const carZOf = p => (p.z + PLAYER_Z) % trackLength;
 
-const AI_COLOURS = ['#D63C3C', '#3F8FCC', '#58B83A', '#B25CF0', '#FF8A2A'];
-const AI_NAMES   = ['Rex', 'Nova', 'Pip', 'Zed', 'Maxi'];
+const AI_COLOURS = ['#D63C3C', '#3F8FCC', '#58B83A', '#B25CF0', '#FF8A2A', '#2FC8C0', '#E85AA8'];
+const AI_NAMES   = ['Rex', 'Nova', 'Pip', 'Zed', 'Maxi', 'Bolt', 'Kiki'];
+
+/* ---------- how hard you want it ----------
+   Hard puts two more drivers on the grid as well as speeding them up, so a
+   podium really means something. Easy is there for someone's first go.   */
+const DIFFS = [
+  { id: 'easy',   name: 'Easy',   ai: 0.93, cars: 4, cash: 0.8,  note: 'Slower drivers, 5 cars on the grid' },
+  { id: 'normal', name: 'Normal', ai: 1,    cars: 5, cash: 1,    note: 'The proper race, 6 cars on the grid' },
+  { id: 'hard',   name: 'Hard',   ai: 1.08, cars: 7, cash: 1.35, note: 'Quicker drivers, 8 cars, more cash' }
+];
+const diff = () => DIFFS.find(d => d.id === (Save.get().ncDiff || 'normal')) || DIFFS[1];
 
 function setupRace(track, m) {
   mode = m || 'race';
   buildTrack(track);
   // the grid: five computer cars ahead of you, you start at the back
   // (none in a time trial or a 2-player race - that's just you two)
-  const n = mode === 'race' ? 5 : 0;
+  const n = mode === 'race' ? diff().cars : 0;
   cars = AI_COLOURS.slice(0, n).map((colour, i) => {
     const row = Math.floor(i / 2), col = i % 2;
     return {
@@ -2267,7 +2313,7 @@ function setupRace(track, m) {
       // track.ai is the fastest driver's speed (your starting car does 0.70).
       // The fastest starts on pole: with the slowest at the front, the whole
       // pack got stuck behind it and nobody could keep up with you.
-      pace: TOP * track.ai * (1 - i * 0.025),
+      pace: TOP * track.ai * diff().ai * (1 - i * 0.025),
       lap: 1, lapZ: 0, dist: 0, done: false, finishTime: 0
     };
   });
@@ -2464,8 +2510,9 @@ function stepPlayer(dt) {
 
   // grass slows you down, a lot
   const offRoad = Math.abs(player.x) > 1 && player.air <= 0;
-  if (offRoad && player.speed > TOP / 3) player.speed += -TOP / 1.2 * dt;
-  if (player.mud > 0 && player.speed > top) player.speed += -TOP * 0.9 * dt;   // sticky
+  const rough = perk().rough ? 0.5 : 1;                     // the monster truck shrugs off the rough stuff
+  if (offRoad && player.speed > TOP / 3) player.speed += -TOP / 1.2 * dt * rough;
+  if (player.mud > 0 && player.speed > top) player.speed += -TOP * 0.9 * dt * rough;   // sticky
 
   // hitting something at the roadside
   if (offRoad) {
@@ -2960,6 +3007,88 @@ const CAR_MAPS = {
     '.......KKKKKK.......',
     'TTT..............TTT',
     'TTT..............TTT'],
+  kart: [
+    '....................',
+    '.......KKKKKK.......',
+    '......KWWWWWWK......',
+    '.....KBBBBBBBBK.....',
+    '...KKBBbbbbbbBBKK...',
+    '..KBBBRRBBBBRRBBBK..',
+    '..KBBBBBBDDBBBBBBK..',
+    '..KKKKKKKKKKKKKKKK..',
+    '.TTT............TTT.',
+    '.TTT............TTT.'],
+  police: [
+    '.......RRBB.........',
+    '......KRRBBK........',
+    '.....KWWWWWWWWK.....',
+    '....KWWWWWWWWWWK....',
+    '...KPPPPPPPPPPPPK...',
+    '..KPPWWWWWWWWWWPPK..',
+    '.KPPWWWWWWWWWWWWPPK.',
+    '.KPPRRPPPPPPPPRRPPK.',
+    '.KPPPPPPDDDDPPPPPPK.',
+    '.KKKKKKKKKKKKKKKKKK.',
+    '.TTT............TTT.',
+    '.TTT............TTT.'],
+  bus: [
+    'KKKKKKKKKKKKKKKKKKKK',
+    'KWWKKWWKKWWKKWWKKWWK',
+    'KWWKKWWKKWWKKWWKKWWK',
+    'KBBBBBBBBBBBBBBBBBBK',
+    'KBbbbbbbbbbbbbbbbbBK',
+    'KBBBBBBBBBBBBBBBBBBK',
+    'KBRRBBBBBBBBBBBBRRBK',
+    'KBBBBBBBDDDDBBBBBBBK',
+    'KKKKKKKKKKKKKKKKKKKK',
+    'TTTT..TTTT..TTTT..TT',
+    'TTTT..TTTT..TTTT..TT'],
+  monster: [
+    '.....KKKKKKKKKK.....',
+    '....KBBBBBBBBBBK....',
+    '...KBBbbbbbbbbBBK...',
+    '...KBRRBBBBBBRRBK...',
+    '...KBBBBDDDDBBBBK...',
+    '...KKKKKKKKKKKKKK...',
+    'TTTTT..........TTTTT',
+    'TTTTT..........TTTTT',
+    'TTtTT..........TTtTT',
+    'TTTTT..........TTTTT',
+    'TTTTT..........TTTTT'],
+  drift: [
+    '.KKKKKKKKKKKKKKKKKK.',
+    '.KSSSSSSSSSSSSSSSSK.',
+    '.KKK..KKKKKKKK..KKK.',
+    '....KWWWWWWWWWWK....',
+    '...KBBBBBBBBBBBBK...',
+    '..KBBbbbbbbbbbbBBK..',
+    '.KBBRRBBBBBBBBRRBBK.',
+    '.KBBBBBBDDDDBBBBBBK.',
+    '.KKKKKKKKKKKKKKKKKK.',
+    'TTTT..........TTTTTT',
+    'TTTT..........TTTTTT'],
+  champ: [
+    '.......YYYY.........',
+    '.....KKYYYYKK.......',
+    '....KWWWWWWWWK......',
+    '...KBBBBBBBBBBK.....',
+    '..KBBbbbbbbbbBBK....',
+    '.KBBRRBBBBBBRRBBK...',
+    '.KBBBBBBDDDDBBBBK...',
+    '.KKKKKKKKKKKKKKKKK..',
+    '.TTT...........TTT..',
+    '.TTT...........TTT..'],
+  ufo: [
+    '......KKKKKK........',
+    '....KKWWWWWWKK......',
+    '...KWWWWWWWWWWK.....',
+    '..KBBBBBBBBBBBBK....',
+    '.KBBbbbbbbbbbbBBK...',
+    'KBBBBBBBBBBBBBBBBK..',
+    'KBBBGGBBBBBBGGBBBK..',
+    '.KKKKKKKKKKKKKKKK...',
+    '..GG..........GG....',
+    '...G...........G....'],
   rocket: [
     '.........KK.........',
     '........KWWK........',
@@ -2994,11 +3123,12 @@ const FLAMES = {
 };
 const flameCols = (id, t) => FLAMES[id] && FLAMES[id].cols ||
   [`hsl(${Math.floor(t * 400) % 360},95%,55%)`, `hsl(${(Math.floor(t * 400) + 60) % 360},95%,75%)`];
-const AI_BODIES = ['sports', 'buggy', 'classic', 'truck', 'formula'];
+const AI_BODIES = ['sports', 'buggy', 'classic', 'truck', 'formula', 'kart', 'police'];
 
 const shade = (hex, f) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(hex.substr(i, 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 const carSprite = (colour, body) => makeSprite(CAR_MAPS[body] || CAR_MAP, { K: '#1A1024', W: '#9FD4F0', B: colour, b: shade(colour, 1.25),
-                                    R: '#FF3B3B', D: '#F2F2F2', T: '#22222E', S: shade(colour, 0.6), G: '#8C91A6', O: '#FF8A2A' });
+                                    R: '#FF3B3B', D: '#F2F2F2', T: '#22222E', S: shade(colour, 0.6), G: '#7FE3FF', O: '#FF8A2A',
+                                    P: '#2A3A6A', Y: '#FFE14A', t: '#3A3A4E' });
 // your car, rebuilt whenever you change it in the garage
 function buildPlayerSprite() {
   const c = myCar();
@@ -3613,6 +3743,25 @@ const show = (id, on) => { const el = document.getElementById(id); if (el) el.st
 let screen = 'menu', attract = true, paused = false, current = 0, cupShown = 0;
 let tut = null;                  // the tutorial, while it's running
 let menuMode = 'race';           // what the track buttons start: 'race', 'trial' or 'duo'
+
+/* ---------- challenge links ----------
+   A link carries a name, a track and a time. Short enough to send in a
+   message, and it needs no server.                                      */
+const Challenge = {
+  make(trackId, secs) {
+    const who = (Save.get().name || 'Someone').slice(0, 14);
+    return location.origin + location.pathname + '?beat=' + encodeURIComponent(btoa(JSON.stringify({ n: who, t: trackId, s: +secs.toFixed(2) })));
+  },
+  read() {
+    if (typeof location === 'undefined') return null;      // the test bots have no address bar
+    const raw = new URLSearchParams(location.search).get('beat');
+    if (!raw) return null;
+    try { const d = JSON.parse(atob(decodeURIComponent(raw))); return d && TRACKS.some(t => t.id === d.t) ? d : null; }
+    catch (e) { return null; }
+  }
+};
+const challenge = Challenge.read();
+const esc = s => String(s).replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
 const bestTime = id => ((Save.get().ncGhost || {})[id] || {}).t;
 
 const starsFor = id => (Save.get().ncStars || {})[id];
@@ -3655,8 +3804,16 @@ function showMenu(cup) {
   }).join('');
   document.querySelectorAll('#tracks .track').forEach(bt => bt.onclick = () => pitStop(+bt.dataset.i));
   document.querySelectorAll('[data-mode]').forEach(bt => bt.classList.toggle('on', bt.dataset.mode === menuMode));
+  document.querySelectorAll('[data-diff]').forEach(bt => bt.classList.toggle('on', bt.dataset.diff === diff().id));
+  document.getElementById('diffRow').style.display = menuMode === 'race' ? '' : 'none';
+  const cn = document.getElementById('challengeNote');
+  if (challenge) {
+    const tr = TRACKS.find(t => t.id === challenge.t);
+    cn.style.display = '';
+    cn.innerHTML = `<b>${esc(challenge.n)}</b> challenges you to beat <b>${fmt(challenge.s)}</b> on <b>${tr.name}</b> (Time trial)`;
+  } else cn.style.display = 'none';
   document.getElementById('modeNote').innerHTML = {
-    race:  'Race 5 computer drivers. Top 3 unlocks the next track.',
+    race:  `${diff().note}. Top 3 unlocks the next track.`,
     trial: 'Just you and the clock. Beat your best time and your ghost races you next time.',
     duo:   'Just you two, head to head. <b>Player 1</b>: A D steer &middot; S brake &middot; W nitro &middot; left Shift drift &nbsp; | &nbsp; ' +
            '<b>Player 2</b>: &larr; &rarr; steer &middot; &darr; brake &middot; &uarr; nitro &middot; right Shift drift'
@@ -3719,11 +3876,14 @@ function showGarage() {
     box.className = 'g-grid';
     box.innerHTML = Object.keys(S.list).map(id => {
       const it = S.list[id], owned = c[S.owned].includes(id), using = c[S.using] === id;
+      // the two cars you earn with stars show what they need until you have it
+      if (gTab === 'cars' && carLocked(id) && !owned) return `<button class="item locked" disabled>
+        <img src="${carThumb(id, pick.paint)}" alt=""><b>${it.name}</b><span>${it.star} \u2605 needed</span></button>`;
       const art = gTab === 'cars' ? `<img src="${carThumb(id, pick.paint)}" alt="">`
                 : gTab === 'paint' ? `<i class="swatch" style="background:${it.col}"></i>`
                 : `<i class="swatch flame ${id}" style="${it.cols ? `background:linear-gradient(${it.cols[1]},${it.cols[0]})` : ''}"></i>`;
       return `<button class="item ${pick[S.using] === id ? 'picked' : ''}" data-item="${id}">
-        ${art}<b>${it.name}</b><span>${using ? 'Using' : owned ? 'Owned' : it.cost + ' cash'}</span></button>`;
+        ${art}<b>${it.name}</b><span>${using ? 'Using' : owned ? 'Owned' : it.cost === 0 ? 'Earned!' : it.cost + ' cash'}</span></button>`;
     }).join('');
     document.querySelectorAll('[data-item]').forEach(bt => bt.onclick = () => {
       pick[S.using] = bt.dataset.item; Sound.sfx('click'); showGarage();
@@ -3746,11 +3906,15 @@ function showPick() {
   if (!tab) { act.style.display = 'none'; return; }
   act.style.display = '';
   const owned = c[tab.owned].includes(id), using = c[tab.using] === id;
-  act.disabled = using || (!owned && cash() < it.cost);
-  act.textContent = using ? 'Using it ✓' : owned ? 'Use it' : cash() < it.cost ? 'Need ' + it.cost + ' cash' : 'Buy for ' + it.cost;
+  const starLock = gTab === 'cars' && carLocked(id) && !owned;
+  act.disabled = using || starLock || (!owned && cash() < it.cost);
+  act.textContent = using ? 'Using it ✓' : owned ? 'Use it'
+    : starLock ? `Win ${it.star} stars first`
+    : it.cost === 0 ? 'Claim it!' : cash() < it.cost ? 'Need ' + it.cost + ' cash' : 'Buy for ' + it.cost;
   act.onclick = () => {
     const c2 = myCar();
     if (!c2[tab.owned].includes(id)) {
+      if (gTab === 'cars' && carLocked(id)) return;
       if (cash() < it.cost) return;
       c2[tab.owned] = c2[tab.owned].concat(id);
       Save.update({ ncCash: cash() - it.cost });
@@ -3921,6 +4085,7 @@ function finishRace() {
     document.getElementById('rMsg').textContent = stars ? (isOpen(current + 1) && TRACKS[current + 1] ? 'Next track unlocked!' : '') : 'Finish in the top 3 to unlock the next track';
     const nextOk = TRACKS[current + 1] && isOpen(current + 1);
     document.getElementById('rNext').style.display = nextOk ? '' : 'none';
+    document.getElementById('rShare').style.display = 'none';
     show('resultCard', true);
   }, 1400);
 }
@@ -3944,6 +4109,18 @@ function finishTrial() {
       ? (old ? `${(old - raceTime).toFixed(1)}s faster! Your new ghost is saved.` : 'Race again to chase your ghost.')
       : `Best: ${fmt(old)}. You were ${(raceTime - old).toFixed(1)}s slower.`;
     document.getElementById('rNext').style.display = TRACKS[current + 1] && isOpen(current + 1) ? '' : 'none';
+    // did you beat the friend who sent you here?
+    if (challenge && challenge.t === id) {
+      document.getElementById('rMsg').innerHTML += `<br>${esc(challenge.n)}: ${fmt(challenge.s)} \u2014 `
+        + (raceTime < challenge.s ? `you win by ${(challenge.s - raceTime).toFixed(1)}s!` : `${(raceTime - challenge.s).toFixed(1)}s to find.`);
+    }
+    const sh = document.getElementById('rShare');
+    sh.style.display = ''; sh.textContent = '\u{1F517} Challenge a friend';
+    sh.onclick = async () => {
+      const link = Challenge.make(id, raceTime);
+      try { await navigator.clipboard.writeText(link); sh.textContent = 'Link copied! Send it to a friend'; }
+      catch (e) { document.getElementById('rMsg').innerHTML += '<br><small style="word-break:break-all">' + esc(link) + '</small>'; sh.textContent = 'Link is below \u2014 copy it'; }
+    };
     show('resultCard', true);
   }, 1400);
 }
@@ -3959,6 +4136,7 @@ function finishDuo() {
     document.getElementById('rCash').textContent = '+0';
     document.getElementById('rMsg').textContent = `Player 1: ${ORD(a.place)}  \u00B7  Player 2: ${ORD(c.place)}`;
     document.getElementById('rNext').style.display = TRACKS[current + 1] && isOpen(current + 1) ? '' : 'none';
+    document.getElementById('rShare').style.display = 'none';
     show('resultCard', true);
   }, 1400);
 }
@@ -3993,6 +4171,7 @@ function updateHudFast() {
     document.getElementById('posSuffix').textContent = ORD(place).replace(/\d+/, '');
   }
   document.getElementById('lap').textContent = Math.min(player.lap, LAPS);
+  document.getElementById('ofCars').textContent = ' / ' + (cars.length + players.length);
   document.getElementById('spd').textContent = Math.round(player.speed / TOP * 260);
   document.getElementById('rtime').textContent = fmt(raceTime);
   const slip = document.getElementById('slip');
@@ -4063,6 +4242,7 @@ document.getElementById('tutGo').onclick = () => showMenu(0);
 document.querySelectorAll('[data-tab]').forEach(bt => bt.onclick = () => { gTab = bt.dataset.tab; Sound.sfx('click'); showGarage(); });
 document.getElementById('rAgain').onclick = () => pitStop(current);
 document.querySelectorAll('[data-mode]').forEach(bt => bt.onclick = () => { menuMode = bt.dataset.mode; Sound.sfx('click'); showMenu(); });
+document.querySelectorAll('[data-diff]').forEach(bt => bt.onclick = () => { Save.update({ ncDiff: bt.dataset.diff }); Sound.sfx('click'); showMenu(); });
 document.getElementById('rNext').onclick = () => pitStop(current + 1);
 document.getElementById('rMenu').onclick = () => showMenu(TRACKS[current].cup);
 ['muteBtn', 'menuMute'].forEach(id => document.getElementById(id).onclick = e => { e.currentTarget.blur(); Sound.toggle(); showMute(); });
@@ -4117,8 +4297,6 @@ showMenu(0);
 // first time here: learn to drive before the first race
 if (!Save.get().ncTut) startTutorial();
 requestAnimationFrame(frame);
-
 </script>
-
 </body>
 </html>

@@ -1353,6 +1353,15 @@ canvas#cv { image-rendering: pixelated; }
   #btn-fire { background: rgba(200,110,255,.45); }
 }
 
+
+/* touchscreen laptops and Chromebooks: the same buttons a phone gets */
+body.hasTouch.playing .touchpad { display: flex; }
+body.hasTouch .touchpad { position: fixed; left: 0; right: 0; bottom: 16px; padding: 0 18px;
+  justify-content: space-between; z-index: 30; }
+body.hasTouch .touchpad .pair { display: flex; gap: min(12px, 2vw); }
+body.hasTouch .touchpad button { width: min(70px, 15vw); height: min(70px, 15vw); font-size: 1.4rem; padding: 0;
+  border-radius: 50%; border: 3px solid rgba(255,255,255,.7); background: rgba(255,255,255,.18); color: #fff; box-shadow: none; }
+.touchpad button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="game-body">
@@ -4250,5 +4259,11 @@ requestAnimationFrame(frame);
 
 </script>
 
+<script>
+// Phones report "pointer: coarse", but a touchscreen laptop or Chromebook often
+// doesn't, so the on-screen buttons never appeared there. This adds a class as
+// soon as we see touch support, and the CSS below uses either signal.
+if (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) document.body.classList.add('hasTouch');
+</script>
 </body>
 </html>

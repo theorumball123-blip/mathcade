@@ -1233,6 +1233,9 @@ canvas { display: block; }
 .rotate-head { margin: 10px 0 0; font: 700 1.6rem 'Fredoka', sans-serif; color: #FFC53D; }
 .rotate-sub { margin: 0; font-weight: 700; opacity: .8; max-width: 26ch; }
 .rotate-anyway { margin-top: 18px; background: #fff; font-size: .95rem; }
+
+/* taps shouldn't zoom the page or select text */
+.gd-hud button, .gd-card button, .mute-btn { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="game-body">
@@ -1274,6 +1277,8 @@ canvas { display: block; }
     <p class="shop-title">Skins</p>
     <p class="shop-sub">Colours only — nothing here makes the game easier.
        You have <b id="coinCount">0</b> coins.</p>
+    <p class="shop-sub">Coins come from the questions after you finish a level,
+       and from beating your best % on any level.</p>
     <div id="skinList"></div>
     <button class="shop-close" id="skinClose">Close</button>
   </div>
@@ -1997,6 +2002,10 @@ const SHIP_GRAVITY = 1050;     // the ship falls much gentler than the cube,
 const SHIP_MAX = 540;          // top speed up or down while flying
 const CEIL = 330;              // corridor height in ship / flip sections
 const GROUND = () => H - 130;
+// Where your cube sits across the screen. It used to be a flat 60 pixels from
+// the left, which on a wide screen left it stuck to the very edge with nothing
+// to look at ahead. A quarter of the way across gives you room to see coming.
+const LANE = () => Math.max(60, Math.min(W * 0.26, 300));
 
 /* ============================================================
    MUSIC — synthesised, no audio files
@@ -2049,7 +2058,56 @@ const Music = (() => {
     step = (step + 1) % 32;
   }
 
+  // --- sound effects ---------------------------------------------------
+  // They share the music's audio and its on/off switch, so the mute button
+  // silences everything.
+  function wake() {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  let noiseBuf = null;
+  function noise(dur, gain, cutoff, t) {
+    if (!noiseBuf) {
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = noiseBuf;
+    f.type = 'lowpass'; f.frequency.value = cutoff;
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(actx.destination);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+  function slide(from, to, dur, type, gain, t) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(from, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, to), t + dur);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gain, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  const EFFECTS = {
+    jump:  t => slide(300, 700, 0.14, 'square', 0.09, t),
+    land:  t => noise(0.07, 0.12, 1400, t),
+    fly:   t => slide(220, 420, 0.2, 'sawtooth', 0.05, t),
+    die:   t => { noise(0.3, 0.3, 900, t); slide(320, 60, 0.32, 'square', 0.12, t); },
+    win:   t => [0, 4, 7, 12].forEach((s, i) => note(440 * Math.pow(2, s / 12), t + i * 0.09, 0.16, 'square', 0.1)),
+    check: t => [0, 7].forEach((s, i) => note(660 * Math.pow(2, s / 12), t + i * 0.06, 0.1, 'triangle', 0.08)),
+    buy:   t => [0, 7, 12].forEach((s, i) => note(880 * Math.pow(2, s / 12), t + i * 0.05, 0.12, 'triangle', 0.09)),
+    click: t => note(900, t, 0.04, 'square', 0.05)
+  };
+
   return {
+    sfx(name) {
+      if (!on || !EFFECTS[name]) return;
+      try { wake(); EFFECTS[name](actx.currentTime + 0.01); } catch (e) { /* no audio here */ }
+    },
     start(config) {
       cfg = config;
       if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2277,7 +2335,16 @@ const bestOf = i => (Save.get().gdBest || {})[i] || 0;
 
 function recordBest(i, pct) {
   const b = Object.assign({}, Save.get().gdBest || {});
-  if (pct > (b[i] || 0)) { b[i] = pct; Save.update({ gdBest: b }); }
+  const old = b[i] || 0;
+  if (pct <= old) return;
+  b[i] = pct;
+  Save.update({ gdBest: b });
+  // Getting further than ever before pays a few coins. Before this, coins only
+  // came from the questions after a finished level, so anyone stuck on a level
+  // could never afford a skin.
+  const coins = Math.max(1, Math.round((pct - old) / 4));
+  Save.addCoins(coins);
+  say('NEW BEST ' + pct + '%  +' + coins + ' coins', 1800);
 }
 
 /* ============================================================
@@ -2396,6 +2463,7 @@ function drawSkins() {
       if (ownedSkins().includes(s.id)) {
         Save.update({ gdSkin: s.id });
       } else if (Save.spendCoins(s.cost)) {
+        Music.sfx('buy');
         Save.update({ gdSkins: ownedSkins().concat(s.id), gdSkin: s.id });
       }
       drawSkins();
@@ -2470,13 +2538,14 @@ function say(text, ms = 1600) {
    Floor sits at 0, ceiling at -CEIL.
    ============================================================ */
 function box() {
+  // must line up with where the cube is drawn, or you'd crash into thin air
   return gdir > 0
-    ? { l: 65, r: 60 + SIZE - 5, top: y - SIZE + 5, bot: y }
-    : { l: 65, r: 60 + SIZE - 5, top: y - 5, bot: y + SIZE - 5 };
+    ? { l: LANE() + 5, r: LANE() + SIZE - 5, top: y - SIZE + 5, bot: y }
+    : { l: LANE() + 5, r: LANE() + SIZE - 5, top: y - 5, bot: y + SIZE - 5 };
 }
 
 function overlapX(o, w) {
-  const b = box(), ox = o.x - x + 60;
+  const b = box(), ox = o.x - x + LANE();
   return b.r > ox + (w ? 4 : 10) && b.l < ox + (w ? o.w : 28);
 }
 
@@ -2502,7 +2571,7 @@ function intoWall() {
   const b = box();
   for (const o of course.obstacles) {
     if (o.t !== 'block') continue;
-    const ox = o.x - x + 60;
+    const ox = o.x - x + LANE();
     if (!(b.r > ox + 4 && b.l < ox + o.w)) continue;
     if (mode === 'ship') {
       // A block only hits the ship if you actually share its height.
@@ -2525,6 +2594,7 @@ function intoWall() {
    DEATH
    ============================================================ */
 function die() {
+  Music.sfx('die');
   if (dead) return;
   dead = true;
   deathTimer = 0.8;
@@ -2534,7 +2604,7 @@ function die() {
   recordBest(level, Math.round(x / course.length * 100));
   const t = performance.now() / 1000;
   for (let i = 0; i < 32; i++) {
-    sparks.push({ x: 60 + SIZE/2, y: GROUND() + y + (gdir > 0 ? -SIZE/2 : SIZE/2),
+    sparks.push({ x: LANE() + SIZE/2, y: GROUND() + y + (gdir > 0 ? -SIZE/2 : SIZE/2),
       vx: (Math.random()-0.5)*620, vy: (Math.random()-0.9)*580, life: 1,
       c: [skinColour('cube', t), P().accent, P().spike, '#fff'][i % 4] });
   }
@@ -2558,6 +2628,7 @@ function finishLevel() {
   Music.stop();
   const secs = Math.round((performance.now() - started) / 1000);
   const startLv = Save.get().level;
+  Music.sfx('win');
 
   // Cleared it — now the maths, before the results screen.
   Quiz.ask({
@@ -2673,7 +2744,7 @@ function drawObstacles(t) {
   ctx.save();
   ctx.lineJoin = 'round';
   for (const o of course.obstacles) {
-    const ox = o.x - x + 60;
+    const ox = o.x - x + LANE();
     if (ox < -280 || ox > W + 280) continue;
     const base = o.up ? gy - CEIL : gy;
     const dir = o.up ? 1 : -1;
@@ -2724,7 +2795,7 @@ function drawObstacles(t) {
   }
   ctx.restore();
 
-  const fx = course.length - x + 60;
+  const fx = course.length - x + LANE();
   if (fx < W + 130) {
     const grad = ctx.createLinearGradient(fx, 0, fx + 110, 0);
     grad.addColorStop(0, 'rgba(255,255,255,0.45)');
@@ -2742,7 +2813,7 @@ function drawObstacles(t) {
 function drawPlayer(t) {
   if (dead) return;
   const cube = skinColour('cube', t), tr = skinColour('trail', t);
-  const cx = 60 + SIZE/2;
+  const cx = LANE() + SIZE/2;
   const cy = GROUND() + y + (gdir > 0 ? -SIZE/2 : SIZE/2);
 
   trail.forEach((s, i) => {
@@ -2828,10 +2899,11 @@ function frame(now) {
     // portals
     for (const o of course.obstacles) {
       if (o.t !== 'portal' || o.done) continue;
-      const ox = o.x - x + 60;
-      if (ox < 60 + SIZE && ox > -60) {
+      const ox = o.x - x + LANE();
+      if (ox < LANE() + SIZE && ox > LANE() - 60) {     // right where the cube is
         o.done = true;
         flash = 1;
+        Music.sfx('check');            // through a portal
         if (o.mode === 'ship') {
           mode = 'ship'; gdir = 1;
           // The corridor opens around you. Without this lift, hitting a
@@ -2851,6 +2923,7 @@ function frame(now) {
       if (y >= 0 || y <= -CEIL) die();
     } else {
       if (held && onGround) {
+        Music.sfx('jump');
         vy = -JUMP * gdir;
         onGround = false;
         for (let i = 0; i < 5; i++)
@@ -2870,6 +2943,7 @@ function frame(now) {
             dust.push({ x: 60 + Math.random()*SIZE, y: GROUND() + s, life: 1,
                         vx: -60 - Math.random()*120, vy: -Math.random()*90 });
         }
+        if (!onGround) Music.sfx('land');
         y = s; vy = 0; onGround = true;
       } else onGround = false;
 
@@ -2878,7 +2952,7 @@ function frame(now) {
       if (gdir < 0 && y < -CEIL - 40) die();
     }
 
-    trail.push({ x: 60 + SIZE/2, y: GROUND() + y + (gdir > 0 ? -SIZE/2 : SIZE/2) });
+    trail.push({ x: LANE() + SIZE/2, y: GROUND() + y + (gdir > 0 ? -SIZE/2 : SIZE/2) });
     if (trail.length > 12) trail.shift();
 
     if (intoWall()) die();

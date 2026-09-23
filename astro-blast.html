@@ -1,0 +1,2871 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Astro Blast &mdash; Mathcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   style.css — shared look for every page.
+   Exercise book: graph paper, ballpoint blue, red teacher's pen.
+   ============================================================ */
+
+:root {
+  --paper:      #F2F6FB;
+  --grid:       #CFE0F2;
+  --ink:        #16324F;
+  --ink-soft:   #5C7490;
+  --red-pen:    #E03B3B;
+  --gold:       #FFC53D;
+  --mint:       #3FC99A;
+  --grape:      #8B6BDB;
+
+  --shadow-sticker: 2px 3px 0 rgba(22, 50, 79, 0.18);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* the graph paper */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+h1, h2, h3, .chunky {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 20px 18px 64px;
+}
+
+/* --- the header strip, like the front of an exercise book --- */
+.book-label {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.book-label h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+}
+
+.book-label h1 .dot { color: var(--red-pen); }
+
+.stats {
+  display: flex;
+  gap: 16px;
+  font-weight: 700;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.stat .figure {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stat .caption {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.coins .figure  { color: #C98B00; }
+.streak .figure { color: var(--mint); }
+.level .figure  { color: var(--grape); }
+
+/* ============================================================
+   Overall level — one level across every game, shown on the hub.
+   The maths level (1-8) is a different thing and lives in the games.
+   ============================================================ */
+
+.overall { min-width: min(300px, 100%); }
+
+.ov-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+
+.ov-level {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--grape);
+}
+
+.ov-level .word {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  margin-right: 6px;
+}
+
+.ov-coins {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.25rem;
+  color: #C98B00;
+  white-space: nowrap;
+}
+
+.ov-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.ov-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.4s ease-out;
+}
+
+.ov-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- the warm-up question card --- */
+.warmup {
+  margin-top: 26px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sticker);
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.warmup .prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 11vw, 3.6rem);
+  margin: 6px 0 18px;
+  line-height: 1.1;
+}
+
+.warmup .meta {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.answer-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+input[type="number"] {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  width: 140px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+input[type="number"]:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--grape);
+  outline-offset: 2px;
+}
+
+/* stop the little spinner arrows */
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+button {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  padding: 11px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+}
+
+button:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* --- feedback line, written in red pen when you're wrong --- */
+.feedback {
+  min-height: 1.6em;
+  margin-top: 14px;
+  font-weight: 800;
+}
+
+.feedback.good  { color: var(--mint); }
+.feedback.bad   { color: var(--red-pen); }
+
+/* --- the game grid: each tile is a picture of the game being played --- */
+.shelf {
+  display: grid;
+  /* the max matters as much as the min — with 1fr, two tiles on a wide page
+     stretched to half the page each. Cap it and they stay tile-sized. */
+  grid-template-columns: repeat(auto-fit, minmax(175px, 215px));
+  justify-content: start;
+  gap: 16px;
+}
+
+/* on a phone, one tile per row, full width — a 215px column left a strip of nothing */
+@media (max-width: 520px) {
+  .shelf { grid-template-columns: 1fr; }
+  .tile:nth-child(n) { transform: none; }
+}
+
+.tile {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+/* each tile sits a touch crooked, like a sticker on the page */
+.tile:nth-child(4n+1) { transform: rotate(-0.7deg); }
+.tile:nth-child(4n+2) { transform: rotate(0.55deg); }
+.tile:nth-child(4n+3) { transform: rotate(0.4deg); }
+.tile:nth-child(4n+4) { transform: rotate(-0.45deg); }
+
+.tile:hover,
+.tile:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow: 4px 8px 0 rgba(22, 50, 79, 0.22);
+}
+
+/* the picture */
+.tile .cover {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-bottom: 2px solid var(--ink);
+  background: #090F22;
+  overflow: hidden;
+}
+
+.tile .cover svg { display: block; width: 100%; height: 100%; }
+
+/* a tile with no artwork yet can still use a big emoji */
+.tile .cover.emoji {
+  display: grid;
+  place-items: center;
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+}
+
+.cover.blue  { background: #BFE3FF; }
+.cover.mint  { background: #C4F0DF; }
+.cover.gold  { background: #FFE6A8; }
+.cover.grape { background: #DCD2F7; }
+
+.tile-body { display: block; padding: 10px 12px 12px; }
+
+.tile .name {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+  text-align: left;
+  padding: 0;
+  line-height: 1.15;
+}
+
+.tile .blurb {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.tile .prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  min-height: 13px;
+}
+
+.tile .prog-track {
+  flex: 1;
+  height: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.tile .prog-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  transition: width 0.5s ease-out;
+}
+
+.tile .state {
+  display: block;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0;
+  color: var(--ink-soft);
+}
+
+.tile .state b { color: var(--ink); }
+.tile .state.go { color: var(--mint); }
+
+.tile.locked { opacity: 0.62; }
+.tile.locked .state { color: var(--ink-soft); }
+.tile.locked:hover { transform: rotate(0deg); box-shadow: var(--shadow-sticker); }
+
+footer {
+  margin-top: 46px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+footer button.armed { background: var(--red-pen); color: #fff; border-color: var(--red-pen); }
+
+footer button {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 520px) {
+  .book-label { flex-direction: column; align-items: flex-start; }
+  .stats { gap: 18px; }
+}
+
+/* ============================================================
+   Question pop-up (js/quiz.js)
+   ============================================================ */
+
+.quiz-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: 50;
+}
+
+.quiz-backdrop.open { display: flex; }
+
+.quiz-card {
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  text-align: center;
+}
+
+.quiz-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.quiz-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.quiz-pips {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin: 14px 0 6px;
+}
+
+.pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.pip.lit { background: var(--mint); }
+
+.quiz-prompt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2rem, 9vw, 2.9rem);
+  margin: 8px 0 18px;
+  line-height: 1.1;
+}
+
+.shake { animation: shake 0.32s ease; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-9px); }
+  75%      { transform: translateX(9px); }
+}
+
+/* ============================================================
+   In-game HUD — the keycap row
+   ============================================================ */
+
+.game-body {
+  margin: 0;
+  overflow: hidden;
+  background: #0A1624;
+}
+
+canvas { display: block; }
+
+.hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  pointer-events: none;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.keycaps { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.keycap {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.keycap.lit {
+  border-color: #fff;
+  background: var(--gold);
+  color: var(--ink);
+  text-shadow: none;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 16px rgba(255, 197, 61, 0.7);
+}
+
+.keycap.pressed { transform: translateY(3px); box-shadow: none; }
+
+.hud-right { text-align: right; line-height: 1.35; }
+.hud-right .big { font-size: 1.5rem; }
+.hud-right .small { font-size: 0.85rem; opacity: 0.85; font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.banner.show { opacity: 1; }
+
+.back-link {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  z-index: 20;
+}
+
+.back-link:hover { color: #fff; }
+
+/* ============================================================
+   Featured game panel on the hub — a dark window into the game
+   world, sitting on the paper page
+   ============================================================ */
+
+.featured {
+  margin-top: 26px;
+  background: #16324F;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 4px 6px 0 rgba(22, 50, 79, 0.28);
+  padding: 26px 24px;
+  color: #fff;
+}
+
+.featured h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 2.5rem);
+}
+
+.featured p {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  color: #BBD3EC;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.featured .keycaps {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 20px 0 22px;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.featured .play {
+  display: inline-block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  padding: 12px 30px;
+  border: 2px solid #0A1624;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.featured .play:active { transform: translate(2px, 3px); box-shadow: none; }
+
+/* ============================================================
+   End-of-game results screen (js/results.js)
+   ============================================================ */
+
+.results-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+}
+
+.results-backdrop.open { display: flex; }
+
+.results-card {
+  position: relative;
+  overflow: hidden;
+  width: min(430px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.4);
+  padding: 26px 22px 22px;
+  text-align: center;
+}
+
+.results-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(1.7rem, 7vw, 2.3rem);
+  margin: 0;
+}
+
+.results-sub {
+  margin: 4px 0 20px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.results-stats {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.results-stat {
+  flex: 1;
+  max-width: 116px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 13px 8px;
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+
+.results-stat.pop {
+  animation: statPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes statPop {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.results-figure {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.results-stat.score .results-figure { color: var(--mint); }
+.results-stat.coins .results-figure { color: #C98B00; }
+.results-stat.time  .results-figure { color: var(--grape); }
+
+.results-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* --- level bar --- */
+.results-levelbox {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.results-levelrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.results-levelbadge {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.9rem;
+  background: var(--grape);
+  color: #fff;
+  padding: 4px 13px;
+  border-radius: 999px;
+}
+
+.results-levelbadge.bump { animation: badgeBump 0.5s ease; }
+
+@keyframes badgeBump {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+
+.results-levelnote {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.results-track {
+  height: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.results-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+}
+
+.results-fill.glow { box-shadow: 0 0 14px 2px rgba(255, 197, 61, 0.9); }
+
+/* --- buttons --- */
+.results-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.results-again { width: 100%; }
+
+.results-home {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  padding: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* --- confetti --- */
+.confetti-bit {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(420px) rotate(680deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-bit { display: none; }
+  .results-stat { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Speed Stages — chunky arcade HUD
+   ============================================================ */
+
+.hud { gap: 10px; justify-content: center; }
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(#2E4C78, #1B3151);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  padding: 7px 20px 7px 12px;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pill b { font-size: 1.15rem; }
+.pill.speed  span { color: var(--gold); }
+.pill.hearts span { color: #FF8A98; }
+.pill.wins   span { color: var(--mint); }
+.pill.mult   span { color: #C4AEFF; }
+
+/* left column of square buttons */
+.sidebar {
+  position: fixed;
+  left: 14px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+
+.sidebar button {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 16px;
+  background: linear-gradient(#5AA9E6, #3A7CC4);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+}
+
+.sidebar button span { font-size: 1.9rem; line-height: 1; }
+.sidebar button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+#rebirthBtn { background: linear-gradient(#B88BEA, #8B5FD0); }
+
+/* progress bar along the bottom */
+.bottombar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  background: rgba(20, 32, 52, 0.88);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.bb-level { font-size: 1.05rem; white-space: nowrap; }
+
+.bb-track {
+  flex: 1;
+  height: 17px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bb-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), #FF9F43);
+  transition: width 0.25s ease-out;
+}
+
+.bb-num { font-size: 0.9rem; white-space: nowrap; opacity: 0.9; }
+
+@media (max-width: 620px) {
+  .sidebar button { width: 62px; height: 62px; font-size: 0.7rem; }
+  .sidebar button span { font-size: 1.4rem; }
+  .pill { font-size: 1.05rem; padding: 5px 14px 5px 9px; }
+}
+
+/* --- shop --- */
+.shop-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 22, 36, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 55;
+}
+
+.shop-backdrop.open { display: flex; }
+
+.shop-card {
+  width: min(440px, 100%);
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.35);
+  padding: 24px 22px;
+  color: var(--ink);
+}
+
+.shop-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.6rem;
+  margin: 0;
+  text-align: center;
+}
+
+.shop-sub {
+  margin: 4px 0 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.shop-item strong {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.02rem;
+}
+
+.shop-item span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.shop-item button { font-size: 0.9rem; padding: 8px 15px; white-space: nowrap; }
+.shop-item button:disabled { background: #E4E9EF; color: var(--ink-soft); cursor: not-allowed; }
+
+.shop-close { width: 100%; margin-top: 6px; background: #fff; }
+
+/* ============================================================
+   Prism Rush — the runner
+   ============================================================ */
+
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+.gd-hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.gd-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.gd-tag {
+  font-family: 'Fredoka', sans-serif;
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.gd-track {
+  flex: 1;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gd-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3FC99A, #FFC53D);
+}
+
+/* start card */
+.gd-start {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  background: rgba(10, 16, 36, 0.86);
+  z-index: 40;
+}
+
+.gd-start h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.4rem, 11vw, 4rem);
+  color: #FFC53D;
+  margin: 0 0 6px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.gd-start p {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.gd-start .gd-small { font-size: 0.85rem; opacity: 0.72; margin-top: 8px; }
+.gd-start button { margin-top: 20px; font-size: 1.25rem; padding: 13px 38px; }
+
+/* --- Prism Rush menu: Geometry Dash style carousel --- */
+.gd-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 35%, #223A6B, #0A1024 70%);
+  z-index: 40;
+}
+
+.gd-menu h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  color: #FFC53D;
+  margin: 0 0 14px;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+.carousel { display: flex; align-items: center; gap: 10px; }
+
+.car-arrow {
+  width: 54px;
+  height: 54px;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.car-stage { width: min(330px, 74vw); }
+
+.car-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 18px 22px;
+  border: 4px solid #fff;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--c1), var(--c2));
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+.car-card.locked { filter: grayscale(0.9) brightness(0.5); }
+
+.car-index { font-size: 0.75rem; opacity: 0.7; letter-spacing: 0.08em; }
+.car-title { font-size: 1.7rem; text-shadow: 0 0 18px var(--ac); }
+
+.car-diff {
+  font-size: 0.78rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: #10203A;
+  font-weight: 700;
+}
+
+.car-bestwrap { width: 100%; margin-top: 8px; }
+
+.car-best {
+  height: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.car-best div { height: 100%; background: var(--ac); }
+
+.car-pct {
+  display: block;
+  text-align: center;
+  font-size: 0.76rem;
+  margin-top: 5px;
+  opacity: 0.85;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+
+.car-star { font-size: 0.8rem; color: #FFE066; }
+
+.menu-row { display: flex; gap: 10px; margin-top: 20px; align-items: stretch; }
+
+.big-play { font-size: 1.35rem; padding: 14px 52px; }
+.big-play:disabled { background: #46506A; color: #9AA6B8; cursor: not-allowed; }
+.menu-side { font-size: 0.95rem; padding: 14px 20px; background: #fff; }
+
+.gd-menu .gd-small {
+  color: #fff;
+  opacity: 0.6;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  margin-top: 14px;
+}
+
+.mute-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  width: 46px;
+  height: 46px;
+  font-size: 1.2rem;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  box-shadow: none;
+  z-index: 45;
+}
+
+.skin-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
+</style>
+<style>
+/* ============================================================
+   Astro Blast
+   ============================================================ */
+.ab-hud, .ab-screen, .ab-card, .banner { font-family: 'Pixelify Sans', 'Fredoka', monospace; }
+canvas#cv { position: fixed; inset: 0; image-rendering: pixelated; touch-action: none; }
+.banner { font-family: 'Pixelify Sans', monospace; font-weight: 700; text-shadow: 2px 0 0 #080614,-2px 0 0 #080614,0 2px 0 #080614,0 -2px 0 #080614; }
+
+.ab-hud { position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: none; align-items: center; gap: 4px 14px; flex-wrap: wrap;
+          padding: 8px 12px; background: rgba(8,6,20,.9); border-bottom: 3px solid #1A1024; color: #fff; font-weight: 700;
+          font-size: clamp(14px, 2.4vh, 20px); }
+.ab-shields { color: #FF5A6E; letter-spacing: 1px; }
+.ab-shields i { color: rgba(255,255,255,.25); font-style: normal; }
+.ab-stat.gold { color: #FFE14A; }
+.ab-stat.score { margin-left: auto; color: #7FE3FF; }
+.ab-btns { display: flex; gap: 6px; }
+.ab-btns button { width: 40px; height: 34px; padding: 0; font: 700 .95rem 'Pixelify Sans', monospace; color: #fff; background: #3F7BC2;
+                  border: 3px solid #1A1024; border-radius: 9px; box-shadow: 0 3px 0 rgba(0,0,0,.4); touch-action: manipulation; }
+#bombBtn { background: #E0602A; }
+
+.ab-screen { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; align-items: center; justify-content: center;
+             gap: 2.2vh; padding: 64px 16px 20px; overflow: auto; color: #fff; background: linear-gradient(rgba(5,4,14,.4), rgba(5,4,14,.8)); }
+.ab-top { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; }
+.ab-back { font: 700 1rem 'Pixelify Sans', monospace; padding: 8px 14px; background: #fff; color: #1A1024; border: 3px solid #1A1024;
+           border-radius: 10px; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.ab-cash { font-size: clamp(15px, 3vh, 24px); font-weight: 700; }
+.ab-cash b { color: #FFE14A; }
+.ab-title { margin: 0; font-size: clamp(34px, 9vh, 76px); font-weight: 700; color: #7FE3FF; line-height: 1;
+            text-shadow: 3px 3px 0 #B22C6A, 6px 6px 0 rgba(0,0,0,.35); letter-spacing: .04em; }
+.ab-title.small { font-size: clamp(28px, 6vh, 52px); }
+.ab-sector { display: flex; align-items: center; gap: 12px; font-size: clamp(18px, 3.6vh, 30px); font-weight: 700; }
+.ab-sector button { width: 44px; height: 44px; padding: 0; font: 700 1.5rem 'Pixelify Sans', monospace; border-radius: 50%;
+                    background: #7FE3FF; border: 3px solid #1A1024; color: #1A1024; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.ab-missions { display: grid; grid-template-columns: repeat(3, minmax(88px, 130px)); gap: 12px; }
+.mish { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 6px 8px; color: #fff; background: #1E2A5A;
+        border: 4px solid #1A1024; border-radius: 14px; box-shadow: 0 6px 0 rgba(0,0,0,.4); font-family: 'Pixelify Sans', monospace;
+        touch-action: manipulation; }
+.mish.boss { background: #5A1E3A; }
+.mish b { font-size: 1.9rem; line-height: 1; }
+.mish small { font-size: .78rem; opacity: .9; }
+.mish.locked { filter: grayscale(.9) brightness(.55); }
+.mstars { color: #FFC53D; font-size: 1.05rem; letter-spacing: 1px; }
+.mstars i, .ab-stars i { color: rgba(255,255,255,.3); font-style: normal; }
+.ab-row { display: flex; gap: 10px; }
+.ab-big { font: 700 1.05rem 'Pixelify Sans', monospace; padding: 10px 20px; background: #3F7BC2; color: #fff; border: 4px solid #1A1024;
+          border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,.4); touch-action: manipulation; }
+.ab-hint { margin: 0; max-width: 560px; text-align: center; font-size: clamp(11px, 1.9vh, 15px); opacity: .85; }
+
+.ab-panel { width: min(460px, 94vw); padding: 16px; background: rgba(14,18,44,.92); border: 4px solid #1A1024; border-radius: 16px; }
+.up { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 2px dashed rgba(255,255,255,.15); }
+.up b { display: block; font-size: 1.15rem; }
+.up span { display: block; font-size: .85rem; opacity: .8; }
+.up .pips { display: flex; gap: 4px; margin-top: 5px; }
+.up .pips i { width: 20px; height: 9px; border: 2px solid #1A1024; background: #3A3050; }
+.up .pips i.on { background: #7FE3FF; }
+.up button { font: 700 .95rem 'Pixelify Sans', monospace; padding: 8px 14px; background: #FFC53D; color: #1A1024; border: 3px solid #1A1024;
+             border-radius: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.up button:disabled { background: #555; color: #999; }
+
+.ab-cardback { position: fixed; inset: 0; z-index: 55; display: none; align-items: center; justify-content: center; padding: 18px;
+               background: rgba(5,4,14,.7); }
+.ab-card { width: min(400px, 100%); text-align: center; padding: 20px; color: #fff; background: rgba(14,18,44,.96);
+           border: 4px solid #1A1024; border-radius: 16px; box-shadow: 0 8px 0 rgba(0,0,0,.45); }
+.ab-card h2 { margin: 0 0 8px; font-size: 1.8rem; color: #7FE3FF; }
+.ab-stars { font-size: 2.6rem; color: #FFC53D; letter-spacing: 5px; }
+.ab-card p { margin: 6px 0 12px; font-size: .98rem; opacity: .9; }
+.ab-card button { display: block; width: 100%; margin-top: 8px; font: 700 1.05rem 'Pixelify Sans', monospace; padding: 10px; color: #fff;
+                  background: #3F7BC2; border: 4px solid #1A1024; border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,.4);
+                  touch-action: manipulation; }
+.ab-card button.go { background: #58B83A; }
+
+/* a phone held upright is the best way to play this one, so no rotate notice */
+@media (max-width: 520px) { .ab-missions { grid-template-columns: repeat(3, minmax(80px, 110px)); } }
+
+/* a challenge from a friend, and the Survival button */
+.ab-challenge { margin: 0; padding: 8px 14px; background: rgba(178,92,240,.25); border: 3px solid #B25CF0; border-radius: 12px;
+                font-size: clamp(13px, 2.2vh, 17px); text-align: center; }
+#survBtn small { display: block; font-size: .7rem; opacity: .85; font-weight: 400; }
+</style>
+</head>
+<body class="game-body">
+
+<canvas id="cv"></canvas>
+
+<!-- ===== the bar along the top ===== -->
+<div class="ab-hud" id="hud">
+  <span class="ab-shields" id="hShields">&#10084;&#10084;&#10084;</span>
+  <span class="ab-stat">&#128165; <b id="hBombs">1</b></span>
+  <span class="ab-stat gold">&#9881; <b id="hSalvage">0</b></span>
+  <span class="ab-stat">WAVE <b id="hWave">1/5</b></span>
+  <span class="ab-stat score"><b id="hScore">0</b></span>
+  <span class="ab-btns">
+    <button id="focusBtn" title="Hold to fly steady (Shift)">&#127919;</button>
+    <button id="bombBtn" title="Bomb (Space)">&#128165;</button>
+    <button id="muteBtn" title="Sound on/off (M)">&#128266;</button>
+    <button id="pauseBtn" title="Pause (Esc)">II</button>
+  </span>
+</div>
+<div class="banner" id="banner"></div>
+
+<!-- ===== pick a mission ===== -->
+<div class="ab-screen" id="menu">
+  <div class="ab-top">
+    <a class="ab-back" href="index.html">&larr; Mathcade</a>
+    <span class="ab-cash">SALVAGE <b id="salvage">0</b></span>
+  </div>
+  <h1 class="ab-title">ASTRO BLAST</h1>
+  <div class="ab-sector">
+    <button id="secPrev">&lsaquo;</button>
+    <span id="secName">Home Orbit</span>
+    <button id="secNext">&rsaquo;</button>
+  </div>
+  <p class="ab-challenge" id="challengeNote" style="display:none"></p>
+  <div class="ab-missions" id="missions"></div>
+  <div class="ab-row">
+    <button class="ab-big" id="survBtn">&#9854;&#65039; Survival</button>
+    <button class="ab-big" id="shopBtn">&#128295; Upgrades</button>
+    <button class="ab-big" id="menuMute" title="Sound on/off (M)">&#128266;</button>
+  </div>
+  <p class="ab-hint">Arrow keys or drag with a finger to fly &middot; your guns fire by themselves<br>
+     SPACE drops a bomb &middot; hold SHIFT to fly steady and hit harder<br>
+     Kills in a row build a multiplier &middot; skim past shots to charge a bomb &middot; don't let aliens through</p>
+</div>
+
+<!-- ===== upgrades ===== -->
+<div class="ab-screen" id="shop">
+  <h1 class="ab-title small">UPGRADES</h1>
+  <div class="ab-panel">
+    <p class="ab-cash" style="margin:0 0 6px">SALVAGE <b id="shopSalvage">0</b></p>
+    <div id="shopList"></div>
+  </div>
+  <button class="ab-big" id="shopBack">Back</button>
+</div>
+
+<!-- ===== paused ===== -->
+<div class="ab-cardback" id="pauseCard">
+  <div class="ab-card">
+    <h2>Paused</h2>
+    <button class="go" id="resumeBtn">Resume</button>
+    <button id="restartBtn">Restart mission</button>
+    <button id="quitBtn">Choose a mission</button>
+  </div>
+</div>
+
+<!-- ===== shot down ===== -->
+<div class="ab-cardback" id="downCard">
+  <div class="ab-card">
+    <h2>Ship lost!</h2>
+    <p id="dMsg"></p>
+    <button class="go" id="dQuiz">&#10067; Answer one question to carry on</button>
+    <button id="dGiveUp">End the mission</button>
+  </div>
+</div>
+
+<!-- ===== results ===== -->
+<div class="ab-cardback" id="resultCard">
+  <div class="ab-card">
+    <h2 id="rTitle">Mission complete!</h2>
+    <div class="ab-stars" id="rStars"></div>
+    <p id="rMsg"></p>
+    <button class="go" id="rNext">Next mission</button>
+    <button id="rShare" style="display:none">&#128279; Challenge a friend</button>
+    <button id="rAgain">Fly it again</button>
+    <button id="rMenu">Choose a mission</button>
+  </div>
+</div>
+
+<script>
+addEventListener('error', e => {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:auto 10px 10px 10px;z-index:99;padding:12px 14px;'
+    + 'background:#3A0F1E;color:#FFD1D7;border:2px solid #FF5A6E;border-radius:10px;'
+    + 'font:600 13px/1.45 monospace;white-space:pre-wrap';
+  d.textContent = 'ERROR: ' + (e.message || 'unknown') + (e.filename ? '\n' + e.filename + ':' + e.lineno : '');
+  document.body.appendChild(d);
+});
+</script>
+<script>
+const Save = (() => {
+  const KEY = 'mathcade';
+
+  const BLANK = {
+    name: 'Player',
+    coins: 0,     // coins you can spend
+    xp: 0,        // every coin ever earned. Spending can't take this away,
+                  // which is why the overall level uses it and not coins.
+    level: 1,     // which MATHS level you're on (1-8) — not the overall level
+    streak: 0,    // correct answers in a row right now
+    best: 0       // best streak ever
+  };
+
+  let data = load();
+  const listeners = [];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { ...BLANK };
+      const saved = JSON.parse(raw);
+      // Anyone who played before the overall level existed: their coins are
+      // the only record of what they earned, so start their XP from those.
+      if (saved.xp === undefined) saved.xp = saved.coins || 0;
+      return { ...BLANK, ...saved };
+    } catch (e) {
+      // Private browsing, or storage full — play on without saving.
+      return { ...BLANK };
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      /* nothing we can do; the game still works for this session */
+    }
+    listeners.forEach(fn => fn(data));
+
+    // --- FIREBASE GOES HERE (later) -------------------------
+    // if (firebase.auth().currentUser) {
+    //   firebase.database()
+    //     .ref('players/' + firebase.auth().currentUser.uid)
+    //     .set(data);
+    // }
+    // --------------------------------------------------------
+  }
+
+  return {
+    get: () => ({ ...data }),
+
+    update(changes) {
+      data = { ...data, ...changes };
+      persist();
+      return { ...data };
+    },
+
+    addCoins(n) {
+      data.coins += n;
+      data.xp    += n;      // the overall level rides along on every coin,
+      persist();            // so no game has to know the level exists
+      return data.coins;
+    },
+
+    // Every game except Prism Rush pays in XP only. Coins are Prism Rush's
+    // own money (for skins), so answering questions elsewhere shouldn't
+    // quietly fill a wallet you can only spend in one game.
+    addXp(n) {
+      data.xp += n;
+      persist();
+      return data.xp;
+    },
+
+    spendCoins(n) {
+      if (data.coins < n) return false;
+      data.coins -= n;      // xp deliberately untouched
+      persist();
+      return true;
+    },
+
+    // One level across every game, worked out from XP.
+    // Level 2 needs 100 XP, then 250, 450, 700, 1000 ... each step 50 more.
+    // There's no top level; it just keeps getting slower.
+    overall() {
+      const xp   = data.xp;
+      const need = n => 25 * n * n + 75 * n;     // XP to reach level n + 1
+      const n    = Math.floor((-75 + Math.sqrt(5625 + 100 * xp)) / 50);
+      const from = need(n);
+      const to   = need(n + 1);
+      return {
+        level: n + 1,
+        xp,
+        into: xp - from,      // XP earned since this level began
+        span: to - from,      // how much XP this level is worth
+        next: to - xp         // XP still to go
+      };
+    },
+
+    // Run a function now and again every time anything changes.
+    onChange(fn) {
+      listeners.push(fn);
+      fn(data);
+    },
+
+    reset() {
+      data = { ...BLANK };
+      persist();
+    }
+  };
+})();
+
+const MathEngine = (() => {
+
+  // --- little helpers -------------------------------------------------
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const pick = arr => arr[rnd(0, arr.length - 1)];
+
+  // --- the question ladder --------------------------------------------
+  // Each level is a function that returns { text, answer }.
+  const LEVELS = [
+    // Made a bit easier on request (twice): same eight steps, gentler numbers.
+    // Each step leans on the friendly cases (2, 5 and 10 times tables,
+    // halves and quarters, 10% / 25% / 50%) and only sometimes mixes in
+    // the harder ones, so a level still stretches you without being a wall.
+
+    // 1 — adding and taking away, small numbers
+    () => {
+      const a = rnd(1, 10), b = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 2 — adding and taking away, two-digit numbers.
+    // Mostly ones with no carrying (23 + 14), and about 1 in 5 that needs it
+    // (38 + 27). Carrying is the skill this step teaches, so it stays in -
+    // just not every time. Subtraction is the same: (a + b) − b needs
+    // borrowing exactly when a + b would have needed carrying.
+    () => {
+      const carry = Math.random() < 0.2;
+      let a, b;
+      do { a = rnd(10, 50); b = rnd(5, 30); }
+      while (((a % 10) + (b % 10) >= 10) !== carry);
+      return Math.random() < 0.5
+        ? { text: `${a} + ${b}`, answer: a + b }
+        : { text: `${a + b} − ${b}`, answer: a };
+    },
+
+    // 3 — times tables, mostly the friendly ones
+    () => {
+      const a = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const b = rnd(1, 10);
+      return { text: `${a} × ${b}`, answer: a * b };
+    },
+
+    // 4 — division facts, mostly the friendly ones
+    () => {
+      const b = Math.random() < 0.8 ? pick([2, 3, 4, 5, 10]) : rnd(2, 9);
+      const answer = rnd(1, 10);
+      return { text: `${b * answer} ÷ ${b}`, answer };
+    },
+
+    // 5 — two steps, order of operations
+    () => {
+      const a = rnd(2, 4), b = rnd(2, 5), c = rnd(1, 10);
+      return Math.random() < 0.5
+        ? { text: `${a} × ${b} + ${c}`, answer: a * b + c }
+        : { text: `${a * b + c} − ${a} × ${b}`, answer: c };
+    },
+
+    // 6 — fractions of an amount, mostly one-halves, quarters and tenths
+    () => {
+      const denom = pick([2, 2, 4, 5, 10]);
+      const numer = Math.random() < 0.8 ? 1 : rnd(1, denom - 1);
+      const whole = denom * rnd(2, 10);
+      return {
+        text: `${numer}/${denom} of ${whole}`,
+        answer: (whole / denom) * numer
+      };
+    },
+
+    // 7 — percentages, mostly 10%, 25% and 50% of round numbers
+    () => {
+      const pct = Math.random() < 0.8 ? pick([10, 25, 50]) : pick([20, 75]);
+      const whole = pick([20, 40, 60, 80, 100]);
+      return { text: `${pct}% of ${whole}`, answer: (whole * pct) / 100 };
+    },
+
+    // 8 — solve for x
+    () => {
+      const a = rnd(2, 4), x = rnd(1, 10), b = rnd(1, 10);
+      return { text: `${a}x + ${b} = ${a * x + b},  x = ?`, answer: x };
+    }
+  ];
+
+  const MAX_LEVEL = LEVELS.length;
+  const STREAK_TO_LEVEL_UP = 3;
+
+  // Coins a single question is worth, before the run multiplier.
+  const baseReward = level => 5 + level * 3;
+
+  // --- a run of questions ---------------------------------------------
+  function startRun(length = 5, { coins = false } = {}) {
+    let index = 0;          // how far through the run
+    let question = null;
+
+    // The difficulty is fixed the moment the run starts. Before this, every
+    // question looked up your level again — so you could deliberately get a
+    // hard one wrong, drop a level, and have the whole restarted run be easy.
+    // Getting one wrong still costs you a level for NEXT time; it just can't
+    // make the run you are in any easier.
+    const runLevel = Save.get().level;
+
+    function make() {
+      const level = runLevel;
+      const q = LEVELS[level - 1]();
+      question = {
+        text: q.text,
+        answer: q.answer,
+        level,
+        number: index + 1,
+        of: length,
+        reward: baseReward(level)
+      };
+      return question;
+    }
+
+    return {
+      current() {
+        return question || make();
+      },
+
+      submit(given) {
+        const q = question || make();
+        const correct = Number(given) === q.answer;
+        const save = Save.get();
+
+        if (correct) {
+          index++;
+          const streak = save.streak + 1;
+          let level = save.level;
+          let levelUp = false;
+
+          if (streak % STREAK_TO_LEVEL_UP === 0 && level < MAX_LEVEL) {
+            level++;
+            levelUp = true;
+          }
+
+          Save.update({ streak, level, best: Math.max(save.best, streak) });
+          if (coins) Save.addCoins(q.reward);   // Prism Rush only
+          else       Save.addXp(q.reward);
+
+          const finished = index >= length;
+          if (!finished) make();
+
+          return {
+            correct: true,
+            reward: q.reward,
+            streak,
+            level,
+            levelUp,
+            finished,
+            answer: q.answer
+          };
+        }
+
+        // Wrong — the run restarts from question 1 and the level eases off.
+        index = 0;
+        const level = Math.max(1, save.level - 1);
+        Save.update({ streak: 0, level });
+        make();
+
+        return {
+          correct: false,
+          reward: 0,
+          streak: 0,
+          level,
+          levelDown: level < save.level,
+          restarted: true,
+          finished: false,
+          answer: q.answer
+        };
+      },
+
+      progress() {
+        return { done: index, total: length };
+      }
+    };
+  }
+
+  // A one-off question with no run attached.
+  function single() {
+    return startRun(1);
+  }
+
+  return { startRun, single, MAX_LEVEL };
+})();
+
+const Quiz = (() => {
+  let root = null;
+  let active = false;
+
+  function build() {
+    root = document.createElement('div');
+    root.className = 'quiz-backdrop';
+    root.innerHTML = `
+      <div class="quiz-card" role="dialog" aria-modal="true">
+        <p class="quiz-title"></p>
+        <p class="quiz-subtitle"></p>
+        <div class="quiz-pips"></div>
+        <p class="quiz-prompt"></p>
+        <div class="answer-row">
+          <input type="number" class="quiz-input" inputmode="numeric"
+                 aria-label="Your answer" autocomplete="off">
+          <button class="quiz-check">Unlock</button>
+        </div>
+        <p class="feedback quiz-feedback"></p>
+      </div>`;
+    document.body.appendChild(root);
+  }
+
+  function ask({ count = 2, title = 'Locked', subtitle = '', onDone, coins = false }) {
+    if (active) return;
+    if (!root) build();
+    active = true;
+
+    const card     = root.querySelector('.quiz-card');
+    const pipsEl   = root.querySelector('.quiz-pips');
+    const promptEl = root.querySelector('.quiz-prompt');
+    const inputEl  = root.querySelector('.quiz-input');
+    const btnEl    = root.querySelector('.quiz-check');
+    const fbEl     = root.querySelector('.quiz-feedback');
+
+    root.querySelector('.quiz-title').textContent = title;
+    root.querySelector('.quiz-subtitle').textContent = subtitle;
+
+    const run = MathEngine.startRun(count, { coins });
+    let earned = 0;
+    let asked = 0;
+    let right = 0;
+
+    function draw() {
+      const q = run.current();
+      const { done } = run.progress();
+      promptEl.textContent = q.text;
+      pipsEl.innerHTML = Array.from({ length: count }, (_, i) =>
+        `<span class="pip ${i < done ? 'lit' : ''}"></span>`).join('');
+      inputEl.value = '';
+      inputEl.focus();
+    }
+
+    function submit() {
+      if (inputEl.value === '') return;
+      const res = run.submit(inputEl.value);
+      asked++;
+      if (res.correct) right++;
+
+      if (res.correct) {
+        earned += res.reward;
+        if (res.finished) {
+          fbEl.className = 'feedback quiz-feedback good';
+          fbEl.textContent = `Unlocked. +${earned} ${coins ? 'coins' : 'XP'}.`;
+          setTimeout(close, 700);
+          return;
+        }
+        fbEl.className = 'feedback quiz-feedback good';
+        fbEl.textContent = res.levelUp
+          ? `Correct — maths level ${res.level} now.`
+          : 'Correct. Next one.';
+      } else {
+        earned = 0;
+        fbEl.className = 'feedback quiz-feedback bad';
+        fbEl.textContent = `It was ${res.answer}. Back to the first question.`;
+        card.classList.remove('shake');
+        void card.offsetWidth;          // restart the animation
+        card.classList.add('shake');
+      }
+      draw();
+    }
+
+    function close() {
+      active = false;
+      root.classList.remove('open');
+      btnEl.removeEventListener('click', submit);
+      inputEl.removeEventListener('keydown', onKey);
+      if (onDone) onDone(earned, { asked, correct: right });
+    }
+
+    function onKey(e) {
+      e.stopPropagation();              // don't let the game read this keypress
+      if (e.key === 'Enter') submit();
+    }
+
+    btnEl.addEventListener('click', submit);
+    inputEl.addEventListener('keydown', onKey);
+
+    fbEl.textContent = '';
+    fbEl.className = 'feedback quiz-feedback';
+    root.classList.add('open');
+    draw();
+  }
+
+  return { ask, isOpen: () => active };
+})();
+</script>
+<script>
+/* ==========================================================
+   ASTRO BLAST
+
+   A top-down space shooter. You fly up the screen, the aliens
+   come down it, and your guns fire by themselves — all you do
+   is steer, dodge, and pick your moment to drop a bomb.
+
+   Everything is measured in the little 200 x 300 picture the
+   game is drawn into, so "x: 100" is the middle of the screen.
+   This part is just the rules - no drawing - so the test bots
+   can play it without a screen.
+   ========================================================== */
+
+const VW = 200, VH = 300;            // the play area, in pixels
+const START_SHIELDS = 4;
+
+/* ---------- the ship you fly, and what you can buy for it ---------- */
+const UPGRADES = {
+  engine: { name: 'Engines',   note: 'Fly faster',            costs: [120, 260, 450] },
+  cannon: { name: 'Cannon',    note: 'Shots hit harder',      costs: [150, 320, 550] },
+  rapid:  { name: 'Fire rate', note: 'Shoot more often',      costs: [140, 300, 520] },
+  shield: { name: 'Shields',   note: 'One more hit to spare', costs: [200, 420, 700] },
+  bombs:  { name: 'Bomb bay',  note: 'One more bomb a mission', costs: [180, 380] },
+  magnet: { name: 'Magnet',    note: 'Pulls salvage in from further', costs: [130, 280] }
+};
+const UP_ORDER = ['engine', 'cannon', 'rapid', 'shield', 'bombs', 'magnet'];
+const up = () => Object.assign({ engine: 0, cannon: 0, rapid: 0, shield: 0, bombs: 0, magnet: 0 }, Save.get().abUp || {});
+const shipSpeed  = () => 105 + 18 * up().engine;
+/* ---------- the things that reward flying well ----------
+   combo:  kills without being hit multiply your score and salvage
+   graze:  skimming past a shot charges a bomb
+   focus:  hold it to fly slowly and hit harder                          */
+const comboMult = g => 1 + Math.min(4, Math.floor(g.combo / 8));
+const GRAZE_FOR_BOMB = 18;
+const FOCUS_SPEED = 0.45, FOCUS_DAMAGE = 1.35;
+const shotDamage = () => 1 + 0.5 * up().cannon;
+const shotGap    = () => 0.27 - 0.04 * up().rapid;
+const maxShields = () => START_SHIELDS + up().shield;
+const maxBombs   = () => 1 + up().bombs;
+const magnetPull = () => 26 + 22 * up().magnet;
+
+/* ---------- power-ups that drop ---------- */
+const POWERS = {
+  spread: { name: 'Spread shot', secs: 12, colour: '#FFC53D' },
+  rapid:  { name: 'Rapid fire',  secs: 12, colour: '#7FE3FF' },
+  shield: { name: 'Shield up',   colour: '#58B83A' },
+  bomb:   { name: 'Bomb',        colour: '#FF6A2A' },
+  coin:   { name: 'Salvage',     colour: '#FFE14A' }
+};
+
+/* ---------- the aliens ----------
+   move: how it flies. hp, speed, how much salvage it drops, and how
+   often it shoots (0 = never).                                       */
+const FOES = {
+  drone:   { name: 'Drone',    hp: 2,  spd: 42, w: 14, h: 12, pay: 3,  shoot: 3.2, move: 'straight' },
+  weaver:  { name: 'Weaver',   hp: 2,  spd: 70, w: 13, h: 11, pay: 4,  shoot: 0,   move: 'weave' },
+  bomber:  { name: 'Bomber',   hp: 6,  spd: 26, w: 20, h: 16, pay: 7,  shoot: 2.6, move: 'straight', drops: true },
+  turret:  { name: 'Turret',   hp: 7,  spd: 30, w: 16, h: 16, pay: 8,  shoot: 2.8, move: 'stop', aims: true },
+  rock:    { name: 'Asteroid', hp: 5,  spd: 34, w: 18, h: 18, pay: 2,  shoot: 0,   move: 'drift', splits: 2 },
+  pebble:  { name: 'Rubble',   hp: 1,  spd: 52, w: 9,  h: 9,  pay: 1,  shoot: 0,   move: 'drift' },
+  armour:  { name: 'Ironclad', hp: 10, spd: 24, w: 20, h: 18, pay: 11, shoot: 3.0, move: 'straight', cap: 2.5 },
+  diver:   { name: 'Diver',    hp: 3,  spd: 88, w: 12, h: 12, pay: 6,  shoot: 0,   move: 'dive' },
+  // one boss for each sector
+  titan:   { name: 'Rock Titan',  hp: 140, spd: 14, w: 52, h: 40, pay: 60,  boss: true, pattern: 'rocks' },
+  queen:   { name: 'Hive Queen',  hp: 230, spd: 16, w: 56, h: 44, pay: 90,  boss: true, pattern: 'swarm' },
+  warlord: { name: 'Warlord',     hp: 360, spd: 18, w: 60, h: 46, pay: 130, boss: true, pattern: 'sweep' },
+  mother:  { name: 'Mothership',  hp: 560, spd: 12, w: 72, h: 52, pay: 200, boss: true, pattern: 'all' }
+};
+
+/* ---------- the sectors you fly through ---------- */
+const SECTORS = [
+  { name: 'Home Orbit',   boss: 'titan',   sky: '#0B1230', star: '#9FD4F0', foes: ['drone', 'weaver', 'rock'] },
+  { name: 'Asteroid Belt', boss: 'queen',  sky: '#241026', star: '#FFC9A0', foes: ['rock', 'pebble', 'drone', 'bomber'] },
+  { name: 'Nebula',       boss: 'warlord', sky: '#160E36', star: '#E0A0FF', foes: ['weaver', 'turret', 'diver', 'bomber'] },
+  { name: 'Alien Home',   boss: 'mother',  sky: '#2A0A1A', star: '#FF9A9A', foes: ['armour', 'diver', 'turret', 'weaver', 'bomber'] }
+];
+// Survival: waves that keep coming and keep getting harder, with a boss every
+// eighth one. There's no finish line - your score is the point.
+const SURVIVAL = { sector: 0, index: -1, id: 'endless', n: 0, name: 'Survival', endless: true, boss: null };
+const MISSIONS = SECTORS.flatMap((s, si) => [0, 1, 2].map(mi => ({
+  sector: si, index: mi, id: si + '-' + mi, n: si * 3 + mi,
+  name: s.name + ' ' + (mi + 1), boss: mi === 2 ? s.boss : null
+})));
+
+// how the waves are built: the same every time, from the mission number.
+// A wave mixes a main kind with a few of something lighter, and the nasty
+// kinds are capped - an opening wave of three aimed turrets was unfair.
+const MOST = { turret: 2, armour: 3, bomber: 3, diver: 4, rock: 4, drone: 6, weaver: 6, pebble: 6 };
+const WEIGHT = { drone: 3, weaver: 3, rock: 3, pebble: 2, bomber: 2, diver: 2, turret: 1, armour: 1 };
+const LIGHT = ['drone', 'weaver', 'pebble'];
+function missionWaves(m) {
+  const S = SECTORS[m.sector];
+  let seed = m.n * 3571 + 11;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const pickWeighted = list => {
+    const total = list.reduce((a, k) => a + WEIGHT[k], 0);
+    let r = rnd() * total;
+    for (const k of list) { r -= WEIGHT[k]; if (r <= 0) return k; }
+    return list[0];
+  };
+  const waves = [], count = 5 + Math.floor(m.n / 3);
+  for (let w = 0; w < count; w++) {
+    const main = pickWeighted(S.foes);
+    const many = Math.min(MOST[main], 2 + Math.floor(rnd() * 3) + Math.floor(m.n / 5));
+    const shape = ['line', 'vee', 'sides'][Math.floor(rnd() * 3)];
+    const groups = [{ type: main, many, shape, gap: 0.45 + rnd() * 0.3 }];
+    // a few stragglers of something lighter, for variety
+    const light = S.foes.filter(k => LIGHT.includes(k) && k !== main);
+    if (light.length && rnd() < 0.55) groups.push({ type: light[Math.floor(rnd() * light.length)], many: 2 + Math.floor(rnd() * 2), shape: 'sides', gap: 0.5 });
+    waves.push(groups);
+  }
+  return waves;
+}
+const foeScale = n => 1 + 0.07 * n;          // aliens toughen up mission by mission
+// in Survival they toughen up wave by wave instead, and every kind turns up in time
+function endlessWave(w) {
+  let seed = w * 7717 + 3;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const all = ['drone', 'weaver', 'rock', 'pebble', 'bomber', 'diver', 'turret', 'armour'];
+  const kinds = all.slice(0, Math.min(all.length, 3 + Math.floor(w / 2)));
+  const main = kinds[Math.floor(rnd() * kinds.length)];
+  const many = Math.min(MOST[main], 2 + Math.floor(rnd() * 3) + Math.floor(w / 4));
+  const groups = [{ type: main, many, shape: ['line', 'vee', 'sides'][Math.floor(rnd() * 3)], gap: 0.4 + rnd() * 0.3 }];
+  const light = kinds.filter(k => LIGHT.includes(k) && k !== main);
+  if (light.length && rnd() < 0.6) groups.push({ type: light[Math.floor(rnd() * light.length)], many: 2 + Math.floor(rnd() * 2), shape: 'sides', gap: 0.5 });
+  return groups;
+}
+const scaleNow = () => G.m.endless ? 1 + 0.09 * G.wave : foeScale(G.m.n);
+
+/* ---------- the state of one mission ---------- */
+let G = null;
+const sfx = name => { if (typeof Sound !== 'undefined' && !(G && G.silent)) Sound.sfx(name); };
+const onEvent = { fn: () => {} };
+
+function newMission(m) {
+  G = {
+    m, waves: missionWaves(m), wave: 0, waveT: 0, spawned: 0, spawnT: 0,
+    ship: { x: VW / 2, y: VH - 40, cool: 0, hurt: 0, spread: 0, rapid: 0, focus: false },
+    shields: maxShields(), bombs: maxBombs(), salvage: 0, score: 0, kills: 0,
+    combo: 0, best: 0, graze: 0, escaped: 0, came: 0,
+    foes: [], shots: [], bolts: [], drops: [], blasts: [], sparks: [],
+    time: 0, over: false, won: false, boss: null, continues: 0, silent: false, held: {}
+  };
+  return G;
+}
+
+const hitBox = f => ({ x: f.x, y: f.y, w: (FOES[f.type] || f).w, h: (FOES[f.type] || f).h });
+const overlap = (a, b) => Math.abs(a.x - b.x) * 2 < a.w + b.w && Math.abs(a.y - b.y) * 2 < a.h + b.h;
+
+function spawnFoe(type, x, y, extra) {
+  const F = FOES[type];
+  const hp = Math.round(F.hp * (F.boss ? (G.m.endless ? 1 + 0.2 * G.wave : 1) : scaleNow()) * 10) / 10;
+  const f = Object.assign({ type, x, y, hp, max: hp, t: 0, cool: F.shoot ? F.shoot * (0.4 + Math.random()) : 0,
+                            x0: x, hurt: 0, w: F.w, h: F.h }, extra || {});
+  G.foes.push(f);
+  if (!F.boss) G.came++;
+  if (F.boss) G.boss = f;
+  return f;
+}
+
+// a wave arrives in a shape: a line, a vee, or down both sides
+function launchWave(groups) {
+  groups.forEach((g, gi) => launchGroup(g, gi));
+}
+function launchGroup(w, gi) {
+  const per = w.many;
+  for (let i = 0; i < per; i++) {
+    const t = per === 1 ? 0.5 : i / (per - 1);
+    let x = 26 + t * (VW - 52), y = -14 - i * 16 - gi * 30;
+    if (w.shape === 'vee') y = -14 - Math.abs(t - 0.5) * 60;
+    if (w.shape === 'sides') { x = i % 2 ? VW - 26 : 26; y = -14 - Math.floor(i / 2) * 20; }
+    spawnFoe(w.type, x, y, { delay: i * w.gap + gi * 1.2 });
+  }
+}
+
+function fireShot(x, y, dx, power) {
+  G.shots.push({ x, y, dx: dx || 0, dy: -240, dmg: shotDamage() * (power || 1) });
+}
+// Only so many alien shots may be in the air at once. Without this, a screen
+// full of shooters put up a wall of bullets that nobody could fly through.
+const MAX_BOLTS = 8;
+function foeShoot(f, aimed) {
+  if (G.bolts.length >= MAX_BOLTS) return;
+  const F = FOES[f.type];
+  let dx = 0, dy = 62;
+  if (aimed) {
+    const ang = Math.atan2(G.ship.y - f.y, G.ship.x - f.x);
+    dx = Math.cos(ang) * 62; dy = Math.sin(ang) * 62;
+  }
+  G.bolts.push({ x: f.x, y: f.y + F.h / 2, dx, dy });
+  sfx('foeShot');
+}
+
+// a boss's glowing core, which takes far more damage
+const bossCore = f => ({ x: f.x, y: f.y + FOES[f.type].h * 0.12, w: 14, h: 10 });
+function hurtFoe(f, dmg, where) {
+  const F = FOES[f.type];
+  if (F.boss && where && overlap(where, bossCore(f))) dmg *= 2.5;      // right on the core
+  if (F.cap) dmg = Math.min(dmg, F.cap);          // an Ironclad only ever takes one point a shot
+  f.hp -= dmg; f.hurt = 0.1;
+  if (f.hp > 0) return;
+  f.dead = true;
+  G.kills++;
+  G.combo++; G.best = Math.max(G.best, G.combo);
+  G.score += Math.round(F.pay * 10 * comboMult(G));
+  G.blasts.push({ x: f.x, y: f.y, t: F.boss ? 1.2 : 0.35, big: !!F.boss });
+  sfx(F.boss ? 'bossBoom' : 'boom');
+  if (F.splits) for (let i = 0; i < F.splits; i++) spawnFoe('pebble', f.x + (i ? 8 : -8), f.y, { drift: i ? 30 : -30 });
+  // what it leaves behind
+  const roll = Math.random();
+  if (F.boss) { for (let i = 0; i < 6; i++) drop('coin', f.x + (Math.random() - 0.5) * 40, f.y + (Math.random() - 0.5) * 20); drop('shield', f.x, f.y); }
+  else if (roll < 0.09) drop(['spread', 'rapid', 'shield', 'bomb'][Math.floor(Math.random() * 4)], f.x, f.y);
+  else if (roll < 0.55) drop('coin', f.x, f.y);
+  onEvent.fn('kill', f);
+}
+const drop = (kind, x, y) => G.drops.push({ kind, x, y, t: 0, w: 10, h: 10 });
+
+function hurtShip(cause) {
+  if (G.ship.hurt > 0 || G.over) return;
+  G.lastHit = cause || 'something';
+  G.shields--;
+  G.combo = 0;                       // and there goes your multiplier
+  G.ship.hurt = 1.5;
+  G.blasts.push({ x: G.ship.x, y: G.ship.y, t: 0.4 });
+  sfx('hit');
+  onEvent.fn('hit', cause);
+  if (G.shields <= 0) { G.over = true; G.won = false; sfx('lose'); onEvent.fn('lose'); }
+}
+
+// answering a question after being shot down puts you back in the fight
+function continueMission() {
+  if (!G.over || G.won) return false;
+  G.over = false; G.shields = Math.max(1, Math.round(maxShields() / 2)); G.continues++;
+  G.ship.hurt = 2; G.ship.x = VW / 2; G.ship.y = VH - 40;
+  G.bolts = [];
+  return true;
+}
+
+function useBomb() {
+  if (G.bombs <= 0 || G.over) return false;
+  G.bombs--;
+  G.bolts = [];
+  G.blasts.push({ x: VW / 2, y: VH / 2, t: 0.6, wipe: true });
+  for (const f of G.foes.slice()) if (!f.dead && f.y > -10) hurtFoe(f, FOES[f.type].boss ? 12 : 99);
+  sfx('bomb');
+  return true;
+}
+
+/* ---------- one tick ---------- */
+function step(dt, held) {
+  if (!G || G.over) return;
+  G.time += dt;
+  G.held = held || G.held;
+  const h = G.held;
+
+  // --- your ship ---
+  const sp = shipSpeed() * dt * (h.focus ? FOCUS_SPEED : 1);
+  G.ship.focus = !!h.focus;
+  if (h.left)  G.ship.x -= sp;
+  if (h.right) G.ship.x += sp;
+  if (h.up)    G.ship.y -= sp;
+  if (h.down)  G.ship.y += sp;
+  if (h.toX !== undefined) {                     // a finger dragging on a phone
+    G.ship.x += Math.max(-sp, Math.min(sp, h.toX - G.ship.x));
+    G.ship.y += Math.max(-sp, Math.min(sp, h.toY - G.ship.y));
+  }
+  G.ship.x = Math.max(10, Math.min(VW - 10, G.ship.x));
+  G.ship.y = Math.max(20, Math.min(VH - 12, G.ship.y));
+  if (G.ship.hurt > 0) G.ship.hurt -= dt;
+  if (G.ship.spread > 0) G.ship.spread -= dt;
+  if (G.ship.rapid > 0) G.ship.rapid -= dt;
+
+  // --- your guns, which fire by themselves ---
+  G.ship.cool -= dt;
+  if (G.ship.cool <= 0) {
+    G.ship.cool = shotGap() * (G.ship.rapid > 0 ? 0.55 : 1);
+    const power = G.ship.focus ? FOCUS_DAMAGE : 1;      // steady aim hits harder
+    if (G.ship.spread > 0) {
+      const fan = G.ship.focus ? 34 : 70;               // and holds the spread tighter
+      fireShot(G.ship.x, G.ship.y - 8, 0, power); fireShot(G.ship.x - 4, G.ship.y - 6, -fan, power); fireShot(G.ship.x + 4, G.ship.y - 6, fan, power);
+    } else fireShot(G.ship.x, G.ship.y - 8, 0, power);
+    sfx('shot');
+  }
+
+  // --- waves arriving ---
+  if (!G.boss || G.boss.dead) {
+    G.waveT += dt;
+    if (G.m.endless && !G.waves[G.wave]) {
+      // every eighth wave is a boss, taking turns through the four of them
+      G.waves[G.wave] = G.wave % 8 === 7 ? 'boss' : endlessWave(G.wave);
+    }
+    const w = G.waves[G.wave];
+    if (w === 'boss' && !G.launched) {
+      const kinds = ['titan', 'queen', 'warlord', 'mother'];
+      spawnFoe(kinds[Math.floor(G.wave / 8) % 4], VW / 2, -30); G.launched = true; sfx('bossIn'); onEvent.fn('boss');
+    } else if (w && w !== 'boss' && G.waveT > (G.wave === 0 ? 0.6 : 2.2) && !G.launched) { launchWave(w); G.launched = true; }
+    if (G.launched && !G.foes.some(f => !f.dead)) {
+      G.wave++; G.waveT = 0; G.launched = false;
+      if (G.m.endless) { G.boss = null; onEvent.fn('wave', G.wave); }
+      else if (G.wave >= G.waves.length) {
+        if (G.m.boss && !G.bossDone) { spawnFoe(G.m.boss, VW / 2, -30); G.bossDone = true; sfx('bossIn'); onEvent.fn('boss'); }
+        else if (!G.foes.length) { G.over = true; G.won = true; sfx('win'); onEvent.fn('win'); return; }
+      }
+    }
+  }
+
+  // --- the aliens ---
+  for (const f of G.foes) {
+    if (f.dead) continue;
+    const F = FOES[f.type];
+    if (f.delay > 0) { f.delay -= dt; continue; }
+    f.t += dt;
+    if (f.hurt > 0) f.hurt -= dt;
+    if (F.boss) moveBoss(f, dt);
+    else {
+      if (F.move === 'weave') { f.y += F.spd * dt; f.x = f.x0 + Math.sin(f.t * 2.6) * 34; }
+      else if (F.move === 'dive') {
+        // It picks its line once and commits, so you can sidestep it. Chasing
+        // you all the way down made divers impossible to shake off.
+        if (f.y < 60) f.y += F.spd * 0.7 * dt;
+        else {
+          if (f.aim === undefined) { f.aim = Math.atan2(G.ship.y - f.y, G.ship.x - f.x); sfx('dive'); }
+          f.x += Math.cos(f.aim) * F.spd * dt; f.y += Math.sin(f.aim) * F.spd * dt;
+        }
+      }
+      else if (F.move === 'stop') {
+        // it hovers and shoots, then comes down after a while. Without this a
+        // turret could sit up there forever and the mission never ended.
+        if (f.y < 55) f.y += F.spd * dt;
+        else { f.hover = (f.hover || 0) + dt; if (f.hover > 8) f.y += F.spd * 0.7 * dt; }
+      }
+      else if (F.move === 'drift') { f.y += F.spd * dt; f.x += (f.drift || 0) * dt; }
+      else f.y += F.spd * dt;
+      if (F.shoot) { f.cool -= dt; if (f.cool <= 0 && f.y > 10 && f.y < VH - 30) { f.cool = F.shoot; foeShoot(f, F.aims); } }
+    }
+    f.x = Math.max(8, Math.min(VW - 8, f.x));
+    if (f.y > VH + 20) { f.dead = true; if (!F.boss) { G.escaped++; G.combo = 0; } }   // it got past you
+    else if (overlap(hitBox(f), { x: G.ship.x, y: G.ship.y, w: 12, h: 12 })) { hurtShip('crash into ' + f.type); if (!F.boss) hurtFoe(f, 99); }
+  }
+
+  // --- shots ---
+  for (const s of G.shots) {
+    s.x += s.dx * dt; s.y += s.dy * dt;
+    if (s.y < -6) { s.done = true; continue; }
+    for (const f of G.foes) {
+      if (f.dead || f.delay > 0) continue;
+      const spot = { x: s.x, y: s.y, w: 3, h: 6 };
+      if (overlap(spot, hitBox(f))) { hurtFoe(f, s.dmg, spot); s.done = true; G.sparks.push({ x: s.x, y: s.y, t: 0.15 }); break; }
+    }
+  }
+  G.shots = G.shots.filter(s => !s.done);
+
+  for (const b of G.bolts) {
+    b.x += b.dx * dt; b.y += b.dy * dt;
+    if (b.y > VH + 6 || b.y < -6 || b.x < -6 || b.x > VW + 6) { b.done = true; continue; }
+    if (overlap({ x: b.x, y: b.y, w: 4, h: 6 }, { x: G.ship.x, y: G.ship.y, w: 10, h: 10 })) { b.done = true; hurtShip('shot'); }
+    else if (!b.grazed && Math.hypot(b.x - G.ship.x, b.y - G.ship.y) < 14) {
+      b.grazed = true; G.graze++;                       // skimmed past it
+      onEvent.fn('graze');
+      if (G.graze % GRAZE_FOR_BOMB === 0) { G.bombs++; sfx('power'); onEvent.fn('grazeBomb'); }
+    }
+  }
+  G.bolts = G.bolts.filter(b => !b.done);
+
+  // --- what the aliens drop ---
+  for (const d of G.drops) {
+    d.t += dt;
+    const dx = G.ship.x - d.x, dy = G.ship.y - d.y, dist = Math.hypot(dx, dy);
+    if (dist < magnetPull()) { d.x += dx / dist * 120 * dt; d.y += dy / dist * 120 * dt; }
+    else d.y += 34 * dt;
+    if (d.y > VH + 10) d.done = true;
+    else if (overlap(d, { x: G.ship.x, y: G.ship.y, w: 14, h: 14 })) { collect(d); d.done = true; }
+  }
+  G.drops = G.drops.filter(d => !d.done);
+
+  G.foes = G.foes.filter(f => !f.dead);          // tidy up the wrecks
+  G.blasts.forEach(b => b.t -= dt); G.blasts = G.blasts.filter(b => b.t > 0);
+  G.sparks.forEach(s => s.t -= dt); G.sparks = G.sparks.filter(s => s.t > 0);
+  if (G.boss && G.boss.dead && !G.over && !G.m.endless) { G.over = true; G.won = true; sfx('win'); onEvent.fn('win'); }
+}
+
+function collect(d) {
+  sfx(d.kind === 'coin' ? 'coin' : 'power');
+  if (d.kind === 'coin') { G.salvage += 3 * comboMult(G); G.score += 20 * comboMult(G); }
+  if (d.kind === 'shield') G.shields = Math.min(maxShields(), G.shields + 1);
+  if (d.kind === 'bomb') G.bombs++;
+  if (d.kind === 'spread') G.ship.spread = POWERS.spread.secs;
+  if (d.kind === 'rapid') G.ship.rapid = POWERS.rapid.secs;
+  onEvent.fn('pickup', d.kind);
+}
+
+// bosses sweep across the top and attack in their own way
+function moveBoss(f, dt) {
+  const F = FOES[f.type];
+  if (f.y < 42) { f.y += 24 * dt; return; }
+  f.x += Math.cos(f.t * 0.6) * F.spd * dt * 2;
+  f.cool -= dt;
+  if (f.cool > 0) return;
+  const stage = f.hp / f.max;                        // it fights harder as it weakens
+  f.cool = (F.pattern === 'all' ? 1.5 : 2.1) * (0.6 + stage * 0.6);
+  if (F.pattern === 'rocks' || (F.pattern === 'all' && Math.random() < 0.3)) {
+    spawnFoe('rock', f.x + (Math.random() - 0.5) * 40, f.y + 10);
+  } else if (F.pattern === 'swarm' || (F.pattern === 'all' && Math.random() < 0.5)) {
+    for (let i = 0; i < 2; i++) spawnFoe('drone', f.x + (i ? 16 : -16), f.y + 8);
+  } else {
+    for (let i = -2; i <= 2; i++) G.bolts.push({ x: f.x, y: f.y + F.h / 2, dx: i * 26, dy: 80 });
+    sfx('foeShot');
+  }
+}
+
+// three stars for finishing without a scratch
+// Three stars means a clean run: every shield intact and almost nothing got
+// past you. Letting aliens through used to cost nothing at all.
+const leakRate = g => g.escaped / Math.max(1, g.came);
+const starsFor = g => !g.won ? 0
+  : g.continues > 0 ? 1
+  : g.shields >= maxShields() && leakRate(g) <= 0.15 ? 3
+  : g.shields >= 2 && leakRate(g) <= 0.35 ? 2 : 1;
+
+/* ==========================================================
+   SOUND — everything is made by the browser from code, no
+   sound files, so it still works offline.
+
+   Sound.sfx('jump')       a sound effect
+   Sound.play('fields')    start a song (does nothing if it's already on)
+   Sound.stop()            stop the music
+   Sound.toggle()          mute / unmute, remembered next time
+   ========================================================== */
+const Sound = (() => {
+  let ac = null, master, music, fx, echo;
+  let muted = !!Save.get().abMuted;
+  let song = null, step = 0, next = 0, timer = null, duck = 1;
+
+  // Browsers only allow sound after the player has pressed something,
+  // so the audio is switched on by the first key, click or tap.
+  function wake() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = muted ? 0 : 1;
+      master.connect(ac.destination);
+      music = ac.createGain(); music.gain.value = 0.55; music.connect(master);
+      fx = ac.createGain(); fx.gain.value = 0.8; fx.connect(master);
+      // a soft echo, used by the cave song
+      echo = ac.createDelay(); echo.delayTime.value = 0.32;
+      const back = ac.createGain(); back.gain.value = 0.35;
+      echo.connect(back); back.connect(echo); back.connect(music);
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return true;
+  }
+  ['keydown', 'pointerdown', 'touchstart'].forEach(ev =>
+    addEventListener(ev, () => { wake(); if (song && !timer) start(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!ac) return;
+    if (document.hidden) ac.suspend(); else ac.resume();
+  });
+
+  const hz = midi => 440 * Math.pow(2, (midi - 69) / 12);
+
+  function tone(freq, dur, type, vol, slide, when, dest) {
+    const t = (ac.currentTime) + (when || 0);
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || fx);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+
+  let noiseBuf = null;
+  function noise(dur, vol, cutoff, when, dest) {
+    if (!noiseBuf) {
+      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t = ac.currentTime + (when || 0);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = noiseBuf;
+    f.type = 'lowpass'; f.frequency.value = cutoff || 2000;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(dest || fx);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+
+  const arp = (base, steps, gap, type, vol) =>
+    steps.forEach((s, i) => tone(base * Math.pow(2, s / 12), 0.13, type, vol, 0, i * gap));
+
+  const EFFECTS = {
+    shot:    () => tone(1200, 0.04, 'square', 0.025, 0.5),
+    foeShot: () => tone(420, 0.09, 'sawtooth', 0.04, 0.6),
+    boom:    () => { noise(0.2, 0.18, 1400); tone(180, 0.18, 'square', 0.05, 0.4); },
+    bossBoom:() => { noise(1.0, 0.3, 700); arp(196, [0, -5, -12], 0.16, 'sawtooth', 0.08); },
+    hit:     () => { noise(0.3, 0.25, 700); tone(200, 0.3, 'square', 0.09, 0.4); },
+    coin:    () => arp(1046, [0, 7], 0.05, 'triangle', 0.05),
+    power:   () => arp(660, [0, 4, 7, 12], 0.05, 'square', 0.07),
+    bomb:    () => { noise(0.7, 0.32, 2200); tone(90, 0.6, 'sawtooth', 0.09, 0.3); },
+    dive:    () => tone(900, 0.25, 'sawtooth', 0.04, 0.25),
+    bossIn:  () => arp(147, [0, 3, 7, 10], 0.2, 'sawtooth', 0.09),
+    win:     () => arp(523, [0, 4, 7, 12, 16], 0.1, 'square', 0.09),
+    lose:    () => arp(392, [0, -3, -7, -12], 0.16, 'triangle', 0.09),
+    click:   () => tone(900, 0.04, 'square', 0.05),
+    buy:     () => arp(880, [0, 7, 12], 0.05, 'triangle', 0.09),
+    nope:    () => tone(160, 0.12, 'square', 0.06)
+  };
+
+
+  /* ---------- music ----------
+     Each song is a two-bar pattern played over a four-chord loop.
+     melody / bass are sixteen steps per bar; numbers are semitones above
+     the chord's root, null is a rest. bass: 1 = root, 5 = fifth.          */
+  const _ = null;
+  const SONGS = {
+    menu: {                               // slow and spacey
+      bpm: 104, root: 57, prog: [0, 3, -2, 0], lead: 'triangle', leadVol: 0.05, leadLen: 2.4, echo: true,
+      melody: [[12, _, _, 15, _, _, 19, _, 17, _, 15, _, 12, _, _, _],
+               [10, _, _, 12, _, _, 15, _, 14, _, 12, _, 10, _, _, _]],
+      bass: [1, _, _, _, 5, _, _, _, 1, _, _, _, 5, _, _, _], bassType: 'triangle',
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+    },
+    flight: {                             // driving, for a mission
+      bpm: 138, root: 55, prog: [0, 0, 5, 3], lead: 'sawtooth', leadVol: 0.035, leadLen: 1.1,
+      melody: [[12, _, 12, 15, _, 12, _, 17, 15, _, 12, _, 10, _, 12, _],
+               [12, _, 15, _, 17, _, 19, _, 17, _, 15, _, 12, _, _, _]],
+      bass: [1, 1, _, 1, 5, _, 1, _, 1, 1, _, 1, 5, _, 1, _], bassType: 'square',
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0], hat: [0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1]
+    },
+    boss: {                               // heavy
+      bpm: 150, root: 53, prog: [0, 0, 1, -1], lead: 'sawtooth', leadVol: 0.04, leadLen: 1,
+      melody: [[12, 12, _, 15, _, 12, _, 18, 17, _, 15, _, 12, _, 11, _],
+               [12, _, 15, _, 17, _, 18, _, 17, _, 15, _, 12, _, _, _]],
+      bass: [1, 1, _, 1, 1, _, 1, 1, 1, 1, _, 1, 5, _, 1, _], bassType: 'square',
+      kick: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], hat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    }
+  };
+
+  function drum(kind, t) {
+    if (kind === 'kick') {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(130, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(music); o.start(t); o.stop(t + 0.18);
+    } else {
+      noise(0.03, 0.05, 7000, t - ac.currentTime, music);
+    }
+  }
+
+  function schedule() {
+    const S = SONGS[song];
+    if (!S || !ac) return;
+    const stepDur = 60 / S.bpm / 4;
+    // If the tab was in the background the timer stops; don't play every
+    // missed note in one burst when it comes back.
+    if (next < ac.currentTime - 0.1) next = ac.currentTime + 0.05;
+    while (next < ac.currentTime + 0.14) {
+      const bar = Math.floor(step / 16), i = step % 16;
+      const root = S.root + S.prog[bar % S.prog.length];
+      const when = next - ac.currentTime;
+      if (S.bass[i]) tone(hz(root - 24 + (S.bass[i] === 5 ? 7 : 0)), stepDur * 1.8, S.bassType, 0.09 * duck, 0, when, music);
+      const m = S.melody[bar % S.melody.length][i];
+      if (m !== null) {
+        tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * duck, 0, when, S.echo ? echo : music);
+        if (S.echo) tone(hz(root + m), stepDur * S.leadLen, S.lead, S.leadVol * 0.7 * duck, 0, when, music);
+      }
+      if (S.kick[i]) drum('kick', next);
+      if (S.hat[i]) drum('hat', next);
+      next += stepDur;
+      step++;
+    }
+  }
+
+  function start() {
+    if (!ac || timer) return;
+    step = 0; next = ac.currentTime + 0.06;
+    timer = setInterval(schedule, 25);
+  }
+
+  return {
+    sfx(name) { if (!muted && wake() && EFFECTS[name]) EFFECTS[name](); },
+    play(name) {
+      if (song === name && timer) return;
+      clearInterval(timer); timer = null;
+      song = name;
+      if (ac && ac.state !== 'closed') start();       // otherwise the first key press starts it
+    },
+    stop() { clearInterval(timer); timer = null; song = null; },
+    // quieter music behind the questions and the pause menu
+    setDuck(on) { duck = on ? 0.35 : 1; },
+    toggle() {
+      muted = !muted;
+      Save.update({ abMuted: muted });
+      if (wake()) master.gain.value = muted ? 0 : 1;
+      return muted;
+    },
+    get muted() { return muted; }
+  };
+})();
+/* ==========================================================
+   DRAWING
+
+   The game lives in a 200 x 300 picture, blown up with
+   smoothing off so it stays chunky pixel art. Because it's
+   taller than it is wide, this is the one game that's happiest
+   on a phone held upright.
+   ========================================================== */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const buf = document.createElement('canvas'); buf.width = VW; buf.height = VH;
+const b = buf.getContext('2d');
+let view = { x: 0, y: 0, s: 1 };
+
+function fit() {
+  cv.width = innerWidth; cv.height = innerHeight;
+  const top = document.getElementById('hud').offsetHeight || 0;
+  const s = Math.min(innerWidth / VW, (innerHeight - top) / VH);
+  view = { s, x: Math.round((innerWidth - VW * s) / 2), y: Math.round(top + (innerHeight - top - VH * s) / 2) };
+}
+addEventListener('resize', fit);
+
+/* ---------- sprites: one letter per pixel ---------- */
+function makeSprite(map, pal) {
+  const w = map[0].length, h = map.length;
+  const c = document.createElement('canvas'); c.width = w + 2; c.height = h + 2;
+  const g = c.getContext('2d');
+  const filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && map[y][x] !== '.';
+  g.fillStyle = '#080614';
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++)
+    if (!filled(x, y) && (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))) g.fillRect(x + 1, y + 1, 1, 1);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (filled(x, y)) { g.fillStyle = pal[map[y][x]] || '#FF00FF'; g.fillRect(x + 1, y + 1, 1, 1); }
+  return c;
+}
+
+const SHIP_MAP = ['....WW....', '....WW....', '...WBBW...', '...WBBW...', '..WWBBWW..', '.WCWBBWCW.', 'WCCWBBWCCW',
+                  'WCCWWWWCCW', '.WC.WW.CW.', '..W.FF.W..'];
+const SHIP_PAL = { W: '#C8D4F0', B: '#7FE3FF', C: '#3F8FCC', F: '#FF8A2A' };
+
+const FOE_MAPS = {
+  drone:   [['..GGGG..', '.GggggG.', 'GGgKKgGG', 'GGgggggG', '.G.GG.G.', '....R...'], { G: '#58B83A', g: '#8FE06A', K: '#1A1024', R: '#FF6A6A' }],
+  weaver:  [['.PP..PP.', 'PPPPPPPP', 'PpKPPKpP', '.PPPPPP.', '..P..P..'], { P: '#B25CF0', p: '#E0A0FF', K: '#1A1024' }],
+  bomber:  [['..RRRRRRRR..', '.RRrrrrrrRR.', 'RRrKKrrKKrRR', 'RRrrrrrrrrRR', '.RR.RRRR.RR.', '...RR..RR...'],
+            { R: '#D63C3C', r: '#FF8A6A', K: '#1A1024' }],
+  turret:  [['..YYYYYY..', '.YyyyyyyY.', 'YyyKKKKyyY', 'YyyyyyyyyY', '.YY.YY.YY.', '..Y.YY.Y..', '....KK....'],
+            { Y: '#E8B028', y: '#FFE14A', K: '#3A3050' }],
+  rock:    [['..SSSSS..', '.SSsSSSS.', 'SSSSSsSSS', 'SsSSSSSSS', 'SSSSsSSSS', '.SSSSSSS.', '..SSSSS..'], { S: '#8C7A6A', s: '#B0A090' }],
+  pebble:  [['.SSS.', 'SSsSS', 'SsSSS', '.SSS.'], { S: '#8C7A6A', s: '#B0A090' }],
+  armour:  [['.IIIIIIII.', 'IIiiiiiiII', 'IiKKiiKKiI', 'IiiiiiiiiI', 'IIiiiiiiII', '.II.II.II.', '..I.II.I..'],
+            { I: '#9FB8D8', i: '#D8E8FF', K: '#1A1024' }],
+  diver:   [['..DD..', '.DDDD.', 'DDKKDD', 'DDDDDD', '.D..D.', '..FF..'], { D: '#FF6A2A', K: '#FFE14A', F: '#FFC53D' }],
+  titan:   [['......SSSSSSSSSSSS......', '...SSSSsSSSSSSSSsSSSS...', '.SSSSSSSSSSSSSSSSSSSSSS.',
+             'SSsSSSKKSSSSSSSSKKSSSsSS', 'SSSSSSKKSSSSSSSSKKSSSSSS', 'SSSSSSSSSSSSSSSSSSSSSSSS',
+             '.SSSSSSSSRRRRRRSSSSSSSS.', '..SSSSSSSSSSSSSSSSSSSS..', '....SSSS.SSSSSS.SSSS....'],
+            { S: '#8C7A6A', s: '#B0A090', K: '#FF6A6A', R: '#3A3050' }],
+  queen:   [['....PPPP....PPPP....', '..PPppppPPppppPP....', '.PPppppppppppppPP...', 'PPppKKppppppKKppPP..',
+             'PPppppppppppppppPP..', '.PPppppRRRRppppPP...', '..PPppppppppppPP....', '...PP..PPPP..PP.....'],
+            { P: '#8A2CC8', p: '#C86AF0', K: '#FFE14A', R: '#FF6A6A' }],
+  warlord: [['...RRRRRRRRRRRR...', '.RRRrrrrrrrrrrRRR.', 'RRrrrrrrrrrrrrrrRR', 'RRrrKKrrrrrrKKrrRR',
+             'RRrrrrrrrrrrrrrrRR', '.RRrrrrYYYYrrrrRR.', '..RRrrrrrrrrrrRR..', '...RR..RRRR..RR...'],
+            { R: '#B02A2A', r: '#FF6A4A', K: '#FFE14A', Y: '#FFC53D' }],
+  mother:  [['.....MMMMMMMMMMMM.....', '...MMmmmmmmmmmmmmMM...', '.MMmmmmmmmmmmmmmmmmMM.',
+             'MMmmmKKmmmmmmmmKKmmmMM', 'MMmmmmmmmmmmmmmmmmmmMM', 'MMmmmmGGGGGGGGmmmmmmMM',
+             '.MMmmmmmmmmmmmmmmmmMM.', '..MMmmmmmmmmmmmmmmMM..', '....MM..MMMMMM..MM....'],
+            { M: '#3A2A6A', m: '#6A4AC8', K: '#FF6A6A', G: '#7FE3FF' }]
+};
+const DROP_MAPS = {
+  coin:   [['.YY.', 'YyyY', 'YyyY', '.YY.'], { Y: '#E8B028', y: '#FFE14A' }],
+  shield: [['.GGG.', 'GgggG', 'GgGgG', '.GGG.', '..G..'], { G: '#58B83A', g: '#A8F08A' }],
+  bomb:   [['..KK.', '.OOOK', 'OOOOO', 'OOOOO', '.OOO.'], { O: '#FF6A2A', K: '#FFE14A' }],
+  spread: [['YY.YY', '.YYY.', 'YYYYY', '.YYY.', 'YY.YY'], { Y: '#FFC53D' }],
+  rapid:  [['..B..', '.BBB.', 'BBBBB', '.BBB.', '..B..'], { B: '#7FE3FF' }]
+};
+
+let SPR = {};
+function buildSprites() {
+  SPR = { foe: {}, drop: {}, hit: {} };
+  SPR.ship = makeSprite(SHIP_MAP, SHIP_PAL);
+  for (const k in FOE_MAPS) {
+    SPR.foe[k] = makeSprite(FOE_MAPS[k][0], FOE_MAPS[k][1]);
+    const c = document.createElement('canvas'); c.width = SPR.foe[k].width; c.height = SPR.foe[k].height;
+    const g = c.getContext('2d');
+    g.drawImage(SPR.foe[k], 0, 0); g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(0, 0, c.width, c.height);
+    SPR.hit[k] = c;
+  }
+  for (const k in DROP_MAPS) SPR.drop[k] = makeSprite(DROP_MAPS[k][0], DROP_MAPS[k][1]);
+}
+
+/* ---------- the star field, three layers deep ---------- */
+let stars = [];
+function buildStars() {
+  stars = [];
+  for (let i = 0; i < 70; i++) stars.push({ x: Math.random() * VW, y: Math.random() * VH, z: 1 + Math.floor(Math.random() * 3) });
+}
+function drawSpace(dt, sector) {
+  const S = SECTORS[sector];
+  b.fillStyle = S.sky; b.fillRect(0, 0, VW, VH);
+  for (const s of stars) {
+    s.y += (12 + s.z * 26) * dt;
+    if (s.y > VH) { s.y = -2; s.x = Math.random() * VW; }
+    b.fillStyle = s.z === 3 ? '#FFFFFF' : s.z === 2 ? S.star : 'rgba(255,255,255,.45)';
+    b.fillRect(Math.round(s.x), Math.round(s.y), s.z === 3 ? 2 : 1, s.z === 3 ? 2 : 1);
+  }
+}
+
+/* ---------- every frame ---------- */
+function draw(dt) {
+  if (cv.width !== innerWidth || cv.height !== innerHeight) fit();
+  if (!G) return;
+  b.imageSmoothingEnabled = false;
+  drawSpace(dt, G.m.sector);
+
+  // what the aliens dropped
+  for (const d of G.drops) {
+    const img = SPR.drop[d.kind];
+    const bob = Math.sin(d.t * 6) * 1.5;
+    b.drawImage(img, Math.round(d.x - img.width / 2), Math.round(d.y - img.height / 2 + bob));
+  }
+  // your shots
+  b.fillStyle = '#7FE3FF';
+  for (const s of G.shots) b.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 3, 2, 6);
+  // their shots
+  for (const s of G.bolts) {
+    b.fillStyle = '#FF8A5A'; b.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 2, 3, 5);
+    b.fillStyle = '#FFE14A'; b.fillRect(Math.round(s.x), Math.round(s.y) - 1, 1, 2);
+  }
+  // the aliens
+  for (const f of G.foes) {
+    if (f.dead || f.delay > 0) continue;
+    const img = (f.hurt > 0 ? SPR.hit : SPR.foe)[f.type];
+    b.drawImage(img, Math.round(f.x - img.width / 2), Math.round(f.y - img.height / 2));
+    if (FOES[f.type].boss) {                       // the core: hit this and it hurts twice as much
+      const c = bossCore(f), pulse = 0.5 + Math.sin(G.time * 6) * 0.3;
+      b.fillStyle = `rgba(255,220,80,${pulse})`;
+      b.fillRect(Math.round(c.x - c.w / 2), Math.round(c.y - c.h / 2), c.w, c.h);
+      b.fillStyle = '#FFFFFF';
+      b.fillRect(Math.round(c.x - 2), Math.round(c.y - 2), 4, 4);
+    }
+  }
+  // your ship, blinking while you're briefly safe after a hit
+  if (!G.over || G.won) {
+    const blink = G.ship.hurt > 0 && Math.floor(G.time * 14) % 2;
+    if (!blink) {
+      b.drawImage(SPR.ship, Math.round(G.ship.x - SPR.ship.width / 2), Math.round(G.ship.y - SPR.ship.height / 2));
+      // engine flame
+      b.fillStyle = Math.floor(G.time * 20) % 2 ? '#FF8A2A' : '#FFE14A';
+      b.fillRect(Math.round(G.ship.x) - 2, Math.round(G.ship.y) + 5, 4, 2 + Math.floor(Math.random() * 3));
+    }
+    if (G.ship.spread > 0 || G.ship.rapid > 0) {           // a ring while a power-up is on
+      b.strokeStyle = G.ship.spread > 0 ? 'rgba(255,197,61,.5)' : 'rgba(127,227,255,.5)';
+      b.beginPath(); b.arc(G.ship.x, G.ship.y, 11, 0, Math.PI * 2); b.stroke();
+    }
+    if (G.ship.focus) {                                    // flying steady: your exact hit spot
+      b.fillStyle = '#FF5A6E'; b.fillRect(Math.round(G.ship.x) - 1, Math.round(G.ship.y) - 1, 3, 3);
+      b.strokeStyle = 'rgba(255,90,110,.45)';
+      b.beginPath(); b.arc(G.ship.x, G.ship.y, 7, 0, Math.PI * 2); b.stroke();
+    }
+  }
+  // bangs and sparks
+  for (const s of G.sparks) { b.fillStyle = '#FFFFFF'; b.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 1, 2, 2); }
+  for (const x of G.blasts) {
+    const f = 1 - x.t / (x.big ? 1.2 : x.wipe ? 0.6 : 0.4);
+    if (x.wipe) { b.fillStyle = `rgba(255,255,255,${0.5 * (1 - f)})`; b.fillRect(0, 0, VW, VH); continue; }
+    const r = (x.big ? 26 : 9) * (0.4 + f);
+    b.fillStyle = `rgba(255,${Math.round(200 - f * 120)},60,${1 - f})`;
+    b.beginPath(); b.arc(x.x, x.y, r, 0, Math.PI * 2); b.fill();
+  }
+
+  ctx.fillStyle = '#05040E'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(buf, 0, 0, VW, VH, view.x, view.y, Math.round(VW * view.s), Math.round(VH * view.s));
+
+  // your combo, and how close the next graze bomb is
+  if (G.combo >= 4 || G.graze % GRAZE_FOR_BOMB) {
+    ctx.font = `700 ${Math.max(12, Math.round(view.s * 6))}px 'Pixelify Sans', monospace`;
+    ctx.textAlign = 'left'; ctx.lineWidth = 3; ctx.strokeStyle = '#080614';
+    const x = view.x + 6, y = view.y + VH * view.s - 10;
+    if (G.combo >= 4) {
+      const txt = `x${comboMult(G)}  ${G.combo} in a row`;
+      ctx.strokeText(txt, x, y); ctx.fillStyle = comboMult(G) >= 4 ? '#FFC53D' : '#7FE3FF'; ctx.fillText(txt, x, y);
+    }
+    const g = G.graze % GRAZE_FOR_BOMB;
+    if (g) {
+      const w = 54 * view.s / 2, bx = view.x + VW * view.s - w - 6, by = y - 8;
+      ctx.fillStyle = 'rgba(8,6,20,.7)'; ctx.fillRect(bx - 2, by - 2, w + 4, 10);
+      ctx.fillStyle = '#B25CF0'; ctx.fillRect(bx, by, w * (g / GRAZE_FOR_BOMB), 6);
+      ctx.strokeStyle = '#080614'; ctx.strokeRect(bx - 2, by - 2, w + 4, 10);
+    }
+  }
+
+  // the boss's health, drawn big and sharp over the top
+  if (G.boss && !G.boss.dead && G.boss.y > 0) {
+    const w = VW * view.s * 0.8, x = view.x + VW * view.s * 0.1, y = view.y + 6;
+    ctx.fillStyle = '#1A1024'; ctx.fillRect(x - 2, y - 2, w + 4, 10);
+    ctx.fillStyle = '#D63C3C'; ctx.fillRect(x, y, w * Math.max(0, G.boss.hp / G.boss.max), 6);
+    ctx.font = `700 ${Math.max(11, Math.round(view.s * 5))}px 'Pixelify Sans', monospace`;
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
+    ctx.fillText(FOES[G.boss.type].name, x + w / 2, y + 18);
+  }
+}
+
+// where a screen point lands inside the little picture (for a finger on a phone)
+const toGame = (px, py) => ({ x: (px - view.x) / view.s, y: (py - view.y) / view.s });
+/* ==========================================================
+   SCREENS AND CONTROLS
+   ========================================================== */
+const $ = id => document.getElementById(id);
+const show = (id, on) => { const el = $(id); if (el) el.style.display = on ? 'flex' : 'none'; };
+let screen = 'menu', paused = false, current = 0, sectorShown = 0, bossMusic = false;
+
+/* ---------- challenge links ----------
+   A link carries a name and a score, nothing else, so it's short enough to
+   send in a message and needs no server at all.                          */
+const Challenge = {
+  make(score, wave) {
+    const who = (Save.get().name || 'Someone').slice(0, 14);
+    const data = btoa(JSON.stringify({ n: who, s: score, w: wave }));
+    return location.origin + location.pathname + '?beat=' + encodeURIComponent(data);
+  },
+  read() {
+    if (typeof location === 'undefined') return null;      // the test bots have no address bar
+    const raw = new URLSearchParams(location.search).get('beat');
+    if (!raw) return null;
+    try { const d = JSON.parse(atob(decodeURIComponent(raw))); return (d && typeof d.s === 'number') ? d : null; }
+    catch (e) { return null; }
+  }
+};
+const challenge = Challenge.read();
+
+const repairPay = n => 40 + 8 * n;              // salvage for the questions before a mission
+const saved = () => Save.get().abStars || {};
+const salvage = () => Save.get().abSalvage || 0;
+const isOpen = n => n === 0 || saved()[MISSIONS[n - 1].id] !== undefined;
+
+/* ---------- picking a mission ---------- */
+function showMenu(sector) {
+  if (sector !== undefined) sectorShown = Math.max(0, Math.min(SECTORS.length - 1, sector));
+  screen = 'menu'; paused = false;
+  ['hud', 'pauseCard', 'resultCard', 'shop', 'downCard'].forEach(id => show(id, false));
+  document.body.classList.remove('playing');
+  newMission(MISSIONS[sectorShown * 3]); G.silent = true; G.demo = true;
+  fit();
+  const st = saved();
+  $('secName').textContent = SECTORS[sectorShown].name;
+  $('secPrev').style.visibility = sectorShown > 0 ? 'visible' : 'hidden';
+  $('secNext').style.visibility = sectorShown < SECTORS.length - 1 ? 'visible' : 'hidden';
+  $('salvage').textContent = salvage();
+  $('missions').innerHTML = MISSIONS.filter(m => m.sector === sectorShown).map(m => {
+    const open = isOpen(m.n), s = st[m.id];
+    return `<button class="mish ${open ? '' : 'locked'} ${m.boss ? 'boss' : ''}" data-n="${m.n}" ${open ? '' : 'disabled'}>
+      <b>${open ? (m.boss ? '☠' : m.n + 1) : '\u{1F512}'}</b>
+      <span class="mstars">${'★'.repeat(s || 0)}<i>${'★'.repeat(3 - (s || 0))}</i></span>
+      <small>${m.boss ? FOES[m.boss].name : 'Mission ' + (m.n + 1)}</small></button>`;
+  }).join('');
+  document.querySelectorAll('#missions .mish').forEach(bt => bt.onclick = () => startMission(+bt.dataset.n));
+  const best = Save.get().abBest || { score: 0, wave: 0 };
+  $('survBtn').innerHTML = best.score ? `\u267E\uFE0F Survival <small>best ${best.score} \u00b7 wave ${best.wave}</small>` : '\u267E\uFE0F Survival';
+  $('challengeNote').style.display = challenge ? '' : 'none';
+  if (challenge) $('challengeNote').innerHTML = `<b>${esc(challenge.n)}</b> challenges you to beat <b>${challenge.s}</b> in Survival!`;
+  show('menu', true);
+  Sound.play('menu');
+  showMute();
+}
+
+/* ---------- the repair bay, then the mission ---------- */
+const esc = s => String(s).replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
+
+// Survival: no finish line, just a score to beat
+function startSurvival() {
+  if (document.activeElement) document.activeElement.blur();
+  screen = 'fly'; paused = false; current = -1; bossMusic = false;
+  ['menu', 'pauseCard', 'resultCard', 'shop', 'downCard'].forEach(id => show(id, false));
+  newMission(SURVIVAL);
+  show('hud', true);
+  document.body.classList.add('playing');
+  fit(); updateHud(true);
+  Sound.play('flight');
+  Quiz.ask({
+    count: 2, title: 'Repair bay', subtitle: 'Answer 2 for 60 salvage',
+    onDone: () => { G.salvage += 60; updateHud(true); flash(challenge ? `Beat ${challenge.n}: ${challenge.s}` : 'Survive as long as you can!', 2); }
+  });
+}
+
+function startMission(n) {
+  if (document.activeElement) document.activeElement.blur();
+  current = n; screen = 'fly'; paused = false; bossMusic = false;
+  ['menu', 'pauseCard', 'resultCard', 'shop', 'downCard'].forEach(id => show(id, false));
+  newMission(MISSIONS[n]);
+  show('hud', true);
+  document.body.classList.add('playing');
+  fit(); updateHud(true);
+  Sound.play('flight');
+  const pay = repairPay(n);
+  G.paused = true;
+  Quiz.ask({
+    count: 2, title: 'Repair bay', subtitle: `Answer 2 for ${pay} salvage`,
+    onDone: () => { G.salvage += pay; G.paid = pay; updateHud(true); flash(`+${pay} salvage`); }
+  });
+}
+
+onEvent.fn = (what, why) => {
+  if (!G || G.demo) return;
+  if (what === 'boss') { Sound.play('boss'); bossMusic = true; flash('WARNING: ' + FOES[G.m.boss].name, 2); }
+  if (what === 'pickup' && POWERS[why] && why !== 'coin') flash(POWERS[why].name, 0.9);
+  if (what === 'grazeBomb') flash('Close flying! +1 bomb', 1.2);
+  if (what === 'wave' && why > 0 && why % 4 === 0) flash('Wave ' + (why + 1), 1);
+  if (what === 'win' || what === 'lose') setTimeout(finish, 900);
+};
+
+/* ---------- shot down: one question puts you back in ---------- */
+function finish() {
+  if (!G.won && G.continues < 1) { askContinue(); return; }
+  if (G.m.endless) return finishSurvival();
+  const m = MISSIONS[current], stars = starsFor(G);
+  if (G.won) {
+    const all = Object.assign({}, saved());
+    if (all[m.id] === undefined || stars > all[m.id]) all[m.id] = stars;
+    Save.update({ abStars: all, abLevels: MISSIONS.length, abSalvage: salvage() + G.salvage });
+  } else Save.update({ abSalvage: salvage() + Math.floor(G.salvage / 2) });
+  $('rTitle').textContent = G.won ? (m.boss ? FOES[m.boss].name + ' destroyed!' : 'Mission complete!') : 'Ship lost';
+  $('rStars').innerHTML = G.won ? '★'.repeat(stars) + '<i>' + '★'.repeat(3 - stars) + '</i>' : '';
+  $('rMsg').innerHTML = G.won
+    ? `${G.kills} aliens down · best run of <b>${G.best}</b> · <b>${G.salvage}</b> salvage`
+      + `<br>${G.escaped} of ${G.came} slipped past you`
+      + (stars < 3 ? '<br>Three stars: keep every shield, and stop nearly everything.' : '')
+    : `You got to wave ${Math.min(G.wave + 1, G.waves.length)} of ${G.waves.length}. Half your salvage was recovered.`;
+  $('rNext').style.display = G.won && MISSIONS[current + 1] && isOpen(current + 1) ? '' : 'none';
+  $('rShare').style.display = 'none';
+  $('rAgain').textContent = 'Fly it again';
+  show('resultCard', true);
+  Sound.play('menu');
+}
+function finishSurvival() {
+  const best = Save.get().abBest || { score: 0, wave: 0 };
+  const isBest = G.score > best.score;
+  if (isBest) Save.update({ abBest: { score: G.score, wave: G.wave + 1 } });
+  Save.update({ abSalvage: salvage() + Math.floor(G.salvage / 2) });
+  $('rTitle').textContent = isBest ? 'New best score!' : 'Run over';
+  $('rStars').innerHTML = '';
+  $('rMsg').innerHTML = `<b>${G.score}</b> points \u00b7 wave ${G.wave + 1} \u00b7 ${G.kills} aliens`
+    + (isBest ? '' : `<br>Your best: ${best.score} (wave ${best.wave})`)
+    + (challenge ? `<br>${esc(challenge.n)} scored ${challenge.s} \u2014 ` + (G.score > challenge.s ? 'you beat them!' : 'not this time.') : '');
+  $('rNext').style.display = 'none';
+  $('rShare').style.display = '';
+  $('rShare').textContent = '\u{1F517} Challenge a friend';
+  $('rShare').onclick = async () => {
+    const link = Challenge.make(G.score, G.wave + 1);
+    try { await navigator.clipboard.writeText(link); $('rShare').textContent = 'Link copied! Send it to a friend'; }
+    catch (e) { prompt && false; $('rMsg').innerHTML += '<br><small style="word-break:break-all">' + esc(link) + '</small>'; $('rShare').textContent = 'Link is below \u2014 copy it'; }
+  };
+  $('rAgain').textContent = 'Fly again';
+  show('resultCard', true);
+  Sound.play('menu');
+}
+
+function askContinue() {
+  show('downCard', true);
+  $('dMsg').textContent = `Wave ${Math.min(G.wave + 1, G.waves.length)} of ${G.waves.length}. Answer one question to get back in the fight.`;
+}
+$('dQuiz').onclick = () => {
+  show('downCard', false);
+  Quiz.ask({
+    count: 1, title: 'Emergency repairs', subtitle: 'One question puts you back in',
+    onDone: () => { continueMission(); updateHud(true); flash('Back in the fight!'); }
+  });
+};
+$('dGiveUp').onclick = () => { show('downCard', false); G.continues = 9; finish(); };
+
+function pause(on) {
+  if (screen !== 'fly' || (G && G.over) || Quiz.isOpen()) return;
+  paused = on === undefined ? !paused : on;
+  Sound.sfx('click');
+  show('pauseCard', paused);
+}
+
+/* ---------- the shop ---------- */
+function showShop() {
+  screen = 'shop';
+  const u = up();
+  $('shopSalvage').textContent = salvage();
+  $('shopList').innerHTML = UP_ORDER.map(id => {
+    const U = UPGRADES[id], lvl = u[id], maxed = lvl >= U.costs.length, cost = U.costs[lvl];
+    return `<div class="up">
+      <div><b>${U.name}</b><span>${U.note}</span>
+        <span class="pips">${U.costs.map((_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</span></div>
+      <button data-up="${id}" ${maxed || salvage() < cost ? 'disabled' : ''}>${maxed ? 'Maxed' : cost}</button>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-up]').forEach(bt => bt.onclick = () => {
+    const id = bt.dataset.up, u2 = up(), cost = UPGRADES[id].costs[u2[id]];
+    if (salvage() < cost) return;
+    u2[id]++;
+    Save.update({ abSalvage: salvage() - cost, abUp: u2 });
+    Sound.sfx('buy');
+    showShop();
+  });
+  show('menu', false); show('shop', true);
+}
+
+/* ---------- the bar along the top ---------- */
+let lastHud = '';
+function updateHud(force) {
+  if (!G || screen !== 'fly') return;
+  const key = [G.shields, G.bombs, G.salvage, G.score, G.wave, comboMult(G)].join();
+  if (!force && key === lastHud) return;
+  lastHud = key;
+  $('hShields').innerHTML = '❤'.repeat(Math.max(0, G.shields)) + `<i>${'❤'.repeat(Math.max(0, maxShields() - G.shields))}</i>`;
+  $('hBombs').textContent = G.bombs;
+  $('hSalvage').textContent = G.salvage;
+  $('hScore').textContent = G.score + (comboMult(G) > 1 ? ' x' + comboMult(G) : '');
+  $('hWave').textContent = Math.min(G.wave + 1, G.waves.length) + '/' + G.waves.length;
+}
+let flashTimer = null;
+function flash(msg, secs = 1.2) {
+  const el = $('banner');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.classList.remove('show'), secs * 1000);
+}
+function showMute() {
+  const icon = Sound.muted ? '\u{1F507}' : '\u{1F50A}';
+  ['muteBtn', 'menuMute'].forEach(id => { const el = $(id); if (el) el.textContent = icon; });
+}
+
+/* ---------- flying the ship ---------- */
+const held = { left: false, right: false, up: false, down: false, focus: false };
+const keymap = { arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right',
+                 arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down' };
+addEventListener('keydown', e => {
+  if (Quiz.isOpen()) return;
+  const k = e.key.toLowerCase();
+  if (k === 'escape') { pause(); return; }
+  if (k === 'm') { Sound.toggle(); showMute(); return; }
+  if (paused) return;
+  if (k === ' ') { e.preventDefault(); if (screen === 'fly' && G && !G.over) { if (!useBomb()) Sound.sfx('nope'); } return; }
+  if (keymap[k]) { held[keymap[k]] = true; e.preventDefault(); }
+});
+addEventListener('keyup', e => { const k = keymap[e.key.toLowerCase()]; if (k) held[k] = false; if (e.key === 'Shift') held.focus = false; });
+addEventListener('keydown', e => { if (e.key === 'Shift' && !Quiz.isOpen()) held.focus = true; });
+// on a phone: hold the focus button with your other thumb
+['pointerdown', 'pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+  $('focusBtn').addEventListener(ev, e => { e.preventDefault(); held.focus = ev === 'pointerdown'; }));
+
+// a finger anywhere on the screen drags the ship about
+let touching = false;
+cv.addEventListener('pointerdown', e => {
+  if (screen !== 'fly' || paused || Quiz.isOpen() || !G || G.over) return;
+  touching = true; dragTo(e);
+});
+addEventListener('pointermove', e => { if (touching) dragTo(e); });
+addEventListener('pointerup', () => { touching = false; held.toX = undefined; held.toY = undefined; });
+function dragTo(e) {
+  const p = toGame(e.clientX, e.clientY);
+  held.toX = Math.max(10, Math.min(VW - 10, p.x));
+  held.toY = Math.max(20, Math.min(VH - 12, p.y - 18));    // a little above the finger, so you can see
+}
+$('bombBtn').onclick = e => { e.currentTarget.blur(); if (!useBomb()) Sound.sfx('nope'); };
+
+$('pauseBtn').onclick = e => { e.currentTarget.blur(); pause(); };
+['muteBtn', 'menuMute'].forEach(id => $(id).onclick = e => { e.currentTarget.blur(); Sound.toggle(); showMute(); });
+$('resumeBtn').onclick = () => pause(false);
+$('restartBtn').onclick = () => (current < 0 ? startSurvival() : startMission(current));
+$('quitBtn').onclick = () => showMenu(current < 0 ? sectorShown : MISSIONS[current].sector);
+$('rNext').onclick = () => startMission(current + 1);
+$('rAgain').onclick = () => (current < 0 ? startSurvival() : startMission(current));
+$('rMenu').onclick = () => showMenu(current < 0 ? sectorShown : MISSIONS[current].sector);
+$('secPrev').onclick = () => showMenu(sectorShown - 1);
+$('secNext').onclick = () => showMenu(sectorShown + 1);
+$('shopBtn').onclick = showShop;
+$('survBtn').onclick = startSurvival;
+$('shopBack').onclick = () => showMenu();
+
+/* ---------- the loop ---------- */
+let last = 0, demoT = 0;
+function frame(t) {
+  const dt = Math.min(0.04, last ? (t - last) / 1000 : 0.016);
+  last = t;
+  if (screen === 'menu' || screen === 'shop') {
+    // the menu's backdrop: a quiet patrol with the odd alien drifting by
+    demoT -= dt;
+    if (demoT <= 0 && G) { spawnFoe(SECTORS[sectorShown].foes[0], 20 + Math.random() * (VW - 40), -10); demoT = 1.6; }
+    if (G) { G.silent = true; step(dt, {}); G.shields = 9; }
+  } else if (screen === 'fly' && !paused && !Quiz.isOpen() && G && !G.over) {
+    step(dt, held);
+    updateHud();
+  }
+  draw(dt);
+  Sound.setDuck(paused || Quiz.isOpen());
+  requestAnimationFrame(frame);
+}
+
+buildSprites();
+buildStars();
+showMenu(0);
+requestAnimationFrame(frame);
+</script>
+
+</body>
+</html>
